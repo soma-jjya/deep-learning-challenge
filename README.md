@@ -8,9 +8,14 @@ Qwen2.5-3B-Instruct를 베이스로 수학 문제의 정수 답을 추론하는 
 ```
 deep-learning-challenge-2026/   # 대회 제공 데이터 (train 17k / leaderboard 1k / test 2k)
 kaggle/                         # Kaggle 노트북 (실행 환경: GPU T4 x2)
-  01_baseline_inference.ipynb   # 베이스라인: 파인튜닝 없이 추론 → submission.csv
+  01_baseline_inference.ipynb   # exp01 베이스라인: 파인튜닝 없이 추론 → submission.csv
+  02_eval_and_selfconsistency.ipynb  # exp02·03: 고정 검증 500 + 개선 후처리 + Self-Consistency
+CONTEXT.md                      # 프로젝트 맥락 관리 (진행 상태·결정 사항 — 여기부터 읽기)
 prd.md                          # 대회 규칙 요약
-EXPERIMENTS.md                  # 실험 기록
+EXPERIMENTS.md                  # 실험 기록 + 가설 백로그
+report.html                     # 실험 보고서 (그래프·참고 문헌) — 브라우저로 열기
+docs/research.md                # 리서치 노트 (논문·사례 출처)
+requirements.txt                # 실행 환경
 ```
 
 ## 재현 방법

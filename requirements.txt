@@ -1,0 +1,8 @@
+# 추론 파이프라인 (Kaggle 노트북 기본 환경에 모두 포함)
+# 정확한 버전 고정본은 노트북의 pip freeze 셀이 생성하는
+# requirements_freeze.txt를 kaggle_freeze/ 폴더에 보관한다.
+torch
+transformers
+accelerate
+pandas
+tqdm

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>딥러닝 챌린지 2026 — 실험 보고서</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --page: #f9f9f7; --surface-1: #fcfcfb;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --series-1: #2a78d6;  /* 로컬 검증 */
+    --series-2: #eb6834;  /* 리더보드 */
+    --good: #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: #0d0d0d; --surface-1: #1a1a19;
+      --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5; --series-2: #d95926; --good: #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: #0d0d0d; --surface-1: #1a1a19;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-2: #d95926; --good: #0ca30c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.15rem; margin: 40px 0 12px; }
+  .sub { color: var(--text-secondary); margin: 0 0 24px; }
+  .tiles { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+  .tile {
+    flex: 1 1 150px; background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .tile .label { font-size: 0.78rem; color: var(--muted); }
+  .tile .value { font-size: 1.7rem; font-weight: 650; }
+  .tile .hint { font-size: 0.78rem; color: var(--text-secondary); }
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px;
+  }
+  .legend { display: flex; gap: 18px; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 6px; }
+  .legend .key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .chart-wrap { overflow-x: auto; }
+  svg text { font-family: inherit; }
+  .tick { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+  .dlabel { font-size: 11px; fill: var(--text-secondary); }
+  #tooltip {
+    position: fixed; display: none; pointer-events: none; z-index: 10;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; font-size: 0.8rem; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    max-width: 280px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+  .jump { border-left: 3px solid var(--series-1); padding: 6px 12px; margin: 10px 0; background: var(--surface-1); border-radius: 0 8px 8px 0; }
+  .jump b { color: var(--good); }
+  a { color: var(--series-1); }
+  .refs li { margin-bottom: 8px; font-size: 0.9rem; }
+  .refs .why { color: var(--text-secondary); font-size: 0.84rem; }
+  .check { list-style: none; padding: 0; font-size: 0.9rem; }
+  .check li { padding: 3px 0; }
+  .status-badge { font-size: 0.75rem; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--text-secondary); margin-left: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>아주 딥러닝 챌린지 2026 — 실험 보고서</h1>
+  <p class="sub">Qwen2.5-3B-Instruct 고정 베이스로 수학 정수 답 추론 · 목표 <b>로컬 85%</b> · 세부 기록은 <code>EXPERIMENTS.md</code></p>
+
+  <div class="tiles">
+    <div class="tile"><div class="label">리더보드 (최신)</div><div class="value" id="tile-lb">–</div><div class="hint" id="tile-lb-hint"></div></div>
+    <div class="tile"><div class="label">로컬 검증 (최신)</div><div class="value" id="tile-local">–</div><div class="hint" id="tile-local-hint"></div></div>
+    <div class="tile"><div class="label">목표까지</div><div class="value" id="tile-gap">–</div><div class="hint">로컬 85% 기준</div></div>
+  </div>
+
+  <h2>정확도 추이</h2>
+  <div class="card">
+    <div class="legend">
+      <span><span class="key" style="background:var(--series-1)"></span>로컬 검증</span>
+      <span><span class="key" style="background:var(--series-2)"></span>리더보드</span>
+      <span><span class="key" style="background:var(--baseline); height:1px"></span>목표 85%</span>
+    </div>
+    <div class="chart-wrap"><svg id="chart" width="820" height="320" role="img" aria-label="실험별 정확도 추이 선 그래프"></svg></div>
+  </div>
+
+  <h2>급상승 구간과 그 이유</h2>
+  <div id="jumps"><p class="sub" style="margin:0">아직 상승 구간이 없습니다. 실험 2개 이상부터 표시됩니다.</p></div>
+
+  <h2>실험 로그 (표)</h2>
+  <div class="card scroll">
+    <table id="exp-table">
+      <thead><tr><th>실험</th><th>날짜</th><th>방법 (직전 대비 변경점)</th><th>로컬</th><th>리더보드</th><th>노트</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <h2>가설 백로그</h2>
+  <div class="card scroll">
+    <table>
+      <thead><tr><th>가설</th><th>내용</th><th>기대</th><th>상태</th></tr></thead>
+      <tbody>
+        <tr><td>H1</td><td>max 토큰 2048 + 소수점-안전 답 추출</td><td class="num">+2~4%p</td><td>노트북 02 (exp02)</td></tr>
+        <tr><td>H2</td><td>Self-Consistency n=8 다수결</td><td class="num">+5~10%p</td><td>노트북 02 (exp03)</td></tr>
+        <tr><td>H3</td><td>RFT: 자체 생성 풀이 중 정답만 QLoRA SFT</td><td class="num">+5~15%p</td><td>대기</td></tr>
+        <tr><td>H4</td><td>NuminaMath-CoT 등 공개 CoT 데이터 혼합</td><td class="num">+3~8%p</td><td>대기</td></tr>
+        <tr><td>H5</td><td>TIR: 모델이 쓴 파이썬 실행으로 계산 보조</td><td class="num">+3~8%p</td><td>H3 이후</td></tr>
+        <tr><td>H6</td><td>양자화+vLLM (SC 샘플 수 확대용 속도)</td><td class="num">간접</td><td>병목 시</td></tr>
+        <tr><td>H7</td><td>GRPO 강화학습</td><td class="num">불확실</td><td>후순위</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>참고 자료 (auto-research)</h2>
+  <div class="card">
+    <ul class="refs">
+      <li><a href="https://huggingface.co/blog/winning-aimo-progress-prize">How NuminaMath Won the 1st AIMO Progress Prize</a> (Hugging Face 블로그) · <a href="https://github.com/project-numina/aimo-progress-prize">코드</a><div class="why">우리와 동일한 Kaggle T4×2 환경의 수학 대회 우승 솔루션. SC-TIR(다수결+파이썬 실행), T4용 GPTQ 8bit 양자화 → H2·H5·H6의 근거</div></li>
+      <li>Wang et al., <i>Self-Consistency Improves Chain of Thought Reasoning in Language Models</i> (ICLR 2023, arXiv:2203.11171)<div class="why">다수결(SC)의 원 논문. GSM8K +17.9%p 사례 → H2의 근거</div></li>
+      <li><a href="https://arxiv.org/abs/2308.01825">Yuan et al., <i>Scaling Relationship on Learning Mathematical Reasoning</i> (RFT, arXiv:2308.01825)</a><div class="why">정답에 도달한 자체 생성 풀이만 골라 SFT(Rejection Sampling FT). 소형 모델에서 효과 큼 → H3의 근거. STaR(arXiv:2203.14465)도 동계열 · <a href="https://www.emergentmind.com/topics/rejection-sampling-fine-tuning-rsft">개념 정리</a></div></li>
+      <li><a href="https://huggingface.co/datasets/AI-MO/NuminaMath-CoT">AI-MO/NuminaMath-CoT</a> · <a href="https://huggingface.co/datasets/nvidia/OpenMathInstruct-2">nvidia/OpenMathInstruct-2</a><div class="why">풀이 과정이 달린 무료 공개 데이터셋 86만/1,400만 쌍 (Apache 2.0 등) → H4의 재료. 사용 시 README 데이터 목록에 기재</div></li>
+      <li><a href="https://arxiv.org/pdf/2504.16891">AIMO-2 우승 솔루션 (arXiv:2504.16891)</a> · <a href="https://arxiv.org/pdf/2603.27844">AIMO-3 분석 (arXiv:2603.27844)</a><div class="why">추론 시점 기법보다 모델 학습이 지배적 → SC 다음은 SFT가 본게임이라는 우선순위의 근거</div></li>
+      <li><a href="https://www.kaggle.com/competitions/ai-mathematical-olympiad-progress-prize-3/writeups/entropy-weighted-self-consistency-for-olympiad-lev">AIMO-3 writeup: Entropy-Weighted Self-Consistency</a><div class="why">SC 개량 변형 — n을 키운 뒤 시도할 후보</div></li>
+      <li><a href="https://www.emergentmind.com/topics/qwen2-5-3b-instruct-model">Qwen2.5-3B-Instruct 성능 정리</a> · <a href="https://qwenlm.github.io/blog/qwen2.5-math/">Qwen2.5-Math 블로그</a><div class="why">베이스 모델의 GSM8K ~83% 참고치 (우리 66%는 경시형 48% 혼합 탓). Math 모델 자체는 규칙상 사용 불가, 학습 방법론만 참고</div></li>
+      <li><a href="https://aclanthology.org/2025.findings-acl.1301.pdf"><i>Small Models Struggle to Learn from Strong Reasoners</i> (ACL 2025)</a><div class="why">소형 모델은 지나치게 길고 어려운 풀이로 학습하면 역효과 → SFT 데이터 선별 시 풀이 길이 관리</div></li>
+    </ul>
+  </div>
+
+  <h2>검증 제출물 체크리스트</h2>
+  <div class="card">
+    <ul class="check">
+      <li>✅ 추론 코드 (생성→후처리→CSV) <span class="status-badge">필수</span> — kaggle/01·02 노트북</li>
+      <li>✅ 사용 데이터 목록 <span class="status-badge">필수</span> — README (현재: 대회 제공 데이터만)</li>
+      <li>✅ 실행 환경 <span class="status-badge">필수</span> — requirements.txt + 노트북 pip freeze 셀</li>
+      <li>⬜ 최종 모델 체크포인트 <span class="status-badge">필수</span> — SFT 단계에서 Kaggle Dataset 저장 예정</li>
+      <li>⬜ 학습 코드 전체 파이프라인 <span class="status-badge">필수</span> — SFT 노트북(03)에서</li>
+      <li>⬜ 학습 로그 wandb <span class="status-badge">권장</span> — SFT 시작 시 연동</li>
+      <li>✅ 실험 보고서 <span class="status-badge">권장</span> — 이 문서 + EXPERIMENTS.md</li>
+      <li>✅ README 재현 가이드 <span class="status-badge">권장</span> — 실행 순서·시드 기재</li>
+    </ul>
+  </div>
+
+  <p class="sub" style="margin-top:32px">마지막 갱신: 2026-08-01 · 이 파일은 실험 결과가 나올 때마다 갱신됩니다.</p>
+</main>
+
+<div id="tooltip"></div>
+
+<script>
+// ── 데이터: 실험 결과가 나올 때마다 여기에 한 줄씩 추가 ──
+// local/lb는 %, null이면 미측정. jump에는 직전 대비 급상승 이유를 쓴다.
+const EXPERIMENTS = [
+  { exp: 'exp01', date: '2026-07-31', method: '베이스라인: 파인튜닝 없음, greedy, max 1024토큰, boxed 추출',
+    local: 66.0, lb: 64.8, note: '로컬(50문제)≈리더보드 확인. 잘림·소수점 오추출 발견', jump: null },
+  // { exp: 'exp02', date: '', method: 'H1: max 2048 + 소수점-안전 추출', local: null, lb: null, note: '', jump: null },
+];
+const TARGET = 85;
+
+// ── 상단 타일 ──
+const last = EXPERIMENTS[EXPERIMENTS.length - 1];
+const lastLb = [...EXPERIMENTS].reverse().find(e => e.lb != null);
+const lastLocal = [...EXPERIMENTS].reverse().find(e => e.local != null);
+if (lastLb) { document.getElementById('tile-lb').textContent = (lastLb.lb/100).toFixed(3); document.getElementById('tile-lb-hint').textContent = lastLb.exp; }
+if (lastLocal) { document.getElementById('tile-local').textContent = lastLocal.local.toFixed(1) + '%'; document.getElementById('tile-local-hint').textContent = lastLocal.exp; }
+if (lastLocal) document.getElementById('tile-gap').textContent = '+' + Math.max(0, TARGET - lastLocal.local).toFixed(1) + '%p';
+
+// ── 실험 테이블 ──
+const tbody = document.querySelector('#exp-table tbody');
+for (const e of EXPERIMENTS) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${e.exp}</td><td class="num">${e.date}</td><td>${e.method}</td>` +
+    `<td class="num">${e.local != null ? e.local.toFixed(1) + '%' : '–'}</td>` +
+    `<td class="num">${e.lb != null ? (e.lb/100).toFixed(3) : '–'}</td><td>${e.note || ''}</td>`;
+  tbody.appendChild(tr);
+}
+
+// ── 급상승 구간 ──
+const jumpsEl = document.getElementById('jumps');
+const jumps = [];
+for (let i = 1; i < EXPERIMENTS.length; i++) {
+  const a = EXPERIMENTS[i-1], b = EXPERIMENTS[i];
+  if (a.local != null && b.local != null && b.local - a.local >= 3) {
+    jumps.push(`<div class="jump"><b>${a.exp} → ${b.exp}: +${(b.local-a.local).toFixed(1)}%p</b><br>${b.jump || b.method}</div>`);
+  }
+}
+if (jumps.length) jumpsEl.innerHTML = jumps.join('');
+
+// ── 차트 (선 그래프) ──
+const svg = document.getElementById('chart');
+const NS = 'http://www.w3.org/2000/svg';
+const W = 820, H = 320, M = { t: 16, r: 90, b: 34, l: 44 };
+const yMin = 40, yMax = 95;
+const n = EXPERIMENTS.length;
+const x = i => M.l + (n === 1 ? (W - M.l - M.r) / 2 : i * (W - M.l - M.r) / (n - 1));
+const y = v => M.t + (yMax - v) / (yMax - yMin) * (H - M.t - M.b);
+const el = (tag, attrs, text) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  svg.appendChild(e); return e;
+};
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function draw() {
+  svg.innerHTML = '';
+  // 그리드 + y축 눈금
+  for (let v = 40; v <= 90; v += 10) {
+    el('line', { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), stroke: css('--grid'), 'stroke-width': 1 });
+    el('text', { x: M.l - 8, y: y(v) + 4, 'text-anchor': 'end', class: 'tick' }, v + '%');
+  }
+  // 목표선
+  el('line', { x1: M.l, x2: W - M.r, y1: y(TARGET), y2: y(TARGET), stroke: css('--baseline'), 'stroke-width': 1.5, 'stroke-dasharray': '6 5' });
+  el('text', { x: W - M.r + 8, y: y(TARGET) + 4, class: 'dlabel' }, '목표 85%');
+  // x축 눈금
+  EXPERIMENTS.forEach((e, i) => el('text', { x: x(i), y: H - 10, 'text-anchor': 'middle', class: 'tick' }, e.exp));
+
+  const series = [
+    { key: 'local', name: '로컬 검증', color: css('--series-1') },
+    { key: 'lb', name: '리더보드', color: css('--series-2') },
+  ];
+  for (const s of series) {
+    const pts = EXPERIMENTS.map((e, i) => ({ i, v: e[s.key], e })).filter(p => p.v != null);
+    if (pts.length > 1) {
+      el('polyline', { points: pts.map(p => `${x(p.i)},${y(p.v)}`).join(' '),
+        fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linecap': 'round' });
+    }
+    for (const p of pts) {
+      el('circle', { cx: x(p.i), cy: y(p.v), r: 4.5, fill: s.color, stroke: css('--surface-1'), 'stroke-width': 2 });
+      // 넉넉한 히트 타깃 + 툴팁
+      const hit = el('circle', { cx: x(p.i), cy: y(p.v), r: 14, fill: 'transparent' });
+      hit.addEventListener('mousemove', ev => {
+        const t = document.getElementById('tooltip');
+        t.style.display = 'block';
+        t.style.left = (ev.clientX + 14) + 'px';
+        t.style.top = (ev.clientY - 10) + 'px';
+        t.innerHTML = `<b>${p.e.exp}</b> · ${s.name} <b>${s.key === 'lb' ? (p.v/100).toFixed(3) : p.v.toFixed(1) + '%'}</b><br>${p.e.method}`;
+      });
+      hit.addEventListener('mouseleave', () => document.getElementById('tooltip').style.display = 'none');
+    }
+    // 직접 라벨 (마지막 점 옆)
+    if (pts.length) {
+      const p = pts[pts.length - 1];
+      el('text', { x: x(p.i) + 10, y: y(p.v) - 8, class: 'dlabel', fill: s.color }, s.name);
+    }
+  }
+}
+draw();
+new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+</script>
+</body>
+</html>
