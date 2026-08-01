@@ -5,7 +5,7 @@
 
 | # | 날짜 | 방법 | 미니 평가 (train 50) | 리더보드 | 노트북 |
 |---|------|------|---------------------|----------|--------|
-| 1 | 2026-07-31 | 베이스라인: Qwen2.5-3B-Instruct 그대로, greedy, max 1024 토큰, boxed 추출 | 66.0% (33/50) | (제출 대기) | kaggle/01_baseline_inference.ipynb |
+| 1 | 2026-07-31 | 베이스라인: Qwen2.5-3B-Instruct 그대로, greedy, max 1024 토큰, boxed 추출 | 66.0% (33/50) | **0.648** | kaggle/01_baseline_inference.ipynb |
 
 ## 실험 1: 베이스라인 (2026-07-31)
 
