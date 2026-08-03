@@ -52,8 +52,13 @@ powershell -File aws\launch.ps1 -Spot
 
 ## 2. 서버 접속 후 최초 1회 세팅
 
+레포가 **private**이므로 GitHub 토큰이 먼저 필요하다:
+GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** →
+Generate: Repository access = `soma-jjya/deep-learning-challenge`, Permissions = **Contents: Read and write**
+
 ```bash
 ssh -i ~/.ssh/ajudl-gpu.pem ubuntu@<출력된 IP>
+echo 'export GITHUB_TOKEN="github_pat_..."' >> ~/.bashrc && source ~/.bashrc
 tmux new -s train                 # 상주 세션 (이후 재접속은 tmux attach -t train)
 bash ~/setup_env.sh               # 파이썬 환경 + Unsloth + 레포 클론 (bootstrap이 복사해 둠)
 ```

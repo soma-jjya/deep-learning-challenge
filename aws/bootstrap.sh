@@ -22,9 +22,15 @@ cat > /home/ubuntu/setup_env.sh << 'EOF'
 set -e
 export PATH="$HOME/.local/bin:$PATH"
 
+# private 레포라 GitHub 토큰 필요 (fine-grained PAT, Contents: Read and write)
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo '먼저 GitHub 토큰을 등록하세요:'
+  echo '  echo "export GITHUB_TOKEN=github_pat_..." >> ~/.bashrc && source ~/.bashrc'
+  exit 1
+fi
 mkdir -p ~/work && cd ~/work
 if [ ! -d deep-learning-challenge ]; then
-  git clone https://github.com/soma-jjya/deep-learning-challenge.git
+  git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/soma-jjya/deep-learning-challenge.git"
 fi
 cd deep-learning-challenge
 
