@@ -15,11 +15,13 @@
 3. Claude: 결과 분석 → EXPERIMENTS.md·report.html 갱신 → 다음 가설 반영한 노트북 수정
 4. 좋은 결과만 리더보드 제출 (description: `expNN | 방법 | local XX%`)
 
-## 현재 상태 (2026-08-01)
+## 현재 상태 (2026-08-03)
 
 - exp01 베이스라인 완료: 로컬 66% (50문제), **리더보드 0.648** — 로컬≈LB 확인됨
-- 다음: `kaggle/02_eval_and_selfconsistency.ipynb` 실행 대기 (exp02 greedy 개선판 + exp03 Self-Consistency n=8, 고정 검증 500문제)
-- 예상 소요: 세션 1회 (~6시간). 플래그로 부분 실행 가능
+- 노트북 02 백슬래시 버그 수정 완료 (chr(92) 조립 방식) → exp02·03 재실행 대기
+- **AWS 실험 인프라 구축 중** (remote-finetune-session.md 기반): `aws/` 폴더에 launch.ps1(인스턴스 시작)·bootstrap.sh(자동 세팅)·README.md(절차), `remote/train_qlora.py`(Unsloth QLoRA 스크립트) 준비됨. 로컬에 AWS CLI 설치 완료
+- 사용자 해야 할 것: ① AWS 계정·액세스 키 → `aws configure` ② GPU 쿼터(G/VT vCPU ≥4) 확인·증가 신청 ③ `claude setup-token`으로 서버용 구독 토큰 발급
+- 서버 확정 스펙: g5.xlarge(A10G 24GB) 서울 리전 권장, 안 쓸 때 stop 필수
 
 ## 핵심 결정·제약 (변경 시 여기 갱신)
 
