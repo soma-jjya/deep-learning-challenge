@@ -1,0 +1,13 @@
+{
+  "id": "KAGGLE_USERNAME/ajudl-exp",
+  "title": "ajudl exp",
+  "code_file": "02_eval_and_selfconsistency.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": ["COMPETITION_SLUG"],
+  "kernel_sources": []
+}
