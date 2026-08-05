@@ -4,6 +4,8 @@
 # experiments/queue.md의 미완료([ ]) 실험을 위에서부터 하나씩 Claude에게 실행시킨다.
 # 큐가 비면 종료 → watchdog이 30분 뒤 인스턴스를 자동 stop.
 set -e
+source ~/.ajudl_env 2>/dev/null || true   # 토큰 로드 (비대화형 셸에서도 동작)
+export PATH="$HOME/.local/bin:$PATH"
 cd ~/work/deep-learning-challenge
 
 notify() {

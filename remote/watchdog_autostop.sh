@@ -3,6 +3,7 @@
 # GPU가 놀고 실험 프로세스도 없는 상태가 30분 이어지면 인스턴스를 stop한다.
 # 예외: ~/KEEP_ALIVE 파일이 있으면 절대 끄지 않는다 (수동 작업 시: touch ~/KEEP_ALIVE)
 STATE=/tmp/idle_count
+source /home/ubuntu/.ajudl_env 2>/dev/null || true   # NTFY_TOPIC 로드 (cron에는 env가 없음)
 
 if [ -f /home/ubuntu/KEEP_ALIVE ]; then echo 0 > $STATE; exit 0; fi
 
