@@ -22,6 +22,13 @@ while true; do
     break
   fi
 
+  # 실험 프로세스가 이미 돌고 있으면 Claude를 부르지 않고 대기 (구독 사용량 절약)
+  if pgrep -f "generate_rft|train_qlora|eval_vllm" > /dev/null; then
+    echo "$(date +%H:%M) 실험 프로세스 진행 중 — 5분 대기"
+    sleep 300
+    continue
+  fi
+
   NEXT=$(grep -m1 '^- \[ \]' experiments/queue.md)
   echo "=== 실행: $NEXT ==="
   notify "실험 시작: $NEXT"
