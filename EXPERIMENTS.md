@@ -34,6 +34,7 @@
 | 1 | 2026-07-31 | 베이스라인: Qwen2.5-3B-Instruct 그대로, greedy, max 1024 토큰, boxed 추출 | 66.0% (33/50) | **0.648** | kaggle/01_baseline_inference.ipynb |
 | 4 | 2026-08-05 | RFT 데이터 생성 (AWS, `remote/generate_rft.py`) — 대상 16,500문제(검증 500·오류 문항 사후필터 전), 문제당 6개 샘플(temp 0.8), 정답 도달 문제 13,190개(79.9%), 채택 풀이 36,733개 → data/sft.jsonl | - | - | remote/generate_rft.py |
 | 4b | 2026-08-05 | exp04 sft.jsonl 사후 필터링 — 오류 문항 627개 기준 라인 제거: 36,733줄 → 36,144줄 (589줄 제거) | - | - | - |
+| 5 | 2026-08-05 | 베이스 모델 AWS 평가 (`remote/eval_vllm.py --mode both`) — 검증 483문항(500 중 오류 문항 제외), greedy 69.4%, SC n=8 74.7% | - | - | remote/eval_vllm.py |
 
 ## 실험 4: RFT 데이터 생성 (2026-08-05, AWS)
 
@@ -42,6 +43,14 @@
 - **결과**: 16,500/16,500 처리 완료. **정답 도달 문제 13,190개 (79.9%)**, 채택 풀이(assistant CoT) 총 **36,733개** → `data/sft.jsonl`에 저장 (커밋 대상 아님, 통계만 기록)
 - **exp04b 필터링**: `deep-learning-challenge-2026/train_filtered_ids.csv`(오류 문항 627개)의 id에 해당하는 라인을 id 필드 기준으로 제거. **36,733줄 → 36,144줄 (589줄 제거)**. 이후 `data/sft.jsonl`은 필터된 버전으로 교체됨
 - **다음**: exp05(베이스 모델 AWS 평가) → exp06(QLoRA r16 SFT, 필터된 sft.jsonl 사용)
+
+## 실험 5: 베이스 모델 AWS 평가 (2026-08-05, AWS)
+
+- **설정**: `remote/eval_vllm.py --mode both` (베이스 모델, 어댑터 없음), 검증 500문제(seed=123)에서 오류 문항(train_filtered_ids.csv) 자동 제외 → **유효 검증 문항 483개**
+- **결과**: greedy(temperature=0, max_tokens=2048) **69.4% (335/483)**, SC n=8(temperature=0.7, top_p=0.8) **74.7% (361/483)**
+- **의미**: exp02·03(Kaggle, 구 500문항 기준)과는 검증 세트 구성이 달라 직접 비교 불가하지만, AWS 환경·필터된 483문항 기준의 새 베이스라인 확보. exp06(QLoRA) 이후 이 수치와 비교해 SFT 효과 측정
+- **결과 파일**: `results/eval_base.json`
+- **다음**: exp06-qlora-r16
 
 ## 실험 1: 베이스라인 (2026-07-31)
 
