@@ -44,8 +44,9 @@ powershell -File aws\launch.ps1 -Spot    # 스팟 (중단 시 stop 후 수동 �
 
 ## 2. 서버 최초 1회 세팅 (SSH)
 
-필요 토큰 4개: GitHub PAT(레포 private) · Claude 구독 토큰(`claude setup-token`, 노트북에서) ·
-HF 토큰 · wandb 토큰. ntfy 주제는 아무 비밀 문자열이나 정하면 됨.
+필요 토큰 3개: GitHub PAT(레포 private) · Claude 구독 토큰(`claude setup-token`, 노트북에서) ·
+wandb 토큰(학습 로그 — 대회 권장 제출물). ntfy 주제는 아무 비밀 문자열이나 정하면 됨.
+HF 토큰은 불필요(모델·데이터 전부 공개). 어댑터 백업은 Kaggle Dataset 또는 scp로.
 
 ```bash
 ssh -i ~/.ssh/ajudl-gpu.pem ubuntu@<IP>
@@ -55,7 +56,7 @@ echo 'export NTFY_TOPIC="ajudl-비밀문자열"'           >> ~/.bashrc
 source ~/.bashrc
 tmux new -s train
 bash ~/setup_env.sh          # 레포 클론 + 파이썬 환경 + watchdog cron 등록
-huggingface-cli login && wandb login
+wandb login
 ```
 
 폰 알림 구독: 폰 브라우저(또는 ntfy 앱)에서 `ntfy.sh/ajudl-비밀문자열` 열어두기.
