@@ -3,3 +3,4 @@ runs/
 data/
 outputs/
 *.log
+__pycache__/
