@@ -41,6 +41,9 @@
 
 ## 핵심 결정·제약 (변경 시 여기 갱신)
 
+- **추론 시 코드 실행·툴 호출 금지 확정** (운영진 Q&A, 2026-08) — H5(TIR) 폐기. SC/다수결은 허용. 멀티 LoRA 앙상블(H8)·검증자 어댑터(H9)는 질의 중
+- **데이터 검수 공지(08-03) 반영**: train 오류 627문항(`deep-learning-challenge-2026/train_filtered_ids.csv`) 학습·검증 제외 (generate_rft·eval_vllm에 반영, exp04는 사후 필터 = 큐의 exp04b). 리더보드는 `deep_chal_math_leaderboard_filtered.csv`(831문항) 사용 — **아직 다운로드 필요**, Kaggle 노트북 재개 시 파일명 교체 필수. 기존 제출은 재제출해야 새 기준 점수
+
 - 실행 환경: Kaggle T4 x2 (로컬 PC는 6GB라 불가). T4는 bf16 미지원 → fp16
 - 검증 세트: train에서 500문제 고정 (`random_state=123`) — **이후 SFT 학습 데이터에서 반드시 제외**
 - 미니 평가 50문제는 폐기 (오차 ±13%p) → 500문제로 통일

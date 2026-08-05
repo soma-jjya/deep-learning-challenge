@@ -43,6 +43,12 @@ def main():
     df = pd.read_csv('deep-learning-challenge-2026/deep_chal_math_train.csv')
     df.columns = df.columns.str.strip()
     val = df.sample(args.val_n, random_state=args.seed).reset_index(drop=True)
+    # 운영진 공지(2026-08-03)의 오류 문항은 검증에서도 제외 (라벨이 틀린 문제로 채점하면 왜곡)
+    bad_path = 'deep-learning-challenge-2026/train_filtered_ids.csv'
+    if os.path.exists(bad_path):
+        bad_ids = set(pd.read_csv(bad_path)['id'])
+        val = val[~val['id'].isin(bad_ids)].reset_index(drop=True)
+    print(f'검증 문항 {len(val)}개 (오류 문항 제외 후)')
 
     llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
               gpu_memory_utilization=0.92,

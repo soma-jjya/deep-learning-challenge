@@ -47,8 +47,15 @@ def main():
 
     df = pd.read_csv(CONFIG['train_csv'])
     df.columns = df.columns.str.strip()
+    # 검증 세트는 반드시 '원본' train에서 seed로 뽑는다 (eval_vllm.py와 정의 일치)
     val_ids = set(df.sample(CONFIG['val_n'], random_state=CONFIG['val_seed'])['id'])
     df = df[~df['id'].isin(val_ids)].reset_index(drop=True)
+    # 운영진 공지(2026-08-03)의 오류 문항 제외 (라벨 오류·이미지 누락 등 627개)
+    bad_path = 'deep-learning-challenge-2026/train_filtered_ids.csv'
+    if os.path.exists(bad_path):
+        bad_ids = set(pd.read_csv(bad_path)['id'])
+        df = df[~df['id'].isin(bad_ids)].reset_index(drop=True)
+        print(f'오류 문항 {len(bad_ids)}개 제외 적용')
     print(f'대상 문제 {len(df)}개 (검증 {len(val_ids)}개 제외)')
 
     os.makedirs('data', exist_ok=True)
