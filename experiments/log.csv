@@ -1,0 +1,2 @@
+exp_id,date,category,hypothesis,config,val_n,acc_greedy,acc_sc,leaderboard,delta_vs_prev,verdict,notes
+exp01,2026-07-31,baseline,베이스 모델 그대로의 실력 측정,"Qwen2.5-3B-Instruct, greedy, max1024, boxed추출",50,0.660,,0.648(구기준),,baseline,"로컬≈LB 확인. 백슬래시 버그로 boxed 추출이 깨진 채 측정된 점수 (폴백만 동작). 구 리더보드 1000문항 기준 — 신기준(831)과 비교 불가"
