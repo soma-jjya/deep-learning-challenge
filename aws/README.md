@@ -1,105 +1,87 @@
-# AWS GPU 실험 서버 세팅 가이드
+# AWS 자율 실험 서버 — 격리·자동정지·무인 실행
 
-remote-finetune-session.md의 "항상 켜진 GPU 서버"를 AWS EC2로 만드는 절차.
-목표 구조: **EC2(GPU) + tmux 상주 세션 + Claude Code 헤드리스** → 노트북을 꺼도 실험이 계속 돈다.
+목표: **기존 AWS 자원 불가침(최우선)** · 서버가 스스로 실험 실행·기록 · 유휴 시 자동 정지.
 
 ```
-[내 노트북] ──ssh──▶ [EC2 g5.xlarge (A10G 24GB)]
-                      └─ tmux ─┬─ 학습 (nohup, 로그 파일)
-                               └─ claude -p "다음 실험..." (오케스트레이터)
+[로컬 Claude] ─ experiments/queue.md에 실험 정의 → git push
+[EC2 g5.xlarge] ─ run_experiments.sh가 큐를 순서대로 실행
+                  ├─ Claude Code(헤드리스)가 실행·분석·EXPERIMENTS.md 기록 → git push
+                  ├─ ntfy로 폰 알림 (시작/완료/실패)
+                  └─ 큐 비고 30분 유휴 → watchdog이 자동 stop (과금 정지)
+[사용자] ─ 폰 알림 받고 GitHub(또는 로컬 git pull)에서 결과 확인만
 ```
 
-## 비용 (서울 리전, 시간당 대략)
+## 기존 자원 불가침 — 3중 안전장치
 
-| 인스턴스 | GPU | 온디맨드 | 스팟 | 용도 |
-|---|---|---|---|---|
-| g4dn.xlarge | T4 16GB | ~$0.65 | ~$0.2 | 최저가. Kaggle과 동일 GPU |
-| **g5.xlarge** ⭐ | A10G 24GB | ~$1.3 | ~$0.4~0.6 | QLoRA 여유 + bf16 지원(T4보다 ~2배 빠름) |
+1. **전용 IAM 사용자 + 태그 조건 정책** (`iam-policy.json`): `Project=ajudl` 태그가 붙은 자원만
+   정지/삭제/변경 가능. 기존 자원은 **권한 차원에서** 건드릴 수 없음
+2. **전용 VPC**: 기존 네트워크(기본 VPC 포함)를 쓰지 않고 `ajudl-vpc`(10.99.0.0/16)를 새로 만들어 그 안에서만 동작
+3. **상태 파일** (`state.json`): 스크립트는 자기가 만든 자원 id만 기록·조작. teardown도 이 목록만 삭제
 
-- **안 쓸 때 stop** (EBS 보관비 월 $8/100GB만 나감). terminate하면 디스크까지 삭제
-- 스팟은 저렴하지만 중간 회수될 수 있음 → 체크포인트 저장 필수 (launch.ps1의 `-Spot` 옵션)
+## 0. 최초 1회: 전용 IAM 사용자 만들기 (브라우저, 5분)
 
-## 0. 최초 1회: 계정 준비 (브라우저에서 직접)
-
-1. AWS 계정 생성 (있으면 스킵) → 결제 수단 등록
-2. IAM에서 액세스 키 발급: 콘솔 → IAM → 사용자 → 본인 → 보안 자격 증명 → 액세스 키 만들기 (CLI 용도)
-3. 로컬에서 자격 증명 등록:
+1. AWS 콘솔 → IAM → 정책 → 정책 생성 → JSON 탭 → `aws/iam-policy.json` 내용 붙여넣기 → 이름 `ajudl-experiment-policy`
+2. IAM → 사용자 → 사용자 생성 → 이름 `ajudl-experiment` → 직접 정책 연결 → 위 정책 선택
+3. 생성된 사용자 → 보안 자격 증명 → **액세스 키 만들기** (CLI 용도)
+4. 로컬에서 **전용 프로필로** 등록 (기본 프로필을 오염시키지 않음):
    ```powershell
-   aws configure
-   # Access Key ID / Secret 입력, region: ap-northeast-2, output: json
+   aws configure --profile ajudl
+   # 위 액세스 키 / region: ap-northeast-2 / output: json
    ```
-4. **GPU 쿼터 확인 (신규 계정은 0이라 인스턴스를 못 띄움!)**
+5. GPU 쿼터 확인 (0이면 콘솔 Service Quotas에서 "Running On-Demand G and VT instances" 4로 증가 요청):
    ```powershell
-   aws service-quotas get-service-quota --service-code ec2 --quota-code L-DB2E81BA --region ap-northeast-2
-   # "Running On-Demand G and VT instances" — Value가 4 이상이어야 g5.xlarge 가능
+   aws service-quotas get-service-quota --service-code ec2 --quota-code L-DB2E81BA --region ap-northeast-2 --profile ajudl
    ```
-   0이면 콘솔 → Service Quotas → EC2 → "Running On-Demand G and VT instances" → 증가 요청(4).
-   승인까지 몇 시간~2일. (스팟 쓰려면 "All G and VT Spot Instance Requests"도 동일하게)
 
-## 1. 인스턴스 띄우기 (로컬에서)
+## 1. 인스턴스 시작 (로컬)
 
 ```powershell
-cd C:\Users\82108\Desktop\harness_project\ajudl
-# 온디맨드 (기본, 안정적)
-powershell -File aws\launch.ps1
-# 스팟 (저렴, 회수 가능성 있음)
-powershell -File aws\launch.ps1 -Spot
+powershell -File aws\launch.ps1          # 온디맨드 g5.xlarge (권장)
+powershell -File aws\launch.ps1 -Spot    # 스팟 (중단 시 stop 후 수동 재시작)
 ```
+전용 VPC·키·보안그룹(내 IP만 SSH) 생성 → 인스턴스 시작 → SSH 명령 출력.
+비용: g5.xlarge 온디맨드 ~$1.3/h. **유휴 30분이면 자동 stop**되므로 상시대기 과금 없음.
 
-스크립트가 하는 일: 최신 딥러닝 AMI 조회 → 키페어·보안그룹(내 IP만 SSH 허용) 생성 →
-인스턴스 시작(디스크 200GB) → 부팅 시 aws/bootstrap.sh 자동 실행(tmux·Node·Claude Code 설치) →
-접속용 SSH 명령 출력.
+## 2. 서버 최초 1회 세팅 (SSH)
 
-## 2. 서버 접속 후 최초 1회 세팅
-
-레포가 **private**이므로 GitHub 토큰이 먼저 필요하다:
-GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** →
-Generate: Repository access = `soma-jjya/deep-learning-challenge`, Permissions = **Contents: Read and write**
+필요 토큰 4개: GitHub PAT(레포 private) · Claude 구독 토큰(`claude setup-token`, 노트북에서) ·
+HF 토큰 · wandb 토큰. ntfy 주제는 아무 비밀 문자열이나 정하면 됨.
 
 ```bash
-ssh -i ~/.ssh/ajudl-gpu.pem ubuntu@<출력된 IP>
-echo 'export GITHUB_TOKEN="github_pat_..."' >> ~/.bashrc && source ~/.bashrc
-tmux new -s train                 # 상주 세션 (이후 재접속은 tmux attach -t train)
-bash ~/setup_env.sh               # 파이썬 환경 + Unsloth + 레포 클론 (bootstrap이 복사해 둠)
+ssh -i ~/.ssh/ajudl-gpu.pem ubuntu@<IP>
+echo 'export GITHUB_TOKEN="github_pat_..."'          >> ~/.bashrc
+echo 'export CLAUDE_CODE_OAUTH_TOKEN="sk-ant-..."'   >> ~/.bashrc
+echo 'export NTFY_TOPIC="ajudl-비밀문자열"'           >> ~/.bashrc
+source ~/.bashrc
+tmux new -s train
+bash ~/setup_env.sh          # 레포 클론 + 파이썬 환경 + watchdog cron 등록
+huggingface-cli login && wandb login
 ```
 
-Claude Code 구독 인증 (API 키 아님 — 과금 없음):
-```powershell
-# [노트북에서] claude setup-token   → 토큰 복사
-```
-```bash
-# [서버에서]
-echo 'export CLAUDE_CODE_OAUTH_TOKEN="sk-ant-oat01-..."' >> ~/.bashrc && source ~/.bashrc
-claude --version && claude -p "hello" # 응답 오면 성공
-```
+폰 알림 구독: 폰 브라우저(또는 ntfy 앱)에서 `ntfy.sh/ajudl-비밀문자열` 열어두기.
 
-HF·wandb 로그인 (학습 로그 = 검증 제출물 권장 항목):
-```bash
-huggingface-cli login    # HF 토큰
-wandb login              # wandb 토큰
-```
-
-## 3. 실험 루프 (반복)
+## 3. 무인 실험 루프
 
 ```bash
-tmux attach -t train
-cd ~/work/deep-learning-challenge
-git pull                                          # 로컬에서 푸시한 최신 실험 코드 받기
-nohup uv run python remote/train_qlora.py > train.log 2>&1 &   # 학습은 백그라운드
-tail -f train.log                                 # 지켜보다 Ctrl+C (학습은 계속 돎)
-# 학습 끝나면:
-claude -p "train.log와 eval 결과를 읽고 EXPERIMENTS.md 형식으로 요약해줘"
+# 서버 tmux 안에서 러너 시작 — 이후는 전부 자동
+cd ~/work/deep-learning-challenge && git pull
+nohup bash remote/run_experiments.sh > runner.log 2>&1 &
 ```
+- 러너가 `experiments/queue.md`의 `- [ ]` 항목을 위에서부터 Claude에게 실행시킴
+- 실험마다: 결과를 EXPERIMENTS.md에 기록 → 큐 체크 → git push → 폰 알림
+- 큐가 비면 러너 종료 → 30분 뒤 watchdog이 인스턴스 stop
+- **새 실험 추가**: 로컬에서 queue.md에 줄 추가 → push → `aws\start.ps1` → 서버에서 러너 재시작
+- 수동 작업할 땐 자동정지 잠금: `touch ~/KEEP_ALIVE` (해제: `rm ~/KEEP_ALIVE`)
 
-노트북을 꺼도 학습은 계속된다. 결과 확인은 재접속 → `tmux attach -t train`.
-
-## 4. 끝나면 반드시
+## 4. 일상 명령 (로컬)
 
 ```powershell
-# stop: 디스크 유지, GPU 과금 정지 (다음에 start로 재개, IP는 바뀜)
-aws ec2 stop-instances --instance-ids <id> --region ap-northeast-2
-# terminate: 완전 삭제 (체크포인트를 HF Hub에 백업했는지 확인 후!)
-aws ec2 terminate-instances --instance-ids <id> --region ap-northeast-2
+powershell -File aws\start.ps1      # 재시작 + 새 IP 출력
+powershell -File aws\stop.ps1       # 수동 정지
+powershell -File aws\teardown.ps1   # 프로젝트 자원 전부 삭제 (state.json 기록분만, 확인 후)
 ```
 
-launch.ps1이 인스턴스 id를 `aws/instance.txt`에 기록해 둔다.
+## 결과 받아보는 법 (사용자)
+
+1. 폰 알림: 실험 시작/완료/실패가 ntfy로 옴
+2. GitHub에서 EXPERIMENTS.md / results/ 확인, 또는 로컬 Claude 세션에서 "결과 분석해줘" (git pull 후 report.html 갱신까지)

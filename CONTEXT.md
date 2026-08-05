@@ -25,6 +25,8 @@
 - 노트북 02 백슬래시 버그 수정 완료 (chr(92) 조립 방식) → exp02·03 재실행 대기
 - RFT 파이프라인 준비 완료: `remote/answer_extract.py`(노트북 02와 동일 추출기 공유), `remote/generate_rft.py`(vLLM로 문제당 6개 풀이 샘플링 → 정답만 채택 → data/sft.jsonl, 중단-재개 지원) → AWS 인스턴스 뜨면 바로 실행 가능
 - **AWS 실험 인프라 구축 중** (remote-finetune-session.md 기반): `aws/` 폴더에 launch.ps1(인스턴스 시작)·bootstrap.sh(자동 세팅)·README.md(절차), `remote/train_qlora.py`(Unsloth QLoRA 스크립트) 준비됨. 로컬에 AWS CLI 설치 완료
+- **AWS 자율 실험 인프라 완성 (2026-08-05)**: 격리 3중 장치(태그 조건 IAM 정책 `aws/iam-policy.json` + 전용 VPC + state.json), 자율 러너(`remote/run_experiments.sh` — experiments/queue.md를 서버 Claude가 순서대로 실행·기록·푸시), 유휴 30분 자동 stop(`remote/watchdog_autostop.sh`), ntfy 폰 알림. 실험 큐에 exp04(RFT 생성)·exp05(베이스 평가)·exp06(QLoRA r16) 등록됨. 대기: 사용자의 IAM 사용자 생성 + `aws configure --profile ajudl` (aws/README.md 0장)
+- **역할 분담 확정**: 로컬 Claude = 계획자(큐에 실험 정의, 결과 분석, 보고서), 서버 Claude = 실행자(큐 실행·기록만, 임의 실험 추가 금지)
 - **Kaggle API 자동 실행 파이프라인 구축 중**: kaggle CLI 설치됨, `kaggle/kernel-metadata.json`(템플릿 — KAGGLE_USERNAME·COMPETITION_SLUG 치환 필요) + `scripts/kaggle_run.ps1`(푸시→폴링→로그 회수). 대기: 사용자의 kaggle.json(API 토큰, `C:\Users\82108\.kaggle\`에 저장)과 대회 URL(slug)
 - **AWS는 보류, 당분간 Kaggle 사용** (2026-08-03 결정). AWS로 넘어갈 때 필요한 것: ① 계정·액세스 키 → `aws configure` ② GPU 쿼터(G/VT vCPU ≥4) 증가 신청 ③ `claude setup-token` ④ GitHub fine-grained PAT (레포 private — bootstrap이 GITHUB_TOKEN으로 클론)
 - 서버 확정 스펙: g5.xlarge(A10G 24GB) 서울 리전 권장, 안 쓸 때 stop 필수

@@ -1,0 +1,82 @@
+"""검증 세트(500, seed=123) 평가 — vLLM. greedy와 Self-Consistency 모두 지원.
+
+사용:
+    uv run python remote/eval_vllm.py --mode both                    # 베이스 모델
+    uv run python remote/eval_vllm.py --mode both --adapter outputs/qlora/xxx_final
+"""
+import argparse
+import json
+import os
+import sys
+from collections import Counter
+
+import pandas as pd
+
+sys.path.insert(0, os.path.dirname(__file__))
+from answer_extract import BS, extract_answer
+
+SYSTEM_PROMPT = (
+    'You are an expert competition mathematician. '
+    'Solve the problem step by step. '
+    'The final answer is always an integer. '
+    'Put your final integer answer inside ' + BS + 'boxed{}.'
+)
+
+
+def majority_vote(answers):
+    votes = [a for a in answers if a is not None]
+    return Counter(votes).most_common(1)[0][0] if votes else 0
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--mode', choices=['greedy', 'sc', 'both'], default='both')
+    ap.add_argument('--adapter', default=None, help='LoRA 어댑터 경로 (없으면 베이스)')
+    ap.add_argument('--n', type=int, default=8, help='SC 샘플 수')
+    ap.add_argument('--val-n', type=int, default=500)
+    ap.add_argument('--seed', type=int, default=123)
+    args = ap.parse_args()
+
+    from vllm import LLM, SamplingParams
+    from vllm.lora.request import LoRARequest
+
+    df = pd.read_csv('deep-learning-challenge-2026/deep_chal_math_train.csv')
+    df.columns = df.columns.str.strip()
+    val = df.sample(args.val_n, random_state=args.seed).reset_index(drop=True)
+
+    llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
+              gpu_memory_utilization=0.92,
+              enable_lora=args.adapter is not None, max_lora_rank=64)
+    tok = llm.get_tokenizer()
+    lora = LoRARequest('adapter', 1, args.adapter) if args.adapter else None
+
+    prompts = [tok.apply_chat_template(
+        [{'role': 'system', 'content': SYSTEM_PROMPT},
+         {'role': 'user', 'content': q}],
+        tokenize=False, add_generation_prompt=True) for q in val['question']]
+
+    results = {'adapter': args.adapter, 'val_n': args.val_n}
+
+    def run(name, sp):
+        outs = llm.generate(prompts, sp, lora_request=lora)
+        preds = [majority_vote([extract_answer(c.text) for c in o.outputs]) for o in outs]
+        acc = sum(int(p) == int(a) for p, a in zip(preds, val['answer'])) / len(val)
+        print(f'[{name}] 정확도: {acc:.1%}')
+        results[name] = acc
+        return preds
+
+    if args.mode in ('greedy', 'both'):
+        run('greedy', SamplingParams(temperature=0, max_tokens=2048))
+    if args.mode in ('sc', 'both'):
+        run(f'sc_n{args.n}', SamplingParams(n=args.n, temperature=0.7, top_p=0.8,
+                                            max_tokens=2048, seed=42))
+
+    os.makedirs('results', exist_ok=True)
+    tag = (args.adapter or 'base').replace('/', '_')
+    out = f'results/eval_{tag}.json'
+    json.dump(results, open(out, 'w'), indent=2)
+    print('저장:', out)
+
+
+if __name__ == '__main__':
+    main()

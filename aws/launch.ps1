@@ -1,5 +1,7 @@
-# AWS GPU 인스턴스 실행 스크립트
-# 사용법: powershell -File aws\launch.ps1 [-Spot] [-Type g5.xlarge] [-Region ap-northeast-2]
+# AWS GPU 인스턴스 실행 — 완전 격리 버전
+# 원칙: ① 전용 프로필(ajudl)만 사용 ② 모든 자원은 전용 VPC에 새로 생성 + Project=ajudl 태그
+#       ③ 이 스크립트가 만든 자원 id는 aws/state.json에 기록, 그 외에는 절대 조작하지 않음
+# 사용법: powershell -File aws\launch.ps1 [-Spot] [-Type g5.xlarge]
 param(
     [string]$Type = "g5.xlarge",
     [string]$Region = "ap-northeast-2",
@@ -7,65 +9,99 @@ param(
     [int]$DiskGB = 200
 )
 $ErrorActionPreference = "Stop"
+$Profile = "ajudl"
 $KeyName = "ajudl-gpu"
-$SgName = "ajudl-gpu-sg"
 $PemPath = "$env:USERPROFILE\.ssh\$KeyName.pem"
+$StatePath = Join-Path $PSScriptRoot "state.json"
+$Tag = "ResourceType=REPLACE,Tags=[{Key=Project,Value=ajudl},{Key=Name,Value=REPLACE_NAME}]"
 
-# 0. 자격 증명 확인
-aws sts get-caller-identity --region $Region | Out-Null
-if (-not $?) { Write-Host "aws configure 먼저 실행하세요"; exit 1 }
+function AwsCmd { param([string[]]$CmdArgs)
+    $out = aws @CmdArgs --profile $Profile --region $Region --output text
+    if (-not $?) { throw "aws 명령 실패: $($CmdArgs -join ' ')" }
+    return $out
+}
 
-# 1. 최신 딥러닝 AMI (Ubuntu 22.04, NVIDIA 드라이버+PyTorch 포함)
-$ami = aws ec2 describe-images --region $Region --owners amazon `
-    --filters "Name=name,Values=Deep Learning OSS Nvidia Driver AMI GPU PyTorch*Ubuntu 22.04*" "Name=state,Values=available" `
-    --query "sort_by(Images,&CreationDate)[-1].[ImageId,Name]" --output text
-$amiId, $amiName = $ami -split "`t"
-Write-Host "AMI: $amiId ($amiName)"
+# 0. 전용 프로필 확인 — 기본 프로필은 절대 쓰지 않는다
+aws sts get-caller-identity --profile $Profile --region $Region | Out-Null
+if (-not $?) {
+    Write-Host "전용 프로필이 없습니다. 먼저 실행:  aws configure --profile ajudl"
+    Write-Host "(ajudl 전용 IAM 사용자의 액세스 키 사용 — aws/README.md 0장 참고)"
+    exit 1
+}
 
-# 2. 키페어 (없으면 생성해 ~/.ssh에 저장)
-$null = aws ec2 describe-key-pairs --key-names $KeyName --region $Region 2>$null
+# 상태 파일 로드
+$state = @{}
+if (Test-Path $StatePath) {
+    (Get-Content $StatePath | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $state[$_.Name] = $_.Value }
+}
+
+# 1. 전용 VPC (기존 네트워크 불가침 — 우리 것만 새로 만든다)
+if (-not $state.vpcId) {
+    $vpcId = AwsCmd @("ec2","create-vpc","--cidr-block","10.99.0.0/16",
+        "--tag-specifications","ResourceType=vpc,Tags=[{Key=Project,Value=ajudl},{Key=Name,Value=ajudl-vpc}]",
+        "--query","Vpc.VpcId")
+    AwsCmd @("ec2","modify-vpc-attribute","--vpc-id",$vpcId,"--enable-dns-hostnames") | Out-Null
+    $subnetId = AwsCmd @("ec2","create-subnet","--vpc-id",$vpcId,"--cidr-block","10.99.1.0/24",
+        "--tag-specifications","ResourceType=subnet,Tags=[{Key=Project,Value=ajudl},{Key=Name,Value=ajudl-subnet}]",
+        "--query","Subnet.SubnetId")
+    AwsCmd @("ec2","modify-subnet-attribute","--subnet-id",$subnetId,"--map-public-ip-on-launch") | Out-Null
+    $igwId = AwsCmd @("ec2","create-internet-gateway",
+        "--tag-specifications","ResourceType=internet-gateway,Tags=[{Key=Project,Value=ajudl},{Key=Name,Value=ajudl-igw}]",
+        "--query","InternetGateway.InternetGatewayId")
+    AwsCmd @("ec2","attach-internet-gateway","--internet-gateway-id",$igwId,"--vpc-id",$vpcId) | Out-Null
+    $rtbId = AwsCmd @("ec2","describe-route-tables","--filters","Name=vpc-id,Values=$vpcId","--query","RouteTables[0].RouteTableId")
+    AwsCmd @("ec2","create-tags","--resources",$rtbId,"--tags","Key=Project,Value=ajudl","Key=Name,Value=ajudl-rtb") | Out-Null
+    AwsCmd @("ec2","create-route","--route-table-id",$rtbId,"--destination-cidr-block","0.0.0.0/0","--gateway-id",$igwId) | Out-Null
+    $state.vpcId = $vpcId; $state.subnetId = $subnetId; $state.igwId = $igwId; $state.rtbId = $rtbId
+    Write-Host "전용 VPC 생성: $vpcId"
+}
+
+# 2. 키페어
+$null = aws ec2 describe-key-pairs --key-names $KeyName --profile $Profile --region $Region 2>$null
 if (-not $?) {
     if (-not (Test-Path "$env:USERPROFILE\.ssh")) { New-Item -ItemType Directory "$env:USERPROFILE\.ssh" | Out-Null }
-    aws ec2 create-key-pair --key-name $KeyName --region $Region --query KeyMaterial --output text | Out-File -Encoding ascii $PemPath
+    aws ec2 create-key-pair --key-name $KeyName --profile $Profile --region $Region `
+        --tag-specifications "ResourceType=key-pair,Tags=[{Key=Project,Value=ajudl}]" `
+        --query KeyMaterial --output text | Out-File -Encoding ascii $PemPath
     Write-Host "키 생성: $PemPath"
 }
+$state.keyName = $KeyName
 
-# 3. 보안그룹 (내 IP만 SSH 허용)
+# 3. 보안그룹 (전용 VPC 안, 내 IP만 SSH)
 $myIp = (Invoke-RestMethod "https://api.ipify.org")
-$sgId = aws ec2 describe-security-groups --region $Region --filters "Name=group-name,Values=$SgName" --query "SecurityGroups[0].GroupId" --output text
-if ($sgId -eq "None" -or [string]::IsNullOrEmpty($sgId)) {
-    $sgId = aws ec2 create-security-group --group-name $SgName --description "ajudl gpu ssh" --region $Region --query GroupId --output text
-    aws ec2 authorize-security-group-ingress --group-id $sgId --protocol tcp --port 22 --cidr "$myIp/32" --region $Region | Out-Null
-    Write-Host "보안그룹 생성: $sgId (SSH from $myIp)"
-} else {
-    # IP가 바뀌었을 수 있으니 현재 IP 규칙 추가 시도 (이미 있으면 에러 무시)
-    aws ec2 authorize-security-group-ingress --group-id $sgId --protocol tcp --port 22 --cidr "$myIp/32" --region $Region 2>$null | Out-Null
+if (-not $state.sgId) {
+    $sgId = AwsCmd @("ec2","create-security-group","--group-name","ajudl-gpu-sg",
+        "--description","ajudl gpu ssh","--vpc-id",$state.vpcId,
+        "--tag-specifications","ResourceType=security-group,Tags=[{Key=Project,Value=ajudl}]",
+        "--query","GroupId")
+    $state.sgId = $sgId
 }
+aws ec2 authorize-security-group-ingress --group-id $state.sgId --protocol tcp --port 22 `
+    --cidr "$myIp/32" --profile $Profile --region $Region 2>$null | Out-Null
 
-# 4. 인스턴스 시작
-$marketOpts = @()
-if ($Spot) { $marketOpts = @("--instance-market-options", "MarketType=spot,SpotOptions={SpotInstanceType=one-time}") }
-$bootstrapPath = Join-Path $PSScriptRoot "bootstrap.sh"
-$instanceId = aws ec2 run-instances --region $Region `
-    --image-id $amiId --instance-type $Type `
-    --key-name $KeyName --security-group-ids $sgId `
-    --block-device-mappings "DeviceName=/dev/sda1,Ebs={VolumeSize=$DiskGB,VolumeType=gp3}" `
-    --user-data "file://$bootstrapPath" `
-    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=ajudl-train}]" `
-    @marketOpts `
-    --query "Instances[0].InstanceId" --output text
+# 4. AMI + 인스턴스
+$amiId = AwsCmd @("ec2","describe-images","--owners","amazon",
+    "--filters","Name=name,Values=Deep Learning OSS Nvidia Driver AMI GPU PyTorch*Ubuntu 22.04*","Name=state,Values=available",
+    "--query","sort_by(Images,&CreationDate)[-1].ImageId")
+Write-Host "AMI: $amiId"
+
+$runArgs = @("ec2","run-instances",
+    "--image-id",$amiId,"--instance-type",$Type,
+    "--key-name",$KeyName,"--security-group-ids",$state.sgId,"--subnet-id",$state.subnetId,
+    "--block-device-mappings","DeviceName=/dev/sda1,Ebs={VolumeSize=$DiskGB,VolumeType=gp3}",
+    "--user-data","file://$(Join-Path $PSScriptRoot 'bootstrap.sh')",
+    "--instance-initiated-shutdown-behavior","stop",
+    "--tag-specifications","ResourceType=instance,Tags=[{Key=Project,Value=ajudl},{Key=Name,Value=ajudl-train}]",
+    "--query","Instances[0].InstanceId")
+if ($Spot) { $runArgs += @("--instance-market-options","MarketType=spot,SpotOptions={SpotInstanceType=persistent,InstanceInterruptionBehavior=stop}") }
+$instanceId = AwsCmd $runArgs
+$state.instanceId = $instanceId
+$state | ConvertTo-Json | Out-File -Encoding utf8 $StatePath
 Write-Host "인스턴스 시작: $instanceId (type=$Type, spot=$($Spot.IsPresent))"
-$instanceId | Out-File -Encoding ascii (Join-Path $PSScriptRoot "instance.txt")
 
-# 5. 실행 대기 후 접속 정보 출력
-aws ec2 wait instance-running --instance-ids $instanceId --region $Region
-$ip = aws ec2 describe-instances --instance-ids $instanceId --region $Region `
-    --query "Reservations[0].Instances[0].PublicIpAddress" --output text
+aws ec2 wait instance-running --instance-ids $instanceId --profile $Profile --region $Region
+$ip = AwsCmd @("ec2","describe-instances","--instance-ids",$instanceId,"--query","Reservations[0].Instances[0].PublicIpAddress")
 Write-Host ""
-Write-Host "=== 준비 완료 (부팅 스크립트가 2~3분 더 돕니다) ==="
-Write-Host "접속:   ssh -i $PemPath ubuntu@$ip"
-Write-Host "확인:   ls ~/BOOTSTRAP_DONE 이 보이면 부팅 세팅 완료"
-Write-Host "다음:   tmux new -s train  →  bash ~/setup_env.sh"
-Write-Host ""
-Write-Host "정지:   aws ec2 stop-instances --instance-ids $instanceId --region $Region"
-Write-Host "삭제:   aws ec2 terminate-instances --instance-ids $instanceId --region $Region"
+Write-Host "=== 준비 완료 (부팅 스크립트 2~3분 더 소요) ==="
+Write-Host "접속:  ssh -i $PemPath ubuntu@$ip"
+Write-Host "다음:  tmux new -s train  →  bash ~/setup_env.sh  (aws/README.md 2장)"
