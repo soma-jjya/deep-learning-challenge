@@ -27,7 +27,15 @@
 
 **하이브리드**: 추론·평가·제출 = Kaggle (무료, 최종 추론 재현성도 Kaggle 환경 기준) / RFT 데이터 생성·QLoRA 학습 = AWS (9시간 벽·T4 속도 병목 회피, 스팟 총 $30~80 예상). 어댑터는 AWS→Kaggle로 가져와 추론.
 
-## 현재 상태 (2026-08-05) — AWS 자율 루프 가동 중 🟢
+## 현재 상태 (2026-08-06) — 첫 사이클 결과 도착 🟢
+
+- **신기준 기준선 (exp05, 유효 검증 483문항)**: greedy **69.4%** / SC n=8 **74.7%** — H2(SC) +5.3%p 확인. 목표 85%까지 10.3%p
+- **RFT 데이터 완성 (exp04·04b)**: 커버리지 79.9%(13,190문제), 필터 후 풀이 36,144개 → data/sft.jsonl (서버에만 존재)
+- **exp06 QLoRA 학습 진행 중** → 완료 시 exp07(SC 스케일)·exp08(반복 RFT) 자동 연쇄
+- pass@6=79.9% vs SC=74.7% 간극 주목: 다수결이 놓치는 ~5%p는 검증자(H9)·가중 투표(H16)가 노릴 영역
+- 참고: 집 IP 바뀌면 SSH 막힘 → SG에 현재 IP authorize (2026-08-06 1회 발생·처리)
+
+## 이전 상태 (2026-08-05) — AWS 자율 루프 가동
 
 - **서버 라이브**: i-006cb0ac24f1ba3b2 (g5.xlarge), 러너가 exp04(RFT 생성)부터 자율 실행 중. watchdog cron 등록됨(유휴 30분 → 자동 stop). IP는 재시작마다 바뀜 → `aws\start.ps1`이 출력
 - 서버 세팅 내역: 토큰은 `~/.ajudl_env`(GitHub classic PAT — JinVibe를 collaborator로 초대해 발급, Claude 구독 토큰, wandb 키, NTFY_TOPIC=ajudl-rvcmx3ae). vLLM 0.26.0 + torch 2.11 + unsloth 확인. git identity `ajudl-server`, core.fileMode false

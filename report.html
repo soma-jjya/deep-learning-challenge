@@ -114,10 +114,10 @@
     <table>
       <thead><tr><th>가설</th><th>내용</th><th>기대</th><th>상태</th></tr></thead>
       <tbody>
-        <tr><td>H1</td><td>max 토큰 2048 + 소수점-안전 답 추출</td><td class="num">+2~4%p</td><td>노트북 02 (exp02)</td></tr>
-        <tr><td>H2</td><td>Self-Consistency n=8 다수결</td><td class="num">+5~10%p</td><td>노트북 02 (exp03)</td></tr>
-        <tr><td>H3</td><td>RFT: 자체 생성 풀이 중 정답만 QLoRA SFT</td><td class="num">+5~15%p</td><td>대기</td></tr>
-        <tr><td>H4</td><td>NuminaMath-CoT 등 공개 CoT 데이터 혼합</td><td class="num">+3~8%p</td><td>대기</td></tr>
+        <tr><td>H1</td><td>max 토큰 2048 + 소수점-안전 답 추출</td><td class="num">+2~4%p</td><td>✅ 적용됨 (exp05에 포함)</td></tr>
+        <tr><td>H2</td><td>Self-Consistency n=8 다수결</td><td class="num">+5~10%p</td><td>✅ <b>확인: +5.3%p</b> (exp05, 69.4→74.7%)</td></tr>
+        <tr><td>H3</td><td>RFT: 자체 생성 풀이 중 정답만 QLoRA SFT</td><td class="num">+5~15%p</td><td>🔄 데이터 완성(36,144 풀이, 커버리지 79.9%) → exp06 학습 중</td></tr>
+        <tr><td>H4</td><td>NuminaMath-CoT 등 공개 CoT 데이터 혼합</td><td class="num">+3~8%p</td><td>대기 (H12로 구체화)</td></tr>
         <tr><td>H5</td><td style="text-decoration:line-through">TIR: 모델이 쓴 파이썬 실행으로 계산 보조</td><td class="num">–</td><td>❌ 금지 (운영진 Q&A: 추론 시 코드 실행·툴 호출 불허)</td></tr>
         <tr><td>H6</td><td>양자화+vLLM (SC 샘플 수 확대용 속도)</td><td class="num">간접</td><td>병목 시</td></tr>
         <tr><td>H7</td><td>GRPO 강화학습</td><td class="num">불확실</td><td>후순위</td></tr>
@@ -165,8 +165,10 @@
 // local/lb는 %, null이면 미측정. jump에는 직전 대비 급상승 이유를 쓴다.
 const EXPERIMENTS = [
   { exp: 'exp01', date: '2026-07-31', method: '베이스라인: 파인튜닝 없음, greedy, max 1024토큰, boxed 추출',
-    local: 66.0, lb: 64.8, note: '로컬(50문제)≈리더보드 확인. 잘림·소수점 오추출 발견', jump: null },
-  // { exp: 'exp02', date: '', method: 'H1: max 2048 + 소수점-안전 추출', local: null, lb: null, note: '', jump: null },
+    local: 66.0, lb: 64.8, note: '로컬(50문제)≈리더보드 확인. 잘림·소수점 오추출 발견. 리더보드는 구기준(1000문항)', jump: null },
+  { exp: 'exp05', date: '2026-08-05', method: 'AWS 신기준 기준선: greedy 69.4% → SC n=8 다수결 74.7% (vLLM, 수리된 추출기)',
+    local: 74.7, lb: null, note: '검증 세트가 "오류 문항 제외 483개"로 정비됨 — exp01(50문제·불량 추출)과는 측정 조건이 다름. RFT 데이터 36,144개 풀이도 이날 완성(exp04·04b)',
+    jump: 'Self-Consistency 다수결이 greedy 대비 +5.3%p (H2 확인). 나머지 상승분은 추출기 수리(H1)·검증 세트 정비의 복합 효과' },
 ];
 const TARGET = 85;
 
