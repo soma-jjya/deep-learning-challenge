@@ -1,0 +1,9 @@
+﻿{
+    "keyName":  "ajudl-gpu",
+    "igwId":  "igw-04fc36f1297d2eb5e",
+    "sgId":  "sg-0852061514e446ac3",
+    "subnetId":  "subnet-0f0b72b6d151de14f",
+    "vpcId":  "vpc-03b2f2f8775b1f8f7",
+    "rtbId":  "rtb-0104392ea0d94b042",
+    "instanceId":  "i-006cb0ac24f1ba3b2"
+}

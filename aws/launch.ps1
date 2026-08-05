@@ -53,12 +53,13 @@ if (-not $state.vpcId) {
     AwsCmd @("ec2","create-tags","--resources",$rtbId,"--tags","Key=Project,Value=ajudl","Key=Name,Value=ajudl-rtb") | Out-Null
     AwsCmd @("ec2","create-route","--route-table-id",$rtbId,"--destination-cidr-block","0.0.0.0/0","--gateway-id",$igwId) | Out-Null
     $state.vpcId = $vpcId; $state.subnetId = $subnetId; $state.igwId = $igwId; $state.rtbId = $rtbId
+    $state | ConvertTo-Json | Out-File -Encoding utf8 $StatePath   # 즉시 기록 (고아 자원 방지)
     Write-Host "전용 VPC 생성: $vpcId"
 }
 
-# 2. 키페어
-$null = aws ec2 describe-key-pairs --key-names $KeyName --profile $Profile --region $Region 2>$null
-if (-not $?) {
+# 2. 키페어 (cmd /c로 실행해 stderr가 예외로 승격되는 PS5.1 문제 회피)
+cmd /c "aws ec2 describe-key-pairs --key-names $KeyName --profile $Profile --region $Region >nul 2>&1"
+if ($LASTEXITCODE -ne 0) {
     if (-not (Test-Path "$env:USERPROFILE\.ssh")) { New-Item -ItemType Directory "$env:USERPROFILE\.ssh" | Out-Null }
     aws ec2 create-key-pair --key-name $KeyName --profile $Profile --region $Region `
         --tag-specifications "ResourceType=key-pair,Tags=[{Key=Project,Value=ajudl}]" `
@@ -75,11 +76,16 @@ if (-not $state.sgId) {
         "--tag-specifications","ResourceType=security-group,Tags=[{Key=Project,Value=ajudl}]",
         "--query","GroupId")
     $state.sgId = $sgId
+    $state | ConvertTo-Json | Out-File -Encoding utf8 $StatePath
 }
-aws ec2 authorize-security-group-ingress --group-id $state.sgId --protocol tcp --port 22 `
-    --cidr "$myIp/32" --profile $Profile --region $Region 2>$null | Out-Null
+cmd /c "aws ec2 authorize-security-group-ingress --group-id $($state.sgId) --protocol tcp --port 22 --cidr $myIp/32 --profile $Profile --region $Region >nul 2>&1"
 
-# 4. AMI + 인스턴스
+# 4. user-data 준비 — CRLF→LF 정규화 + BOM 없는 UTF-8로 임시 파일 생성, fileb://로 전달
+$raw = [IO.File]::ReadAllText((Join-Path $PSScriptRoot "bootstrap.sh"))
+$tmpUd = Join-Path $env:TEMP "ajudl_userdata.sh"
+[IO.File]::WriteAllText($tmpUd, ($raw -replace "`r`n", "`n"), (New-Object System.Text.UTF8Encoding($false)))
+
+# 5. AMI + 인스턴스
 $amiId = AwsCmd @("ec2","describe-images","--owners","amazon",
     "--filters","Name=name,Values=Deep Learning OSS Nvidia Driver AMI GPU PyTorch*Ubuntu 22.04*","Name=state,Values=available",
     "--query","sort_by(Images,&CreationDate)[-1].ImageId")
@@ -89,7 +95,7 @@ $runArgs = @("ec2","run-instances",
     "--image-id",$amiId,"--instance-type",$Type,
     "--key-name",$KeyName,"--security-group-ids",$state.sgId,"--subnet-id",$state.subnetId,
     "--block-device-mappings","DeviceName=/dev/sda1,Ebs={VolumeSize=$DiskGB,VolumeType=gp3}",
-    "--user-data","file://$(Join-Path $PSScriptRoot 'bootstrap.sh')",
+    "--user-data","fileb://$tmpUd",
     "--instance-initiated-shutdown-behavior","stop",
     "--tag-specifications","ResourceType=instance,Tags=[{Key=Project,Value=ajudl},{Key=Name,Value=ajudl-train}]",
     "--query","Instances[0].InstanceId")

@@ -7,8 +7,7 @@ aws ec2 start-instances --instance-ids $state.instanceId --profile $Profile --re
 aws ec2 wait instance-running --instance-ids $state.instanceId --profile $Profile --region $Region
 
 $myIp = (Invoke-RestMethod "https://api.ipify.org")
-aws ec2 authorize-security-group-ingress --group-id $state.sgId --protocol tcp --port 22 `
-    --cidr "$myIp/32" --profile $Profile --region $Region 2>$null | Out-Null
+cmd /c "aws ec2 authorize-security-group-ingress --group-id $($state.sgId) --protocol tcp --port 22 --cidr $myIp/32 --profile $Profile --region $Region >nul 2>&1"
 
 $ip = aws ec2 describe-instances --instance-ids $state.instanceId --profile $Profile --region $Region `
     --query "Reservations[0].Instances[0].PublicIpAddress" --output text
