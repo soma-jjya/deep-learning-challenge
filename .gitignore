@@ -1,0 +1,5 @@
+aws/.github_token.txt
+runs/
+data/
+outputs/
+*.log

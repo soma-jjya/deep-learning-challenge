@@ -19,7 +19,15 @@
 
 **하이브리드**: 추론·평가·제출 = Kaggle (무료, 최종 추론 재현성도 Kaggle 환경 기준) / RFT 데이터 생성·QLoRA 학습 = AWS (9시간 벽·T4 속도 병목 회피, 스팟 총 $30~80 예상). 어댑터는 AWS→Kaggle로 가져와 추론.
 
-## 현재 상태 (2026-08-04)
+## 현재 상태 (2026-08-05) — AWS 자율 루프 가동 중 🟢
+
+- **서버 라이브**: i-006cb0ac24f1ba3b2 (g5.xlarge), 러너가 exp04(RFT 생성)부터 자율 실행 중. watchdog cron 등록됨(유휴 30분 → 자동 stop). IP는 재시작마다 바뀜 → `aws\start.ps1`이 출력
+- 서버 세팅 내역: 토큰은 `~/.ajudl_env`(GitHub classic PAT — JinVibe를 collaborator로 초대해 발급, Claude 구독 토큰, wandb 키, NTFY_TOPIC=ajudl-rvcmx3ae). vLLM 0.26.0 + torch 2.11 + unsloth 확인. git identity `ajudl-server`, core.fileMode false
+- 서버 접속: `ssh -i ~/.ssh/ajudl-gpu.pem ubuntu@<IP>` / 진행 확인: `tail -f ~/work/deep-learning-challenge/runner.log`
+- 결과 수신: ntfy.sh/ajudl-rvcmx3ae (폰) + 서버가 EXPERIMENTS.md·queue.md를 커밋/푸시 → 로컬은 git pull로 동기화. **로컬에서 수정 후엔 반드시 push** (서버가 매 실험 전 pull)
+- 보안 메모: 사용자가 토큰들을 채팅에 붙여넣은 적 있음(2026-08-05) → 대회 후 AWS 키·PAT·Claude 토큰·wandb 키 로테이션 권장
+
+## 이전 상태 (2026-08-04)
 
 - exp01 베이스라인 완료: 로컬 66% (50문제), **리더보드 0.648** — 로컬≈LB 확인됨
 - 노트북 02 백슬래시 버그 수정 완료 (chr(92) 조립 방식) → exp02·03 재실행 대기
