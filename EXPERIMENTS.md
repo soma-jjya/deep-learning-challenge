@@ -42,6 +42,15 @@
 | 6c | 2026-08-06 | **QLoRA SFT 재시도 (H3+H14) — 재실패** — r16/lr5e-5/ep1(완만), 문제당 최단 풀이 1개. greedy 67.9%(-1.5%p), SC n8 73.3%(-1.4%p) | 67.9%(greedy)/73.3%(SC) | - | remote/train_qlora.py |
 | 8 | 2026-08-06 | 반복 RFT (H10) — exp06c 어댑터가 베이스보다 낮아 조건 불충족, **스킵** | - | - | - |
 | 10 | 2026-08-06 | 확신도 가중 투표 (H16, 베이스) — `remote/eval_vllm.py --mode sc --n 8`, 같은 표본에서 일반 다수결 73.7%(356/483) vs 가중 투표 **74.5%**(360/483) | 74.5%(가중) | - | remote/eval_vllm.py |
+| 9a | 2026-08-06 | NuminaMath-CoT 외부 데이터 준비 (H12) — `remote/prep_numina.py --take 30000`, 정수답·boxed·길이(50~2500자) 필터 + 검증셋 문제 텍스트 제외 → 외부 30,000개 채택, 자체(`data/sft_short.jsonl`) 12,923개와 병합·셔플 → `data/sft_mix.jsonl` 42,923개 | - | - | remote/prep_numina.py |
+
+## 실험 9a: NuminaMath 외부 데이터 준비 (2026-08-06, AWS)
+
+- **설정**: `remote/prep_numina.py --take 30000` — AI-MO/NuminaMath-CoT(Apache 2.0, 원본 859,494개)에서 셔플 후 순회하며 채택: 풀이 길이 50~2500자, `boxed` 포함, `extract_answer`로 정수 답 추출 가능, 검증 세트(seed=123, 500문항) 질문 텍스트와 겹치지 않음. 채택된 외부 데이터를 자체 RFT 최단 풀이 데이터(`data/sft_short.jsonl`, 문제당 1개)와 병합·셔플
+- **결과**: 외부 데이터 **30,000개** 채택 → `data/numina.jsonl`. 자체 12,923개와 합쳐 총 **42,923개** → `data/sft_mix.jsonl` (H12 학습용 입력, exp09b에서 사용)
+- **결과 파일**: `data/numina.jsonl`(30,000줄), `data/sft_mix.jsonl`(42,923줄), 로그 `exp09a.log`
+- **사고 기록**: 이 실행도 이전 서버 세션에서 이미 완료돼 있었으나(파일·로그 08-06 08:07 생성) 기록·커밋 전에 세션이 중단된 것으로 추정. 이번 세션에서 산출물을 검증(파일 라인 수 일치 확인) 후 기록만 대행, 재실행하지 않음. 같은 세션에서 이어서 `remote/train_qlora.py`로 exp09b 학습(`outputs/qlora_mix/qlora_r16_lr0.0001_ep1_final`, train loss 0.3994, [wandb fvh36wox](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/fvh36wox))까지도 이미 완료돼 있었음 — 평가만 이번 세션에서 실행
+- **다음**: exp09b 평가(`remote/eval_vllm.py --mode both --adapter outputs/qlora_mix/qlora_r16_lr0.0001_ep1_final`)
 
 ## 실험 10: 확신도 가중 투표 (2026-08-06, AWS)
 
