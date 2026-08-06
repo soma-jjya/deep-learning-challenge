@@ -100,8 +100,9 @@ def main():
     if args.mode in ('greedy', 'both'):
         run('greedy', SamplingParams(temperature=0, max_tokens=2048))
     if args.mode in ('sc', 'both'):
+        # logprobs=0: cumulative_logprob만 필요(가중 투표용), 토큰별 상세 리스트는 불필요 → 비용 최소화
         run(f'sc_n{args.n}', SamplingParams(n=args.n, temperature=0.7, top_p=0.8,
-                                            max_tokens=2048, seed=42))
+                                            max_tokens=2048, seed=42, logprobs=0))
 
     os.makedirs('results', exist_ok=True)
     tag = (args.adapter or 'base').replace('/', '_')
