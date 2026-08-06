@@ -9,18 +9,18 @@
 |---|---|---|---|---|
 | H1 | max 토큰 1024→2048 + 소수점 오추출 수정 | +2~4%p | exp01 오답 분석 | 노트북 02 반영 |
 | H2 | Self-Consistency n=8 (temp 0.7 다수결) | +5~10%p | Wang et al. 2022, AIMO 우승 사례 | 노트북 02 반영 |
-| H3 | RFT: 자체 생성 CoT 중 정답만 골라 QLoRA SFT | +5~15%p | RFT 논문, STaR | 대기 |
+| H3 | RFT: 자체 생성 CoT 중 정답만 골라 QLoRA SFT | +5~15%p | RFT 논문, STaR | ❌ 2연속 실패 (exp06, exp06c) — 정체 2/3, lr·데이터량 조절로도 회복 안 됨 |
 | H4 | 외부 CoT 데이터 혼합 (NuminaMath-CoT) | +3~8%p | NuminaMath 1위 솔루션 | 대기 |
 | H5 | ~~TIR: 모델이 쓴 파이썬을 실행해 계산 보조~~ | - | - | ❌ **금지** (운영진 Q&A: 추론 시 코드 실행·툴 호출 불허) |
 | H6 | GPTQ/AWQ 양자화 + vLLM으로 SC 샘플 수 증대 | 간접 (속도) | NuminaMath T4 최적화 | 속도 병목 시 |
 | H7 | GRPO 강화학습 | 불확실 | DeepSeekMath | 후순위 |
 | H8 | 멀티 LoRA 어댑터 앙상블 (같은 베이스, 다수결 결합) | +2~5%p | SC의 다양성 확장 | ⏳ 운영진 질의 중 |
 | H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ⏳ 운영진 질의 중 |
-| H10 | 반복 RFT: 학습된 모델로 데이터 재생성 → 재학습 (2~3라운드) | +3~8%p | STaR의 반복 루프 | exp06 후 자동 (큐 exp08) |
+| H10 | 반복 RFT: 학습된 모델로 데이터 재생성 → 재학습 (2~3라운드) | +3~8%p | STaR의 반복 루프 | ⏭️ 스킵 (exp08) — exp06c 어댑터가 베이스보다 낮아 조건 미충족 |
 | H11 | SC 샘플 수 스케일링 (8→16→32) + temperature 탐색 | +1~4%p | 다수결은 표본이 클수록 안정 | ✅ 완료 (exp07) — n=8→16 +0.9%p로 체감, n=32는 비용 대비 보류 |
 | H12 | 외부 CoT 데이터 혼합 비율 실험 (NuminaMath-CoT 정수답 부분집합 0/30/70%) | +3~8%p | NuminaMath 우승, H4 구체화 | 대기 (데이터 준비 스크립트 필요) |
 | H13 | 오답 유형 분석 → 취약 유형 표적 데이터 증강 (상용 API 활용 허용 범위) | +2~6%p | 오답 분석 기반 커리큘럼 | exp05 오답 분석 후 |
-| H14 | 풀이 길이 통제: 짧은 정답 풀이 우선 학습 (긴 풀이는 3B에 역효과) | +1~4%p | Small Models Struggle 논문 | H10과 결합 가능 |
+| H14 | 풀이 길이 통제: 짧은 정답 풀이 우선 학습 (긴 풀이는 3B에 역효과) | +1~4%p | Small Models Struggle 논문 | ❌ 완료 (exp06c, lr완화와 결합) — 효과 없음, 여전히 베이스보다 낮음 |
 | H15 | DPO: 같은 문제의 정답 풀이(chosen) vs 오답 풀이(rejected) 쌍 학습 | +2~6%p | RFT 부산물 데이터 재활용 | SFT 정체 시 |
 | H16 | 로그확률 가중 투표 (모델 출력의 확신도로 표 가중치 — 모델 출력만 사용이라 규칙 적합) | +1~3%p | Entropy-weighted SC (AIMO-3) | H11 후 |
 
@@ -39,6 +39,18 @@
 | 6b | 2026-08-06 | 리더보드 제출 파일 생성 — exp06 어댑터가 베이스보다 나빠 **어댑터 없이** `remote/make_submission.py --n 8 --tag base` 실행 (SC n=8, 831문항) → results/submission_base.csv | 74.7% | **0.77015** ✅ | remote/make_submission.py |
 | 7 | 2026-08-06 | SC 스케일 (H11, 베이스) — n=4: 72.7%, n=8: 74.7%, **n=16: 75.6%** (+0.9%p vs n8). 표본 2배당 ~+1%p의 완만한 수익 곡선 | 75.6% (n16) | - | remote/eval_vllm.py |
 | 7 | 2026-08-06 | SC 샘플 수 스케일링 (H11) — 베이스 모델, `remote/eval_vllm.py --mode sc --n 16`/`--n 4` (검증 483문항) | n=4 72.7%(351) / n=8 74.7%(361,exp05) / n=16 75.6%(365) | - | remote/eval_vllm.py |
+| 6c | 2026-08-06 | **QLoRA SFT 재시도 (H3+H14) — 재실패** — r16/lr5e-5/ep1(완만), 문제당 최단 풀이 1개. greedy 67.9%(-1.5%p), SC n8 73.3%(-1.4%p) | 67.9%(greedy)/73.3%(SC) | - | remote/train_qlora.py |
+| 8 | 2026-08-06 | 반복 RFT (H10) — exp06c 어댑터가 베이스보다 낮아 조건 불충족, **스킵** | - | - | - |
+
+## 실험 6c: QLoRA SFT 재시도 — 완만한 학습 + 최단 풀이 (2026-08-06, AWS)
+
+- **설정**: exp06 실패 대응 1단계. `data/sft.jsonl`에서 문제당 가장 짧은 정답 풀이 1개만 남긴 `data/sft_short.jsonl` 생성 → `remote/train_qlora.py`를 lr=5e-5(exp06의 1/4), epochs=1(exp06의 절반)로 학습(train loss 0.2429, [wandb sv8lkhho](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/sv8lkhho)) → 어댑터 `outputs/qlora_gentle/qlora_r16_lr5e-05_ep1_final` → `remote/eval_vllm.py --mode both --adapter ...` (검증 483문항, exp05·06·07과 동일 세트)
+- **결과**: greedy **67.9% (328/483)**, SC n=8 **73.3% (354/483)** — 베이스(69.4%/74.7%) 대비 greedy −1.5%p, SC −1.4%p. exp06(68.3%/73.5%)과 비교해도 **거의 동일하거나 소폭 더 낮음**
+- **의미**: 학습률을 1/4로, epoch을 절반으로, 학습 데이터도 문제당 최단 풀이 1개로 줄였음에도 실패 폭이 줄지 않음 → **원인 가설 1(학습률 과함)은 주 원인이 아니었을 가능성이 높음**. 남은 원인 가설(2. 자기증류로 출력 다양성 감소, 3. 이미 푸는 문제만 학습해 실력 확장 없음) 쪽에 무게가 실림
+- **정체 카운트 갱신**: QLoRA SFT 계열 시도 2연속 실패 (exp06, exp06c) → **정체 카운트 2/3**. 다음 QLoRA류 시도가 또 실패하면 근본 전환(GRPO/외부데이터 중심 재구성/DPO 등) 착수
+- **후속 결정 (exp08)**: 반복 RFT(H10)는 "exp06c 어댑터가 베이스보다 좋을 때만 실행" 조건이었으나 조건 미충족 → **스킵**. 대신 백로그의 H12(외부 데이터 혼합)·H15(DPO)가 다음 유력 후보
+- **결과 파일**: `results/eval_outputs_qlora_gentle_qlora_r16_lr5e-05_ep1_final.json`, 어댑터는 삭제하지 않고 보존
+- **다음**: 큐 비어 있음 — 로컬 Claude가 H12/H15 중 다음 실험을 큐에 등록해야 함
 
 ## 실험 6: QLoRA SFT 1차 — 실패 분석 (2026-08-05→06)
 
