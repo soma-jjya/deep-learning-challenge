@@ -35,6 +35,7 @@ while true; do
   fi
 
   NEXT=$(grep -m1 '^- \[ \]' experiments/queue.md)
+  before=$(grep -c '^- \[ \]' experiments/queue.md)
   echo "=== 실행: $NEXT ==="
   notify "실험 시작: $NEXT"
 
@@ -51,5 +52,12 @@ while true; do
     }
 
   git pull --rebase
-  notify "실험 완료: $NEXT"
+  # 실험 '완료'는 큐 항목이 실제로 [x] 처리됐을 때만 — Claude가 백그라운드 작업을
+  # 띄워두고 세션만 끝낸 경우엔 진행 중으로 알린다 (다음 루프가 이어받음)
+  after=$(grep -c '^- \[ \]' experiments/queue.md)
+  if [ "$after" -lt "${before:-999}" ]; then
+    notify "실험 완료: $NEXT"
+  else
+    notify "세션 라운드 종료 — 작업이 백그라운드 진행 중일 수 있음 (다음 루프가 이어받음)"
+  fi
 done
