@@ -9,7 +9,9 @@ if [ -f /home/ubuntu/KEEP_ALIVE ]; then echo 0 > $STATE; exit 0; fi
 
 busy=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | sort -nr | head -1)
 busy=${busy:-0}
-procs=$(pgrep -cf "train_qlora|generate_rft|eval_vllm|run_experiments|claude" || true)
+# 실제 작업 프로세스만 센다 — claude/runner가 유령 상태로 매달려도 유휴면 정지되게
+# (정지돼도 부팅 자동시작이 러너를 되살리므로 안전)
+procs=$(pgrep -cf "train_qlora|generate_rft|eval_vllm|make_submission|prep_numina" || true)
 
 if [ "$busy" -gt 10 ] || [ "$procs" -gt 0 ]; then
   echo 0 > $STATE
