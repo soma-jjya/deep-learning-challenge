@@ -30,7 +30,8 @@
 ## 현재 상태 (2026-08-06 오후) — exp06 실패, 재시도 체인 가동
 
 - **exp06 QLoRA 1차 실패**: greedy 68.3%/SC 73.5% — 베이스(69.4/74.7)보다 하락. 원인 가설: lr 과함·자기증류(다양성 감소)·풀 수 있는 문제만 학습. **정체 카운트 1/3**
-- 재편된 큐: exp06b(베이스 SC n8로 제출 파일 → results/submission_base.csv) → exp07(베이스 SC n=4/16 스케일) → exp06c(완만 SFT: lr5e-5·1ep·최단풀이=H14) → exp08(exp06c 성공 시만)
+- **exp06b 완료**: 베이스 모델(어댑터 없음) SC n=8로 `results/submission_base.csv` 생성(831행, 정수만, 결측 없음). 리더보드 라벨이 없어 로컬 정확도 산출 불가 — 실점수는 사용자가 Kaggle 제출 후 확인
+- 남은 큐: exp07(베이스 SC n=4/16 스케일) → exp06c(완만 SFT: lr5e-5·1ep·최단풀이=H14) → exp08(exp06c 성공 시만)
 - 러너 사망 사고 수리: git pull 충돌 시 자동 커밋 후 재시도. 서버 로컬 변경(eval_vllm max_model_len=4096)은 서버에서 커밋 처리
 - exp06 학습 자체는 정상(wandb run o5zlvcyp — 학습 로그 제출물 확보됨). 어댑터: 서버 outputs/qlora/qlora_r16_lr0.0002_ep2_final
 

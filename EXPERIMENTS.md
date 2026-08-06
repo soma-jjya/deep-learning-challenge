@@ -36,6 +36,7 @@
 | 4b | 2026-08-05 | exp04 sft.jsonl 사후 필터링 — 오류 문항 627개 기준 라인 제거: 36,733줄 → 36,144줄 (589줄 제거) | - | - | - |
 | 5 | 2026-08-05 | 베이스 모델 AWS 평가 (`remote/eval_vllm.py --mode both`) — 검증 483문항(500 중 오류 문항 제외), greedy 69.4%, SC n=8 74.7% | - | - | remote/eval_vllm.py |
 | 6 | 2026-08-05 | **QLoRA SFT 1차 (H3) — 실패** — r16/lr2e-4/ep2, RFT 36,144 풀이 학습. greedy 68.3%(-1.1%p), SC n8 73.5%(-1.2%p). [wandb](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/o5zlvcyp) | - | - | remote/train_qlora.py |
+| 6b | 2026-08-06 | 리더보드 제출 파일 생성 — exp06 어댑터가 베이스보다 나빠 **어댑터 없이** `remote/make_submission.py --n 8 --tag base` 실행 (SC n=8, 831문항) → results/submission_base.csv | - | 제출 대기 | remote/make_submission.py |
 
 ## 실험 6: QLoRA SFT 1차 — 실패 분석 (2026-08-05→06)
 
@@ -46,6 +47,12 @@
   3. **데이터 편향**: 이미 푸는 80% 문제의 풀이만 학습 — 못 푸는 20%는 데이터에 없어서 실력 확장이 안 됨
 - **대응 (연결 체인)**: exp06c = 완만한 학습(lr 5e-5, 1 epoch) + 문제당 최단 풀이 1개(H14, 3B에 유리) → 그래도 안 되면 가설 2·3을 정면 공략: 외부 데이터 혼합(H12)·DPO(H15)로 전환. 정체 카운트 1/3
 - **사고 기록**: 러너가 git pull 충돌로 사망해 평가 후 기록이 누락됐었음 → 러너에 자동 커밋 후 재시도 로직 추가
+
+## 실험 6b: 리더보드 제출 파일 생성 (2026-08-06, AWS)
+
+- **설정**: `remote/make_submission.py --n 8 --tag base` — exp06 QLoRA 어댑터가 베이스보다 하락했으므로 **어댑터 없이 베이스 모델**로 생성. SC n=8(temperature=0.7, top_p=0.8), 리더보드 831문항 전체(`deep_chal_math_leaderboard_filtered.csv`) 대상
+- **결과**: `results/submission_base.csv` 831행 생성 완료, 정수 답 831개 전부 채움(결측 없음 확인). 실제 리더보드 점수는 사용자가 Kaggle에 제출해야 확인 가능
+- **다음**: exp07(SC 스케일 실험) → exp06c(완만한 QLoRA 재시도)
 
 ## 실험 4: RFT 데이터 생성 (2026-08-05, AWS)
 
