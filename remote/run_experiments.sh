@@ -28,7 +28,9 @@ while true; do
   fi
 
   # 실험 프로세스가 이미 돌고 있으면 Claude를 부르지 않고 대기 (구독 사용량 절약)
-  if pgrep -f "generate_rft|train_qlora|eval_vllm" > /dev/null; then
+  # 패턴을 "uv run python remote/"로 일반화 — 개별 스크립트명을 나열하면 새 스크립트(예: gen_verifier_data.py) 추가 시
+  # 감지를 놓쳐 이미 실행 중인데도 Claude를 중복 호출하는 사고가 남 (2026-08-06 밤 실측)
+  if pgrep -f "uv run python remote/" > /dev/null; then
     echo "$(date +%H:%M) 실험 프로세스 진행 중 — 5분 대기"
     sleep 300
     continue
