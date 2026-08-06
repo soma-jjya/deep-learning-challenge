@@ -123,6 +123,11 @@
         <tr><td>H7</td><td>GRPO 강화학습</td><td class="num">불확실</td><td>후순위</td></tr>
         <tr><td>H8</td><td>멀티 LoRA 어댑터 앙상블 (같은 베이스, 다수결)</td><td class="num">+2~5%p</td><td>⏳ 운영진 질의 중</td></tr>
         <tr><td>H9</td><td>검증자 어댑터로 Best-of-N 선별</td><td class="num">+3~8%p</td><td>⏳ 운영진 질의 중</td></tr>
+        <tr><td>H10</td><td>반복 RFT (학습된 모델로 재생성)</td><td class="num">+3~8%p</td><td>⏭️ 스킵 — 전제(개선된 어댑터) 미충족</td></tr>
+        <tr><td>H11</td><td>SC 샘플 수 스케일링</td><td class="num">+1~4%p</td><td>✅ n=16 75.6% (+0.9%p vs n8), 수확 체감</td></tr>
+        <tr><td>H12</td><td>NuminaMath 외부 데이터 혼합 학습</td><td class="num">+3~8%p</td><td>🔄 실행 중 (exp09a·b) — 실패 시 정체 3/3</td></tr>
+        <tr><td>H14</td><td>최단 풀이 학습</td><td class="num">+1~4%p</td><td>❌ 효과 없음 (exp06c)</td></tr>
+        <tr><td>H16</td><td>확신도(로그확률) 가중 투표</td><td class="num">+1~3%p</td><td>✅ <b>+0.8%p</b> (exp10) — 비용 0, 기본 적용 예정</td></tr>
       </tbody>
     </table>
   </div>
