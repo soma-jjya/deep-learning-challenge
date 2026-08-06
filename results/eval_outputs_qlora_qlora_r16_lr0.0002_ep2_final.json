@@ -1,0 +1,6 @@
+{
+  "adapter": "outputs/qlora/qlora_r16_lr0.0002_ep2_final",
+  "val_n": 500,
+  "greedy": 0.6832298136645962,
+  "sc_n8": 0.7349896480331263
+}

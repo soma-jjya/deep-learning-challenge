@@ -1,0 +1,40 @@
+{
+  "os":  "Linux-6.8.0-1052-aws-x86_64-with-glibc2.35",
+  "python":  "CPython 3.11.15",
+  "startedAt":  "2026-08-05T17:57:29.920442Z",
+  "program":  "/home/ubuntu/work/deep-learning-challenge/remote/train_qlora.py",
+  "codePath":  "remote/train_qlora.py",
+  "codePathLocal":  "remote/train_qlora.py",
+  "git":  {
+    "remote":  "https://x-access-token:@github.com/soma-jjya/deep-learning-challenge.git",
+    "commit":  "b741ae3764b516a191d4d76b1cb2943018c3be4e"
+  },
+  "email":  "loonaticvibe2.11@gmail.com",
+  "root":  "/home/ubuntu/work/deep-learning-challenge",
+  "host":  "ip-10-99-1-130",
+  "executable":  "/home/ubuntu/work/deep-learning-challenge/.venv/bin/python3",
+  "cpu_count":  2,
+  "cpu_count_logical":  4,
+  "gpu":  "NVIDIA A10G",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "207929917440",
+      "used":  "48858292224"
+    }
+  },
+  "memory":  {
+    "total":  "16554995712"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA A10G",
+      "memoryTotal":  "24146608128",
+      "cudaCores":  10240,
+      "architecture":  "Ampere",
+      "uuid":  "GPU-b7af6028-2776-7405-f693-c36268e84e0c"
+    }
+  ],
+  "cudaVersion":  "13.0",
+  "writerId":  "iazmv6tko8c6hkfu9ay52ulc150xtk0o"
+}

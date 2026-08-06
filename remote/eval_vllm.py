@@ -51,7 +51,7 @@ def main():
     print(f'검증 문항 {len(val)}개 (오류 문항 제외 후)')
 
     llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
-              gpu_memory_utilization=0.92,
+              gpu_memory_utilization=0.85, max_model_len=4096,
               enable_lora=args.adapter is not None, max_lora_rank=64)
     tok = llm.get_tokenizer()
     lora = LoRARequest('adapter', 1, args.adapter) if args.adapter else None
