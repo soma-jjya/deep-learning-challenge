@@ -15,7 +15,12 @@ notify() {
 notify "실험 러너 시작"
 
 while true; do
-  git pull --rebase
+  # pull 실패(로컬 변경 충돌)가 러너를 죽이지 않게: 자동 커밋 후 재시도
+  if ! git pull --rebase; then
+    echo "pull 실패 — 서버 로컬 변경을 자동 커밋 후 재시도"
+    git add -A && git commit -m "server: auto-commit local changes before pull" || true
+    git pull --rebase || { echo "pull 재실패 — 5분 후 재시도"; sleep 300; continue; }
+  fi
   if ! grep -q '^- \[ \]' experiments/queue.md; then
     echo "큐가 비었습니다. 러너 종료."
     notify "실험 큐 완료 — 서버는 곧 자동 정지됩니다"
