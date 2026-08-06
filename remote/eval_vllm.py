@@ -28,6 +28,23 @@ def majority_vote(answers):
     return Counter(votes).most_common(1)[0][0] if votes else 0
 
 
+def weighted_vote(answer_conf_pairs):
+    """확신도(평균 토큰 로그확률) 가중 다수결 (H16).
+
+    같은 답에 투표한 샘플들의 softmax(평균 로그확률) 가중치를 합산해 최댓값 선택.
+    모델 출력만 사용하므로 대회 규칙(코드 실행·외부 도구 금지)에 저촉되지 않음.
+    """
+    import math
+    pairs = [(a, lp) for a, lp in answer_conf_pairs if a is not None]
+    if not pairs:
+        return 0
+    m = max(lp for _, lp in pairs)
+    weights = {}
+    for a, lp in pairs:
+        weights[a] = weights.get(a, 0.0) + math.exp((lp - m) * 2.0)  # temp 0.5 스케일
+    return max(weights, key=weights.get)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--mode', choices=['greedy', 'sc', 'both'], default='both')
@@ -69,6 +86,15 @@ def main():
         acc = sum(int(p) == int(a) for p, a in zip(preds, val['answer'])) / len(val)
         print(f'[{name}] 정확도: {acc:.1%}')
         results[name] = acc
+        # SC일 때는 같은 생성 결과로 가중 투표(H16)도 공짜로 측정
+        if sp.n > 1:
+            wpreds = [weighted_vote([
+                (extract_answer(c.text),
+                 c.cumulative_logprob / max(1, len(c.token_ids)))
+                for c in o.outputs]) for o in outs]
+            wacc = sum(int(p) == int(a) for p, a in zip(wpreds, val['answer'])) / len(val)
+            print(f'[{name}+weighted] 확신도 가중 투표 정확도: {wacc:.1%}')
+            results[name + '_weighted'] = wacc
         return preds
 
     if args.mode in ('greedy', 'both'):

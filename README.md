@@ -29,4 +29,6 @@ requirements.txt                # 실행 환경
 
 ## 사용 데이터
 
-- 대회 제공 데이터만 사용 (외부 데이터 추가 시 여기에 출처 명시)
+- 대회 제공 데이터 (train 17,000 / leaderboard_filtered 831 — 운영진 공지의 오류 문항 627개는 학습·검증에서 제외)
+- [AI-MO/NuminaMath-CoT](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT) (Apache 2.0, 무료 공개) — 정수 답 부분집합을 SFT 혼합 학습에 사용 (`remote/prep_numina.py`로 추출, 검증 세트와 문항 중복 제거)
+- 자체 생성 데이터: 베이스 모델의 Rejection Sampling 풀이 (`remote/generate_rft.py`)
