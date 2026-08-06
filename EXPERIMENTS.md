@@ -26,11 +26,13 @@
 
 **🚨 정체 3/3 발동 (2026-08-06, exp09b)** → 근본 전환 계획 수립: **docs/pivot-plan.md**. 트랙 A = GRPO 강화학습(H17, KL 제약으로 SFT 실패 원인 회피), 트랙 B = 추론 스택 재설계(H18 자기수정, H19 프롬프트 앙상블). 신규 가설:
 
-| H17 | GRPO: KL 제약 RL — SFT와 달리 기존 조율 보존 + 다양성 유지 | +2~5%p | DeepSeekMath, pivot-plan | 🔄 exp12 파일럿 |
+| H17 | GRPO: KL 제약 RL — SFT와 달리 기존 조율 보존 + 다양성 유지 | +2~5%p | DeepSeekMath, pivot-plan | ⚠️ 완료 (exp12) — greedy 69.2%/SC 74.5%/가중 74.9%, 베이스와 사실상 동일(±0.2%p), 성공 기준(SC≥75.7%) 미달. SFT처럼 하락하진 않았으나 개선도 없음 — 학습 트랙 동결 검토(exp13) |
 | H18 | 2단계 자기수정 (풀이→같은 모델이 검토·수정) | +1~3%p | Self-Refine 계열 | 트랙 B, exp12 이후 |
 | H19 | 프롬프트 앙상블 SC (표본마다 다른 시스템 프롬프트로 다양성 확대) | +1~3%p | SC 다양성 이론 | 트랙 B, exp12 이후 |
 
 **트랙 B1 완료 (exp11, 2026-08-06)**: SC n=16 + 가중투표 복합 스택 측정 — n16 다수결 74.7%(361/483), n16 가중투표 74.3%(359/483, 다수결보다 -0.4%p 낮음). 목표(76%+) 미달, exp10(n8 가중투표 +0.8%p)과 반대 방향 결과로 가중투표 효과의 안정성에 의문 — 복합 스택 채택 보류, 제출은 SC n=8 유지 권장.
+
+**트랙 A 파일럿 완료 (exp12, 2026-08-06)**: GRPO 3000문제/400스텝 파일럿 — greedy 69.2%/SC n8 74.5%/가중 74.9%, 베이스(69.4/74.7)와 사실상 동일(±0.2%p). 성공 기준(SC n8≥75.7%) 미달 — pivot-plan.md 철수 기준에 해당하나 SFT처럼 하락하진 않음(중립). exp13에서 트랙 A 지속 여부 최종 판정 필요.
 
 > **정체 카운트 3/3 도달 (exp09b, 2026-08-06)**: QLoRA SFT 계열(exp06 lr2e-4, exp06c lr5e-5, exp09b 외부데이터혼합 lr1e-4) 3연속 모두 베이스보다 하락. lr·데이터량·풀이길이·외부데이터 혼합 등 표면적 조정으로는 회복 안 됨 — 근본 전환 필요 시점. 이 판단(방향 선택·문서화)은 로컬 Claude(계획자) 담당, 서버 Claude(실행자)는 큐 등록 대기 중.
 
@@ -53,6 +55,17 @@
 | 9a | 2026-08-06 | NuminaMath-CoT 외부 데이터 준비 (H12) — `remote/prep_numina.py --take 30000`, 정수답·boxed·길이(50~2500자) 필터 + 검증셋 문제 텍스트 제외 → 외부 30,000개 채택, 자체(`data/sft_short.jsonl`) 12,923개와 병합·셔플 → `data/sft_mix.jsonl` 42,923개 | - | - | remote/prep_numina.py |
 | 9b | 2026-08-06 | **QLoRA SFT 외부 혼합 (H12) — 3연속 실패, 정체 3/3** — r16/lr1e-4/ep1, data/sft_mix.jsonl(42,923개=외부30k+자체12.9k). greedy 67.5%(-1.9%p), SC n8 71.8%(-2.9%p), 가중투표 72.0%(-2.7%p) | 67.5%(greedy)/71.8%(SC)/72.0%(가중) | - | remote/train_qlora.py |
 | 11 | 2026-08-06 | 트랙 B1: 최적 추론 스택 확정 (베이스) — `remote/eval_vllm.py --mode sc --n 16`. n16 다수결 74.7%(361/483), n16 가중투표 74.3%(359/483) — 가중투표가 오히려 다수결보다 낮음(-0.4%p), 목표 76%+ 미달 | 74.7%(다수결)/74.3%(가중) | - | remote/eval_vllm.py |
+| 12 | 2026-08-06 | **트랙 A: GRPO 파일럿 (H17) — 목표 미달, 학습 트랙 동결 후보** — `remote/train_grpo.py` (3000문제, 400스텝, lr5e-6, num_generations=4), train_loss 0.02, [wandb ctiym4ny](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/ctiym4ny). 평가: greedy 69.2%(-0.2%p), SC n8 74.5%(-0.2%p), 가중투표 74.9%(+0.2%p) — 베이스(69.4/74.7)와 사실상 동일(잡음 범위), 성공 기준(SC n8≥75.7%) 미달 | 69.2%(greedy)/74.5%(SC)/74.9%(가중) | - | remote/train_grpo.py |
+
+## 실험 12: 트랙 A — GRPO 강화학습 파일럿 (H17) (2026-08-06, AWS)
+
+- **배경**: docs/pivot-plan.md 트랙 A. QLoRA SFT 3연속 실패(exp06/06c/09b) 이후 근본 전환 — KL 제약으로 베이스 정책을 크게 벗어나지 않으면서 정답 도달 여부만 보상해 SFT가 해치던 출력 다양성을 보존하는 것이 목표
+- **설정**: `remote/train_grpo.py` (수정 없이 그대로 실행, API 불일치 없었음) — unsloth `FastLanguageModel` + `fast_inference=True`(내장 vLLM 생성), r=16/alpha=32 LoRA, 중간 난이도 위주 3,000문제(RFT 6회 시도 중 1~2회만 정답이었던 문제 우선), `num_generations=4`(그룹 상대 보상), `per_device_batch=4`, `lr=5e-6`, `max_steps=400`, 보상 함수: 정답 일치 +1.0, boxed 존재 +0.1. 검증 세트(seed=123, 500문항)는 `build_dataset()`에서 명시적으로 제외
+- **학습 결과**: 400스텝 완료(약 2h18m 소요, runtime 8304s), `train_loss` **0.02028**, [wandb run ctiym4ny](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/ctiym4ny) — 학습 중 `reward/reward_correct/mean`이 스텝 전반에 걸쳐 0.3~0.65 사이를 오르내리며 뚜렷한 상승 추세 없이 노이즈 수준으로 진동(KL 0.003~0.005로 베이스 정책 근처에 안정적으로 유지된 것은 의도대로 확인됨). 어댑터: `outputs/grpo_pilot/grpo_pilot_final`
+- **평가 결과** (`remote/eval_vllm.py --mode both --adapter outputs/grpo_pilot/grpo_pilot_final`, 검증 483문항): greedy **69.2%** (335/483 상당, -0.2%p vs 베이스 69.4%), SC n=8 **74.5%** (-0.2%p vs 베이스 74.7%), 가중투표 **74.9%** (+0.2%p vs 베이스 SC)
+- **판정**: **성공 기준(SC n8 ≥ 75.7%, 베이스 +1%p) 미달** — 다만 QLoRA SFT 계열(-1.1~-2.9%p로 뚜렷한 하락)과 달리 GRPO는 베이스와 통계적으로 구분 안 되는 수준(±0.2%p, 기존 관측된 vLLM 비결정성 노이즈 ±1%p 이내)으로 "해롭지 않지만 이롭지도 않음". 파일럿 스케일(3,000문제·400스텝·num_generations=4)에서는 유의미한 개선 신호를 얻지 못함 — 보상이 학습 내내 정체된 것으로 보아 스텝 수·데이터 난이도 구성·num_generations 규모가 부족했거나, 이 태스크에서 GRPO 자체의 개선 여지가 크지 않을 가능성 모두 열려 있음
+- **결과 파일**: `results/eval_outputs_grpo_pilot_grpo_pilot_final.json`, 로그 `train_grpo.log`(학습), `eval12.log`(평가)
+- **다음**: pivot-plan.md 철수 기준("+1%p 미만이면 학습 트랙 동결")에 해당 — exp13에서 트랙 A 지속 여부 최종 판정 필요 (로컬 Claude 판단 대기)
 
 ## 실험 11: 트랙 B1 — 최적 추론 스택 확정 (SC n=16 + 가중투표) (2026-08-06, AWS)
 
