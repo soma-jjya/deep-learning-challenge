@@ -179,6 +179,10 @@ const EXPERIMENTS = [
   { exp: 'exp06b', date: '2026-08-06', method: '베이스 + SC n=8로 신기준 리더보드 제출 (831문항)',
     local: 74.7, lb: 77.015, note: '리더보드 0.77015 — 로컬 74.7%와 정합 (LB가 약간 높음). exp07: SC 스케일 n=4 72.7% / n=8 74.7% / n=16 75.6%',
     jump: 'SC 다수결 + 수리된 후처리의 첫 신기준 제출. 구기준 0.648 대비 +0.122 (채점 기준 변경 효과 포함)' },
+  { exp: 'exp09b', date: '2026-08-06', method: 'QLoRA 외부 데이터 혼합 (NuminaMath 30k) — 실패: SC 71.8%',
+    local: 71.8, lb: null, note: 'SFT 3연속 실패 → 정체 3/3 발동, 근본 전환(docs/pivot-plan.md). 진단: 이미 정밀 조율된 베이스에 SFT는 구조적으로 해로움 (다양성 붕괴로 SC가 더 크게 하락)', jump: null },
+  { exp: 'exp12', date: '2026-08-07', method: 'GRPO 강화학습 파일럿 (KL제약 RL, 3천 문제 400스텝) — 베이스와 동일: SC 74.5%',
+    local: 74.5, lb: null, note: 'SFT와 달리 성능을 지키는 데는 성공(KL 제약 작동), 올리지는 못함 → 학습 트랙 동결. exp11: n16+가중투표도 노이즈 범위(74.3~74.7%) — 추론 미세 이득은 ±1%p 측정 한계 확인', jump: null },
 ];
 const TARGET = 85;
 
