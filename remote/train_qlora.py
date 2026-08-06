@@ -13,12 +13,12 @@ import os
 
 CONFIG = dict(
     base_model='Qwen/Qwen2.5-3B-Instruct',  # 대회 규칙: 고정
-    data_path='data/sft_short.jsonl',
-    output_dir='outputs/qlora_gentle',
+    data_path='data/sft_mix.jsonl',
+    output_dir='outputs/qlora_mix',
     max_seq_len=2048,
     lora_r=16,
     lora_alpha=32,
-    learning_rate=5e-5,
+    learning_rate=1e-4,
     epochs=1,
     per_device_batch=4,
     grad_accum=4,
