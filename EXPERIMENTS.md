@@ -36,7 +36,8 @@
 | 4b | 2026-08-05 | exp04 sft.jsonl 사후 필터링 — 오류 문항 627개 기준 라인 제거: 36,733줄 → 36,144줄 (589줄 제거) | - | - | - |
 | 5 | 2026-08-05 | 베이스 모델 AWS 평가 (`remote/eval_vllm.py --mode both`) — 검증 483문항(500 중 오류 문항 제외), greedy 69.4%, SC n=8 74.7% | - | - | remote/eval_vllm.py |
 | 6 | 2026-08-05 | **QLoRA SFT 1차 (H3) — 실패** — r16/lr2e-4/ep2, RFT 36,144 풀이 학습. greedy 68.3%(-1.1%p), SC n8 73.5%(-1.2%p). [wandb](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/o5zlvcyp) | - | - | remote/train_qlora.py |
-| 6b | 2026-08-06 | 리더보드 제출 파일 생성 — exp06 어댑터가 베이스보다 나빠 **어댑터 없이** `remote/make_submission.py --n 8 --tag base` 실행 (SC n=8, 831문항) → results/submission_base.csv | - | 제출 대기 | remote/make_submission.py |
+| 6b | 2026-08-06 | 리더보드 제출 파일 생성 — exp06 어댑터가 베이스보다 나빠 **어댑터 없이** `remote/make_submission.py --n 8 --tag base` 실행 (SC n=8, 831문항) → results/submission_base.csv | 74.7% | **0.77015** ✅ | remote/make_submission.py |
+| 7 | 2026-08-06 | SC 스케일 (H11, 베이스) — n=4: 72.7%, n=8: 74.7%, **n=16: 75.6%** (+0.9%p vs n8). 표본 2배당 ~+1%p의 완만한 수익 곡선 | 75.6% (n16) | - | remote/eval_vllm.py |
 | 7 | 2026-08-06 | SC 샘플 수 스케일링 (H11) — 베이스 모델, `remote/eval_vllm.py --mode sc --n 16`/`--n 4` (검증 483문항) | n=4 72.7%(351) / n=8 74.7%(361,exp05) / n=16 75.6%(365) | - | remote/eval_vllm.py |
 
 ## 실험 6: QLoRA SFT 1차 — 실패 분석 (2026-08-05→06)

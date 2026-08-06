@@ -171,6 +171,9 @@ const EXPERIMENTS = [
     jump: 'Self-Consistency 다수결이 greedy 대비 +5.3%p (H2 확인). 나머지 상승분은 추출기 수리(H1)·검증 세트 정비의 복합 효과' },
   { exp: 'exp06', date: '2026-08-06', method: 'QLoRA SFT 1차 (r16, lr2e-4, ep2, RFT 36k 풀이) — 실패: greedy 68.3%, SC 73.5%',
     local: 73.5, lb: null, note: '베이스 대비 −1.2%p. 원인 가설: 학습률 과함(과적합)·자기증류로 풀이 다양성 감소·이미 푸는 문제만 학습. 재시도 exp06c(lr 5e-5, 1ep, 최단 풀이)', jump: null },
+  { exp: 'exp06b', date: '2026-08-06', method: '베이스 + SC n=8로 신기준 리더보드 제출 (831문항)',
+    local: 74.7, lb: 77.015, note: '리더보드 0.77015 — 로컬 74.7%와 정합 (LB가 약간 높음). exp07: SC 스케일 n=4 72.7% / n=8 74.7% / n=16 75.6%',
+    jump: 'SC 다수결 + 수리된 후처리의 첫 신기준 제출. 구기준 0.648 대비 +0.122 (채점 기준 변경 효과 포함)' },
 ];
 const TARGET = 85;
 
