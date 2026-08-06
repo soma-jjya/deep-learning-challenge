@@ -9,8 +9,8 @@
 |---|---|---|---|---|
 | H1 | max 토큰 1024→2048 + 소수점 오추출 수정 | +2~4%p | exp01 오답 분석 | 노트북 02 반영 |
 | H2 | Self-Consistency n=8 (temp 0.7 다수결) | +5~10%p | Wang et al. 2022, AIMO 우승 사례 | 노트북 02 반영 |
-| H3 | RFT: 자체 생성 CoT 중 정답만 골라 QLoRA SFT | +5~15%p | RFT 논문, STaR | ❌ 2연속 실패 (exp06, exp06c) — 정체 2/3, lr·데이터량 조절로도 회복 안 됨 |
-| H4 | 외부 CoT 데이터 혼합 (NuminaMath-CoT) | +3~8%p | NuminaMath 1위 솔루션 | 대기 |
+| H3 | RFT: 자체 생성 CoT 중 정답만 골라 QLoRA SFT | +5~15%p | RFT 논문, STaR | ❌ **3연속 실패** (exp06, exp06c, exp09b) — 정체 3/3, lr·데이터량·외부데이터 혼합으로도 회복 안 됨. QLoRA SFT 계열 보류, 근본 전환 필요 |
+| H4 | 외부 CoT 데이터 혼합 (NuminaMath-CoT) | +3~8%p | NuminaMath 1위 솔루션 | ❌ 완료 (exp09b, H12로 구체화) — 외부 30k+자체 12.9k 혼합해도 베이스보다 하락 |
 | H5 | ~~TIR: 모델이 쓴 파이썬을 실행해 계산 보조~~ | - | - | ❌ **금지** (운영진 Q&A: 추론 시 코드 실행·툴 호출 불허) |
 | H6 | GPTQ/AWQ 양자화 + vLLM으로 SC 샘플 수 증대 | 간접 (속도) | NuminaMath T4 최적화 | 속도 병목 시 |
 | H7 | GRPO 강화학습 | 불확실 | DeepSeekMath | 후순위 |
@@ -18,13 +18,15 @@
 | H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ⏳ 운영진 질의 중 |
 | H10 | 반복 RFT: 학습된 모델로 데이터 재생성 → 재학습 (2~3라운드) | +3~8%p | STaR의 반복 루프 | ⏭️ 스킵 (exp08) — exp06c 어댑터가 베이스보다 낮아 조건 미충족 |
 | H11 | SC 샘플 수 스케일링 (8→16→32) + temperature 탐색 | +1~4%p | 다수결은 표본이 클수록 안정 | ✅ 완료 (exp07) — n=8→16 +0.9%p로 체감, n=32는 비용 대비 보류 |
-| H12 | 외부 CoT 데이터 혼합 비율 실험 (NuminaMath-CoT 정수답 부분집합 0/30/70%) | +3~8%p | NuminaMath 우승, H4 구체화 | 대기 (데이터 준비 스크립트 필요) |
+| H12 | 외부 CoT 데이터 혼합 비율 실험 (NuminaMath-CoT 정수답 부분집합 0/30/70%) | +3~8%p | NuminaMath 우승, H4 구체화 | ❌ 완료 (exp09a·exp09b) — 외부 30,000+자체 12,923 혼합 학습(lr1e-4/ep1)해도 베이스보다 하락(greedy 67.5%, SC 71.8%). 자기증류 가설 기각, 학습 파이프라인 자체(러닝레이트/포맷/LoRA target) 재검토 필요 |
 | H13 | 오답 유형 분석 → 취약 유형 표적 데이터 증강 (상용 API 활용 허용 범위) | +2~6%p | 오답 분석 기반 커리큘럼 | exp05 오답 분석 후 |
 | H14 | 풀이 길이 통제: 짧은 정답 풀이 우선 학습 (긴 풀이는 3B에 역효과) | +1~4%p | Small Models Struggle 논문 | ❌ 완료 (exp06c, lr완화와 결합) — 효과 없음, 여전히 베이스보다 낮음 |
 | H15 | DPO: 같은 문제의 정답 풀이(chosen) vs 오답 풀이(rejected) 쌍 학습 | +2~6%p | RFT 부산물 데이터 재활용 | SFT 정체 시 |
 | H16 | 로그확률 가중 투표 (모델 출력의 확신도로 표 가중치 — 모델 출력만 사용이라 규칙 적합) | +1~3%p | Entropy-weighted SC (AIMO-3) | ✅ 완료 (exp10) — 같은 SC n=8 표본 내에서 가중 투표가 일반 다수결보다 +0.8%p 높음(74.5% vs 73.7%), 기대 범위(+1~3%p) 하단에 근접 |
 
 **정체 대비 근본 전환 후보** (3연속 정체 시 이 중에서 문서화 후 착수): GRPO 강화학습(H7) / 학습 데이터 전면 재구성(외부 데이터 중심) / 추론 파이프라인 재설계(다단계 자기수정) / 커리큘럼 학습(쉬운→어려운 순서 제어)
+
+> **정체 카운트 3/3 도달 (exp09b, 2026-08-06)**: QLoRA SFT 계열(exp06 lr2e-4, exp06c lr5e-5, exp09b 외부데이터혼합 lr1e-4) 3연속 모두 베이스보다 하락. lr·데이터량·풀이길이·외부데이터 혼합 등 표면적 조정으로는 회복 안 됨 — 근본 전환 필요 시점. 이 판단(방향 선택·문서화)은 로컬 Claude(계획자) 담당, 서버 Claude(실행자)는 큐 등록 대기 중.
 
 > 2026-08-03 공지 반영: 학습·검증에서 train 오류 627문항 제외, 리더보드는 filtered(831문항) 기준. 이전 리더보드 점수(exp01 0.648)와 새 기준 점수는 직접 비교 불가.
 > 정형 기록은 `experiments/log.csv` (모든 실험·시행착오 필수 기재), 시각화는 `report.html`.
@@ -43,6 +45,7 @@
 | 8 | 2026-08-06 | 반복 RFT (H10) — exp06c 어댑터가 베이스보다 낮아 조건 불충족, **스킵** | - | - | - |
 | 10 | 2026-08-06 | 확신도 가중 투표 (H16, 베이스) — `remote/eval_vllm.py --mode sc --n 8`, 같은 표본에서 일반 다수결 73.7%(356/483) vs 가중 투표 **74.5%**(360/483) | 74.5%(가중) | - | remote/eval_vllm.py |
 | 9a | 2026-08-06 | NuminaMath-CoT 외부 데이터 준비 (H12) — `remote/prep_numina.py --take 30000`, 정수답·boxed·길이(50~2500자) 필터 + 검증셋 문제 텍스트 제외 → 외부 30,000개 채택, 자체(`data/sft_short.jsonl`) 12,923개와 병합·셔플 → `data/sft_mix.jsonl` 42,923개 | - | - | remote/prep_numina.py |
+| 9b | 2026-08-06 | **QLoRA SFT 외부 혼합 (H12) — 3연속 실패, 정체 3/3** — r16/lr1e-4/ep1, data/sft_mix.jsonl(42,923개=외부30k+자체12.9k). greedy 67.5%(-1.9%p), SC n8 71.8%(-2.9%p), 가중투표 72.0%(-2.7%p) | 67.5%(greedy)/71.8%(SC)/72.0%(가중) | - | remote/train_qlora.py |
 
 ## 실험 9a: NuminaMath 외부 데이터 준비 (2026-08-06, AWS)
 
@@ -51,6 +54,16 @@
 - **결과 파일**: `data/numina.jsonl`(30,000줄), `data/sft_mix.jsonl`(42,923줄), 로그 `exp09a.log`
 - **사고 기록**: 이 실행도 이전 서버 세션에서 이미 완료돼 있었으나(파일·로그 08-06 08:07 생성) 기록·커밋 전에 세션이 중단된 것으로 추정. 이번 세션에서 산출물을 검증(파일 라인 수 일치 확인) 후 기록만 대행, 재실행하지 않음. 같은 세션에서 이어서 `remote/train_qlora.py`로 exp09b 학습(`outputs/qlora_mix/qlora_r16_lr0.0001_ep1_final`, train loss 0.3994, [wandb fvh36wox](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/fvh36wox))까지도 이미 완료돼 있었음 — 평가만 이번 세션에서 실행
 - **다음**: exp09b 평가(`remote/eval_vllm.py --mode both --adapter outputs/qlora_mix/qlora_r16_lr0.0001_ep1_final`)
+
+## 실험 9b: QLoRA SFT 외부 데이터 혼합 (H12) — 3연속 실패, 정체 3/3 (2026-08-06, AWS)
+
+- **설정**: `remote/train_qlora.py` CONFIG 수정 — `data_path=data/sft_mix.jsonl`(자체 RFT 최단풀이 12,923개 + NuminaMath-CoT 외부 30,000개 = 42,923개), `output_dir=outputs/qlora_mix`, `lr=1e-4`, `epochs=1`, r16/alpha32/seq2048, unsloth 4bit. 학습 후 `remote/eval_vllm.py --mode both --adapter outputs/qlora_mix/qlora_r16_lr0.0001_ep1_final`로 검증 483문항 평가(greedy + SC n=8 + 가중투표)
+- **학습 결과**: train loss 0.3994 ([wandb fvh36wox](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/fvh36wox)), 어댑터 `outputs/qlora_mix/qlora_r16_lr0.0001_ep1_final`
+- **평가 결과**: greedy **67.5%** (326/483), SC n=8 **71.8%** (347/483), SC n=8 가중투표 **72.0%** (348/483) — 베이스(exp05: greedy 69.4%/SC 74.7%) 대비 greedy **-1.9%p**, SC **-2.9%p**, 가중투표도 베이스 SC보다 **-2.7%p**로 모두 하락
+- **의미**: H12(외부 데이터 혼합으로 자기증류 한계 탈피) 가설 기각. exp06(자체데이터만, lr2e-4)·exp06c(자체데이터만, lr5e-5)에 이어 **QLoRA SFT 계열 3연속 실패** — lr을 2e-4→5e-5→1e-4로 바꾸고, 데이터를 자체전용→외부혼합으로 바꿔도 회복되지 않음. 학습률/데이터 구성보다 더 근본적인 요인(학습 포맷, LoRA target modules, 프롬프트 템플릿 불일치, 혹은 SFT 자체가 이 태스크·모델 크기에 안 맞을 가능성)을 의심할 필요 — **정체 카운트 3/3 도달**, CONTEXT.md 운영 정책에 따라 근본 전환 검토 단계
+- **결과 파일**: `results/eval_outputs_qlora_mix_qlora_r16_lr0.0001_ep1_final.json`, 로그 `train_mix.log`(학습), `eval09b.log`(평가)
+- **사고 기록**: 학습·평가 모두 이전 서버 세션에서 이미 완료돼 있었음(train_mix.log 완료 10:57, eval09b.log 완료 11:12) — 기록·커밋·푸시 전에 세션이 사용량 한도 등으로 중단된 것으로 추정(exp09a·exp10과 동일 패턴). 이번 세션은 로그·결과 파일을 검증한 뒤 기록만 대행, 재실행하지 않음
+- **다음**: 큐 비어있음. QLoRA SFT류는 3연속 실패로 보류 — 로컬 Claude(계획자)가 근본 전환 방향(GRPO / 학습 데이터 전면 재구성 / 추론 파이프라인 재설계 / 커리큘럼 학습 중 택1, 문서화 후 큐 등록) 결정 필요
 
 ## 실험 10: 확신도 가중 투표 (2026-08-06, AWS)
 
