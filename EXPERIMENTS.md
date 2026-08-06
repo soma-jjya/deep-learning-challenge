@@ -17,7 +17,7 @@
 | H8 | 멀티 LoRA 어댑터 앙상블 (같은 베이스, 다수결 결합) | +2~5%p | SC의 다양성 확장 | ⏳ 운영진 질의 중 |
 | H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ⏳ 운영진 질의 중 |
 | H10 | 반복 RFT: 학습된 모델로 데이터 재생성 → 재학습 (2~3라운드) | +3~8%p | STaR의 반복 루프 | exp06 후 자동 (큐 exp08) |
-| H11 | SC 샘플 수 스케일링 (8→16→32) + temperature 탐색 | +1~4%p | 다수결은 표본이 클수록 안정 | exp06 후 자동 (큐 exp07) |
+| H11 | SC 샘플 수 스케일링 (8→16→32) + temperature 탐색 | +1~4%p | 다수결은 표본이 클수록 안정 | ✅ 완료 (exp07) — n=8→16 +0.9%p로 체감, n=32는 비용 대비 보류 |
 | H12 | 외부 CoT 데이터 혼합 비율 실험 (NuminaMath-CoT 정수답 부분집합 0/30/70%) | +3~8%p | NuminaMath 우승, H4 구체화 | 대기 (데이터 준비 스크립트 필요) |
 | H13 | 오답 유형 분석 → 취약 유형 표적 데이터 증강 (상용 API 활용 허용 범위) | +2~6%p | 오답 분석 기반 커리큘럼 | exp05 오답 분석 후 |
 | H14 | 풀이 길이 통제: 짧은 정답 풀이 우선 학습 (긴 풀이는 3B에 역효과) | +1~4%p | Small Models Struggle 논문 | H10과 결합 가능 |
@@ -37,6 +37,7 @@
 | 5 | 2026-08-05 | 베이스 모델 AWS 평가 (`remote/eval_vllm.py --mode both`) — 검증 483문항(500 중 오류 문항 제외), greedy 69.4%, SC n=8 74.7% | - | - | remote/eval_vllm.py |
 | 6 | 2026-08-05 | **QLoRA SFT 1차 (H3) — 실패** — r16/lr2e-4/ep2, RFT 36,144 풀이 학습. greedy 68.3%(-1.1%p), SC n8 73.5%(-1.2%p). [wandb](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/o5zlvcyp) | - | - | remote/train_qlora.py |
 | 6b | 2026-08-06 | 리더보드 제출 파일 생성 — exp06 어댑터가 베이스보다 나빠 **어댑터 없이** `remote/make_submission.py --n 8 --tag base` 실행 (SC n=8, 831문항) → results/submission_base.csv | - | 제출 대기 | remote/make_submission.py |
+| 7 | 2026-08-06 | SC 샘플 수 스케일링 (H11) — 베이스 모델, `remote/eval_vllm.py --mode sc --n 16`/`--n 4` (검증 483문항) | n=4 72.7%(351) / n=8 74.7%(361,exp05) / n=16 75.6%(365) | - | remote/eval_vllm.py |
 
 ## 실험 6: QLoRA SFT 1차 — 실패 분석 (2026-08-05→06)
 
@@ -53,6 +54,15 @@
 - **설정**: `remote/make_submission.py --n 8 --tag base` — exp06 QLoRA 어댑터가 베이스보다 하락했으므로 **어댑터 없이 베이스 모델**로 생성. SC n=8(temperature=0.7, top_p=0.8), 리더보드 831문항 전체(`deep_chal_math_leaderboard_filtered.csv`) 대상
 - **결과**: `results/submission_base.csv` 831행 생성 완료, 정수 답 831개 전부 채움(결측 없음 확인). 실제 리더보드 점수는 사용자가 Kaggle에 제출해야 확인 가능
 - **다음**: exp07(SC 스케일 실험) → exp06c(완만한 QLoRA 재시도)
+
+## 실험 7: SC 샘플 수 스케일링 (2026-08-06, AWS)
+
+- **설정**: `remote/eval_vllm.py --mode sc --n 16`, 이어서 `--n 4` — 베이스 모델(어댑터 없음), 검증 483문항(exp05와 동일 세트), temperature=0.7, top_p=0.8
+- **결과**: n=4 **72.7%** (351/483) / n=8 **74.7%** (361/483, exp05) / n=16 **75.6%** (365/483)
+- **의미**: n=4→8 구간(+2.0%p)이 n=8→16 구간(+0.9%p)보다 이득이 커 **수확 체감** 확인(H11 가설과 일치, 다만 32까지는 아직 미탐). 추론 비용(샘플 수 비례)을 고려하면 제출용으로는 n=8이 비용 대비 합리적 선택 — n=16은 소폭 이득(+0.9%p) 대비 2배 비용
+- **결과 파일**: `results/eval_base_sc_n4.json`, `results/eval_base_sc_n16.json`
+- **사고 기록**: 실행 자체는 이전 서버 러너 세션에서 완료됐으나(로그 `logs_exp07_n16.log`, `logs_exp07_n4.log` 확인) 기록 단계 전에 세션이 종료되어 이번 세션에서 결과를 확인 후 기록만 대행
+- **다음**: exp06c(완만한 QLoRA 재시도, H14 결합)
 
 ## 실험 4: RFT 데이터 생성 (2026-08-05, AWS)
 
