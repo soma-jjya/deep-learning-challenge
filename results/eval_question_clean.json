@@ -1,0 +1,8 @@
+{
+  "val_n": 483,
+  "affected_n": 25,
+  "orig_greedy_all": 0.6997929606625258,
+  "clean_greedy_all": 0.6935817805383023,
+  "orig_greedy_affected": 0.52,
+  "clean_greedy_affected": 0.56
+}
