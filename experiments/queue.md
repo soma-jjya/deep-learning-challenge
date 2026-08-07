@@ -36,3 +36,11 @@
 - [x] exp20-fewshot: 4-shot 프롬프트. data/sft_short.jsonl에서 서로 다른 유형의 짧은 정답 풀이 4개를 골라(기하/대수/정수론/응용 각 1), 모든 문제 앞에 예시 대화(user문제→assistant풀이)로 붙여 greedy와 SC n8 평가 (일회용 스크립트, 커밋). 비교: zero-shot 69.4/74.7. **성공: SC ≥75.7%** → 결과: greedy 70.2%(339/483, +0.8%p), SC n8 **73.1%**(353/483, **-1.6%p, 하락**). 성공 기준 미달, zero-shot보다도 낮음 — few-shot이 SC 다양성을 오히려 억누른 것으로 추정. 총력전 카드 2장째(H8·퓨샷) 기각
 - [x] exp21-question-clean: 문제 텍스트 정화. val 483문항에서 잡음 패턴(`Translate the above text`로 시작하는 지시문, `![](...)` 이미지 링크, `[asy]...[/asy]`, 문두 문제번호 `N.` 등)을 제거하는 전처리 함수 작성 → 정화 적용/미적용 greedy 비교 + 몇 문항이 영향받는지 기록 (일회용 스크립트, 커밋 — 효과 있으면 make_submission에도 이식할 것이므로 함수를 remote/clean_question.py로 분리). **성공: 영향받은 문항 부분집합에서 뚜렷한 개선** → 결과: 영향받은 문항 25개(5.2%). 전체 greedy 원문 70.0%(338/483)/정화 69.4%(335/483, -0.6%p). 영향받은 25문항만: 원문 52.0%(13/25)/정화 56.0%(14/25, +4.0%p=1문항 차이) — 표본이 작아 노이즈와 구분 불가, "뚜렷한 개선" 기준 미달. 카드③ 기각
 - [x] exp22-adaptive-budget: 적응형 예산. n=8 결과에서 최다 득표가 3표 이하(합의 실패)인 문제만 골라 추가 24표(합계 32표)로 재표결, 나머지는 n8 결과 유지 (일회용 스크립트, 커밋). 비교: n8 74.7%, 균일 n16 75.6%. **성공: ≥76.3%** — 성공 시 이 방식이 새 제출 스택 → 결과: n8 baseline 74.5%(360/483), 합의 실패 90개(18.6%), adaptive 75.2%(363/483), 평균 투표수 12.47. 성공 기준(76.3%+) 미달, 균일 n16(75.6%)보다도 낮음 — 총력전 카드④ 기각. 총력전 사이클(exp19~22) 4장 전부 목표 미달로 종료
+
+## 최종 대형 스윙 (남은 카드 2장)
+
+- [ ] exp23a-verifier-v2-data: 검증자 v2 데이터 생성. `nohup uv run python remote/gen_verifier_v2_data.py > gen_verifier_v2.log 2>&1 &` (~2-3시간). 어려운음성/어려운양성/채택/근거실패 통계 기록
+- [ ] exp23b-verifier-v2-train: 검증자 v2 학습. remote/train_verifier.py를 수정: data='data/verifier_v2.jsonl', output_dir='outputs/verifier_v2', assistant 응답을 'Yes/No' 대신 **r['judge'] 전문**(근거+Verdict 줄)으로. 클래스 균형은 label 기준 유지. 학습 후 어댑터 경로 기록
+- [ ] exp23c-verifier-v2-eval: v2 판정. 새 스크립트(eval_bestofn_v2.py, 커밋): 베이스 n=8 생성 → 각 풀이를 v2 어댑터로 채점(greedy, max_tokens 600, 'Verdict: Yes/No' 파싱) → 전략 3종 비교: ①majority ②verdict-vote(답별 Yes 수 최다) ③hybrid(득표수+Yes수 합산). **성공 기준: 최고 전략 ≥76.5%**. 성공 시 exp23d로 제출 파일
+- [ ] exp23d-submission-v2: exp23c 성공 시에만 — 성공 전략을 make_submission에 이식해 831문항 제출 파일 생성(results/submission_verifier2.csv 커밋). 실패 시 skip
+- [ ] exp24-grpo-scale: GRPO 스케일업 (파일럿의 '무해함' 확인 기반). remote/train_grpo.py CONFIG 수정: n_problems=6000, max_steps=1500, output_dir='outputs/grpo_scale' → 학습(~10-15시간) → eval_vllm --mode both --adapter로 평가. **성공 기준: SC n8 ≥75.7%**. wandb 보상 곡선이 400스텝 이후 상승하는지도 기록 (파일럿이 '덜 돌린 것'이었는지 판정)
