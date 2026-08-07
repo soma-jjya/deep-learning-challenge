@@ -15,7 +15,7 @@
 | H6 | GPTQ/AWQ 양자화 + vLLM으로 SC 샘플 수 증대 | 간접 (속도) | NuminaMath T4 최적화 | 속도 병목 시 |
 | H7 | GRPO 강화학습 | 불확실 | DeepSeekMath | 후순위 |
 | H8 | 멀티 LoRA 어댑터 앙상블 (같은 베이스, 다수결 결합) | +2~5%p | SC의 다양성 확장 | ❌ 완료 (exp19) — base8+qlora8 74.9%(362/483), base8+grpo8 74.7%(361/483), 둘 다 균일 n16(75.6%)보다 낮고 성공 기준(76.6%+) 미달. 정책 다양성 가설 기각 |
-| H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ❌ 완료 (exp18a·18b·18c, v1) — verifier_weighted 75.4%(다수결 74.9% 대비 +0.5%p)로 방향은 맞으나 성공 기준(76.5%+) 미달, best_of_1 72.5%는 오히려 하락. **재도전(exp23a·23b·23c, v2, 근거+Verdict 학습) 완료** — majority/hybrid 73.7%(356/483), verdict_vote 73.3%(354/483), 셋 다 v1(75.4%)보다도 낮음. 성공 기준(76.5%+) 미달, 재도전도 실패 — H9 **최종 기각** |
+| H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ❌ 완료 (exp18a·18b·18c, v1) — verifier_weighted 75.4%(다수결 74.9% 대비 +0.5%p)로 방향은 맞으나 성공 기준(76.5%+) 미달, best_of_1 72.5%는 오히려 하락. **재도전(exp23a·23b·23c, v2, 근거+Verdict 학습) 완료** — majority/hybrid 73.7%(356/483), verdict_vote 73.3%(354/483), 셋 다 v1(75.4%)보다도 낮음. 성공 기준(76.5%+) 미달, 재도전도 실패. **잔여 조합(exp25, v1×n=32) 완료** — verifier_weighted 75.8%(366/483, n8 대비 +0.4%p)로 표본 확대 효과는 있으나 여전히 성공 기준(76.3%+) 미달 — H9 **최종 기각**(모든 변형 소진) |
 | H10 | 반복 RFT: 학습된 모델로 데이터 재생성 → 재학습 (2~3라운드) | +3~8%p | STaR의 반복 루프 | ⏭️ 스킵 (exp08) — exp06c 어댑터가 베이스보다 낮아 조건 미충족 |
 | H11 | SC 샘플 수 스케일링 (8→16→32→64) + temperature 탐색 | +1~4%p | 다수결은 표본이 클수록 안정 | ❌ 완료 (exp07, exp17) — n=8→16 +0.9%p, n=16→32→64는 75.4~75.8% 사이에서 정체(비단조), 성공 기준(76.3%+) 미달. SC 스케일링만으로는 추가 이득 없음 확정 |
 | H12 | 외부 CoT 데이터 혼합 비율 실험 (NuminaMath-CoT 정수답 부분집합 0/30/70%) | +3~8%p | NuminaMath 우승, H4 구체화 | ❌ 완료 (exp09a·exp09b) — 외부 30,000+자체 12,923 혼합 학습(lr1e-4/ep1)해도 베이스보다 하락(greedy 67.5%, SC 71.8%). 자기증류 가설 기각, 학습 파이프라인 자체(러닝레이트/포맷/LoRA target) 재검토 필요 |
@@ -81,6 +81,17 @@
 | 23c | 2026-08-07 | **검증자 v2 Best-of-N 평가 (H9 재도전) — 목표 미달, H9 최종 기각** — `remote/eval_bestofn_v2.py --verifier outputs/verifier_v2/verifier_final --n 8` (베이스로 생성 n=8, v2 어댑터가 근거+Verdict로 채점). majority 73.7%(356/483), verdict_vote 73.3%(354/483), hybrid 73.7%(356/483). 성공 기준(76.5%+) 미달, 셋 다 v1(exp18c, verifier_weighted 75.4%)보다도 낮음 | 73.7%(majority/hybrid) | - | remote/eval_bestofn_v2.py |
 | 23d | 2026-08-07 | 검증자 v2 선별 제출 파일 생성 — exp23c가 성공 기준(76.5%+) 미달이라 **skip** | - | - | - | - | - | remote/train_verifier.py |
 | 24 | 2026-08-07 | **GRPO 스케일업 (최종 대형 스윙 카드②) — 목표 미달** — `remote/train_grpo.py`(n_problems=6000, max_steps=1500, lr5e-6), train_loss 0.0177, [wandb c637q5at](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/c637q5at). 평가: greedy 69.8%(337/483, +0.4%p), SC n8 **73.1%**(353/483, **-1.6%p**), 가중투표 74.1%(358/483, -0.6%p) — 성공 기준(SC n8≥75.7%) 미달, exp12 파일럿(74.5%)보다도 낮아 스텝 확대가 오히려 역효과 | 73.1%(SC n8) | - | remote/train_grpo.py |
+| 25 | 2026-08-07 | **v1 검증자 × n=32 잔여 조합 — 목표 미달, 큐 소진** — `remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 32`. majority 75.4%(364/483), verifier_weighted **75.8%**(366/483), best_of_1 72.3%(349/483). exp18c(n8: 74.9/75.4/72.5) 대비 verifier_weighted +0.4%p로 표본 확대는 소폭 도움됐으나 성공 기준(76.3%+) 미달 | 75.8%(verifier_weighted) | - | remote/eval_bestofn.py |
+
+## 실험 25: v1 검증자 × n=32 잔여 조합 — 목표 미달, 큐 소진 (2026-08-07, AWS)
+
+- **배경**: H9(v1 검증자, exp18c)에서 유일하게 방향이 맞았던 신호(verifier_weighted 75.4%, 다수결 74.9% 대비 +0.5%p)를 표본 수를 n=8→32로 늘리면 pass@n 상승과 맞물려 성공 기준을 넘을 수 있는지 확인 — 큐의 마지막 잔여 조합 카드
+- **설정**: `uv run python remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 32` (검증 483문항, 베이스 모델로 n=32 풀이 생성 후 v1 검증자 어댑터로 채점, majority/verifier_weighted/best_of_1 3전략)
+- **결과**: **majority 75.4%(364/483), verifier_weighted 75.8%(366/483), best_of_1 72.3%(349/483)**. exp18c(n8: 74.9/75.4/72.5) 대비 verifier_weighted +0.4%p, best_of_1은 -0.2%p로 거의 그대로. **성공 기준(verifier_weighted≥76.3%) 미달**
+- **의미**: 표본을 4배 늘려도 verifier_weighted가 +0.4%p만 오름 — SC 자체가 n16 이후 정체(exp17)하는 것과 같은 패턴으로, 검증자 신호도 n 확대만으로는 목표치까지 못 미침. H9는 v1(n8, n32)·v2 세 변형 모두 성공 기준 미달로 최종 기각 확정
+- **결과 파일**: `results/eval_bestofn.json`, `eval25_v1_n32.log`
+- **다음**: 큐의 마지막 항목이 완료됨 — 로컬 Claude(계획자)가 다음 근본 가설(H15 DPO 등)을 문서화해 큐에 등록 필요
+- **사고 기록**: 세션 진입 시 이미 이전 세션이 백그라운드로 실행·완료해둔 결과(13:22 모델 로드 시작 → 14:14 완료, GPU 유휴·관련 프로세스 없음 확인)를 발견 — 로그(`eval25_v1_n32.log`) 마지막 줄(`검증 483문항, n=32`, majority/verifier_weighted/best_of_1 수치)과 `results/eval_bestofn.json` 수치가 정확히 일치함을 확인한 뒤 재실행 없이 기록만 수행
 
 ## 실험 24: GRPO 스케일업 (최종 대형 스윙 카드②) — 목표 미달 (2026-08-07, AWS)
 
@@ -91,7 +102,7 @@
 - **의미**: H17(GRPO) 최종 기각 확정 — 파일럿의 중립적 결과는 "학습 부족"이 아니라 "GRPO가 이 3B 모델·태스크 조합에서 SC 다수결에 필요한 다양성을 깎아먹는 방향으로 수렴"하는 것에 가까움. 학습 트랙(트랙 A)은 QLoRA SFT·GRPO 파일럿·GRPO 스케일업까지 모든 파라다임이 베이스 대비 중립 이하로 마무리
 - **결과 파일**: `results/eval_outputs_grpo_scale_grpo_scale_final.json`, 로그 `train_grpo_scale.log`(학습), `eval24_grpo_scale.log`(평가)
 - **사고 기록**: 세션 진입 시 이미 이전 세션이 백그라운드로 학습(05:16 시작 → 12:58 완료, 약 7.7시간)과 평가(13:06 시작 → 13:18 완료)를 모두 실행·완료해둔 상태를 발견 — GPU 유휴·관련 프로세스 없음 확인, 로그 마지막 줄과 결과 JSON 수치(greedy 0.6977/sc_n8 0.7308/weighted 0.7412)가 정확히 일치함을 확인한 뒤 재실행 없이 기록만 수행
-- **다음**: exp25(잔여 조합 — v1 검증자 × n=32, 큐의 마지막 항목)
+- **다음**: exp25(잔여 조합 — v1 검증자 × n=32, 큐의 마지막 항목) — 완료, 결과는 "실험 25" 절 참고
 
 ## 실험 23a: 검증자 v2 데이터 생성 (H9 재도전) (2026-08-07, AWS)
 

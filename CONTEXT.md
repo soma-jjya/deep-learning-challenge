@@ -27,7 +27,13 @@
 
 **하이브리드**: 추론·평가·제출 = Kaggle (무료, 최종 추론 재현성도 Kaggle 환경 기준) / RFT 데이터 생성·QLoRA 학습 = AWS (9시간 벽·T4 속도 병목 회피, 스팟 총 $30~80 예상). 어댑터는 AWS→Kaggle로 가져와 추론.
 
-## 현재 상태 (2026-08-07 갱신 10) — exp24 완료(GRPO 스케일업, H17 최종 기각), 큐 다음은 exp25(v1 검증자 × n=32, 큐 마지막 항목)
+## 현재 상태 (2026-08-07 갱신 11) — exp25 완료(v1 검증자×n32, H9 최종 기각), **큐 완전 소진**
+
+- **exp25 완료(잔여 조합 — v1 검증자 × n=32, H9 최종 기각)**: `remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 32` — 세션 진입 시 이미 이전 세션(exp24 완료 후 곧바로 백그라운드 시작)이 실행·완료해둔 상태(13:22 모델 로드 → 14:14 완료, GPU 유휴·프로세스 없음 확인)를 발견해 재실행 없이 로그(`eval25_v1_n32.log`)와 결과 파일(`results/eval_bestofn.json`) 일치 확인 후 기록만 수행. majority 75.4%(364/483), verifier_weighted **75.8%**(366/483), best_of_1 72.3%(349/483) — exp18c(n8: 74.9/75.4/72.5) 대비 verifier_weighted +0.4%p로 표본 확대 효과는 있었으나 **성공 기준(76.3%+) 미달**. H9(검증자)는 v1(n8·n32)·v2 세 변형 모두 실패로 최종 기각 확정
+- **큐 완전 소진** — 로컬 Claude(계획자)가 다음 근본 가설(H15 DPO, 또는 새 가설)을 문서화해 experiments/queue.md에 등록 필요. CONTEXT.md 운영 정책(가설 풀 3개 이상 유지)상 시급. 남은 미종결 백로그 항목은 H15(DPO)뿐 — 총력전 사이클(exp19~22)·최종 대형 스윙(exp23~25)까지 저비용 미검증 카드가 모두 소진된 상태
+- **운영 메모(러너, 지속 이월)**: 재부팅 후 진행 중이던 실험을 다시 트리거하는 패턴이 이번 세션도 동일(exp25가 이미 완료된 상태에서 재트리거됐으나 중복 실행 없음, 진입 시점 로그 확인으로 안전하게 걸러짐). 근본 수정(진행 중 실험을 상태 파일로 표시)은 아직 미반영. 큐가 빈 지금이 러너 상태 재확인에 안전한 시점
+
+## 이전 상태 (2026-08-07 갱신 10) — exp24 완료(GRPO 스케일업, H17 최종 기각), 큐 다음은 exp25(v1 검증자 × n=32, 큐 마지막 항목)
 
 - **exp24 완료(GRPO 스케일업, 최종 대형 스윙 카드② — H17 최종 기각)**: `remote/train_grpo.py`(n_problems=6000, max_steps=1500) — 세션 진입 시 이미 이전 세션이 백그라운드로 학습(05:16→12:58, 약 7.7시간)·평가(13:06→13:18)를 모두 완료해둔 상태(GPU 유휴·프로세스 없음 확인)를 발견해 재실행 없이 로그(`train_grpo_scale.log`, `eval24_grpo_scale.log`)와 결과 파일(`results/eval_outputs_grpo_scale_grpo_scale_final.json`) 일치 확인 후 기록만 수행. train_loss 0.0177([wandb c637q5at](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/c637q5at)), reward_correct/mean이 스텝 전반에서 뚜렷한 상승 추세 없음. 평가: greedy 69.8%(+0.4%p), SC n8 **73.1%**(-1.6%p, 성공 기준 75.7% 미달), 가중투표 74.1%(-0.6%p) — 파일럿(exp12, SC 74.5%)보다도 하락. "파일럿이 덜 돌린 것"이라는 가설 기각 — **H17(GRPO) 최종 기각**, 학습 트랙(트랙 A)은 모든 파라다임(QLoRA SFT×3, GRPO 파일럿·스케일업)에서 베이스 대비 중립 이하로 마무리
 - **큐 다음 항목**: exp25-v1-verifier-n32 (잔여 조합 — v1 검증자(유일한 양의 신호, exp18c +0.5%p) × n=32. `remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 32`, ~2시간, 성공 기준 verifier_weighted≥76.3%). **큐의 마지막 항목** — 완료 후 로컬 Claude(계획자)가 다음 가설(H15 DPO 등) 등록 필요
