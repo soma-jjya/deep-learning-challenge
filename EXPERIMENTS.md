@@ -82,6 +82,16 @@
 | 23d | 2026-08-07 | 검증자 v2 선별 제출 파일 생성 — exp23c가 성공 기준(76.5%+) 미달이라 **skip** | - | - | - | - | - | remote/train_verifier.py |
 | 24 | 2026-08-07 | **GRPO 스케일업 (최종 대형 스윙 카드②) — 목표 미달** — `remote/train_grpo.py`(n_problems=6000, max_steps=1500, lr5e-6), train_loss 0.0177, [wandb c637q5at](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/c637q5at). 평가: greedy 69.8%(337/483, +0.4%p), SC n8 **73.1%**(353/483, **-1.6%p**), 가중투표 74.1%(358/483, -0.6%p) — 성공 기준(SC n8≥75.7%) 미달, exp12 파일럿(74.5%)보다도 낮아 스텝 확대가 오히려 역효과 | 73.1%(SC n8) | - | remote/train_grpo.py |
 | 25 | 2026-08-07 | **v1 검증자 × n=32 잔여 조합 — 목표 미달, 큐 소진** — `remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 32`. majority 75.4%(364/483), verifier_weighted **75.8%**(366/483), best_of_1 72.3%(349/483). exp18c(n8: 74.9/75.4/72.5) 대비 verifier_weighted +0.4%p로 표본 확대는 소폭 도움됐으나 성공 기준(76.3%+) 미달 | 75.8%(verifier_weighted) | - | remote/eval_bestofn.py |
+| 26 | 2026-08-07 | 최종 제출 파일 생성 — 확정 최고 로컬 스택(확신도 가중 SC n=32, 75.8%)으로 리더보드 831문항 제출 파일 생성. `uv run python remote/make_submission.py --n 32 --weighted --tag n32w` (베이스 모델, 어댑터 없음) → results/submission_n32w.csv (831행, 정수만, 결측·중복 없음 확인) | 75.8%(로컬 기준, exp25) | 실측 대기 | remote/make_submission.py |
+
+## 실험 26: 최종 제출 파일 생성 (SC n=32 가중, 확정 최고 스택) (2026-08-07, AWS)
+
+- **배경**: exp17·exp25 두 방법(균일 SC와 검증자 Best-of-N)이 독립적으로 일치한 로컬 최고 수치 — 확신도 가중 SC n=32(75.8%)를 최종 제출 스택으로 확정, 리더보드 831문항에 적용
+- **설정**: `uv run python remote/make_submission.py --n 32 --weighted --tag n32w` (베이스 모델, 어댑터 없음, 확신도 가중 다수결). 리더보드 대상: `deep-learning-challenge-2026/deep_chal_math_leaderboard_filtered.csv`(831문항)
+- **결과**: `results/submission_n32w.csv` 생성 완료 — 831행, id/answer 컬럼, 정수 답만, 결측·중복 id 없음(검증 완료). 로그 마지막 줄: "저장: results/submission_n32w.csv (831행). 빈 답 없음 확인: True"
+- **소요**: 14:27 모델 로드 시작 → 15:28 완료, 약 61분 (예상 2.5시간보다 빠름)
+- **다음**: 사용자가 Kaggle/대회 플랫폼에 제출 후 실측 리더보드 점수 확인 (기대 0.775~0.785). 큐 재소진 — 로컬 Claude(계획자)가 다음 항목 등록 필요
+- **사고 기록**: 세션 진입 시 이미 이전 세션이 백그라운드로 실행·완료해둔 결과(로그 `make_submission_n32w.log`, GPU 유휴·관련 프로세스 없음 확인)를 발견 — 재실행 없이 로그와 CSV 파일 검증(행 수·컬럼·정수 여부·중복 id) 후 기록만 수행
 
 ## 실험 25: v1 검증자 × n=32 잔여 조합 — 목표 미달, 큐 소진 (2026-08-07, AWS)
 
