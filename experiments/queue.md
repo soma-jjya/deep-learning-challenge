@@ -29,3 +29,10 @@
 - [x] exp18b-verifier-train: 검증자 어댑터 학습. `nohup uv run python remote/train_verifier.py > train_verifier.log 2>&1 &` (클래스 균형 1:1, ~1-2시간). loss·wandb 링크 기록. 어댑터: outputs/verifier/verifier_final → 결과: 970/970 스텝 정상 완료(약 81분), 클래스 균형 1:1(양성 7,760+음성 7,760=15,520), train_loss 0.7613→0.2116(평균 0.2288). wandb ufarew6n. 어댑터 outputs/verifier/verifier_final 저장 완료
 - [x] exp18c-bestofn-eval: 검증자 Best-of-N 평가. `uv run python remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 8` — majority/verifier_weighted/best_of_1 세 수치 기록. **성공 기준: verifier_weighted ≥ 76.5%** (다수결 +1.8%p). 성공 시 이것이 새 제출 스택 → 결과: majority 74.9%(362/483), verifier_weighted 75.4%(364/483), best_of_1 72.5%(350/483) — 성공 기준(76.5%+) 미달, H9 기각
 - [x] exp18d-submission-verifier: exp18c 성공 시에만 — make_submission.py를 검증자 선별 방식으로 확장(eval_bestofn.py의 선별 로직 이식, 커밋 필수)해 리더보드 831문항 제출 파일 생성 → results/submission_verifier.csv 커밋. 실패 시 skip 기록 → 결과: **skip**. exp18c가 성공 기준(76.5%+) 미달이라 실행 조건 미충족
+
+## 총력전 사이클 (2026-08-07 사용자 지시: 무조건 상승 — 저비용 미검증 카드 4장 병렬 소진)
+
+- [ ] exp19-policy-ensemble: H8 정책 앙상블 (운영진 허용 확정). 베이스로 n=8 + exp06 어댑터(outputs/qlora/qlora_r16_lr0.0002_ep2_final)로 n=8 생성해 **16표 합동 다수결**. eval_bestofn.py를 참고해 일회용 스크립트 작성(커밋). 같은 방식으로 "베이스8+GRPO어댑터8(outputs/grpo_pilot/grpo_pilot_final)" 조합도 측정. 비교 기준: 균일 n16 75.6%. **성공: ≥76.6%** (다양성 가설의 직접 검증)
+- [ ] exp20-fewshot: 4-shot 프롬프트. data/sft_short.jsonl에서 서로 다른 유형의 짧은 정답 풀이 4개를 골라(기하/대수/정수론/응용 각 1), 모든 문제 앞에 예시 대화(user문제→assistant풀이)로 붙여 greedy와 SC n8 평가 (일회용 스크립트, 커밋). 비교: zero-shot 69.4/74.7. **성공: SC ≥75.7%**
+- [ ] exp21-question-clean: 문제 텍스트 정화. val 483문항에서 잡음 패턴(`Translate the above text`로 시작하는 지시문, `![](...)` 이미지 링크, `[asy]...[/asy]`, 문두 문제번호 `N.` 등)을 제거하는 전처리 함수 작성 → 정화 적용/미적용 greedy 비교 + 몇 문항이 영향받는지 기록 (일회용 스크립트, 커밋 — 효과 있으면 make_submission에도 이식할 것이므로 함수를 remote/clean_question.py로 분리). **성공: 영향받은 문항 부분집합에서 뚜렷한 개선**
+- [ ] exp22-adaptive-budget: 적응형 예산. n=8 결과에서 최다 득표가 3표 이하(합의 실패)인 문제만 골라 추가 24표(합계 32표)로 재표결, 나머지는 n8 결과 유지 (일회용 스크립트, 커밋). 비교: n8 74.7%, 균일 n16 75.6%. **성공: ≥76.3%** — 성공 시 이 방식이 새 제출 스택
