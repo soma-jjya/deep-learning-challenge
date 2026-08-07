@@ -15,7 +15,7 @@
 | H6 | GPTQ/AWQ 양자화 + vLLM으로 SC 샘플 수 증대 | 간접 (속도) | NuminaMath T4 최적화 | 속도 병목 시 |
 | H7 | GRPO 강화학습 | 불확실 | DeepSeekMath | 후순위 |
 | H8 | 멀티 LoRA 어댑터 앙상블 (같은 베이스, 다수결 결합) | +2~5%p | SC의 다양성 확장 | ⏳ 운영진 질의 중 |
-| H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ⏳ 진행 중 (exp18a 데이터 생성 완료 → exp18b 학습 대기) |
+| H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ⏳ 진행 중 (exp18a 데이터 생성·exp18b 학습 완료 → exp18c Best-of-N 평가 대기) |
 | H10 | 반복 RFT: 학습된 모델로 데이터 재생성 → 재학습 (2~3라운드) | +3~8%p | STaR의 반복 루프 | ⏭️ 스킵 (exp08) — exp06c 어댑터가 베이스보다 낮아 조건 미충족 |
 | H11 | SC 샘플 수 스케일링 (8→16→32→64) + temperature 탐색 | +1~4%p | 다수결은 표본이 클수록 안정 | ❌ 완료 (exp07, exp17) — n=8→16 +0.9%p, n=16→32→64는 75.4~75.8% 사이에서 정체(비단조), 성공 기준(76.3%+) 미달. SC 스케일링만으로는 추가 이득 없음 확정 |
 | H12 | 외부 CoT 데이터 혼합 비율 실험 (NuminaMath-CoT 정수답 부분집합 0/30/70%) | +3~8%p | NuminaMath 우승, H4 구체화 | ❌ 완료 (exp09a·exp09b) — 외부 30,000+자체 12,923 혼합 학습(lr1e-4/ep1)해도 베이스보다 하락(greedy 67.5%, SC 71.8%). 자기증류 가설 기각, 학습 파이프라인 자체(러닝레이트/포맷/LoRA target) 재검토 필요 |
@@ -69,6 +69,7 @@
 | 17 | 2026-08-06 | **SC 표본 수 확대 n=32/64 (H11 마무리, 베이스) — 목표 미달** — `remote/eval_vllm.py --mode sc --n 32`/`--n 64`. n32 다수결 75.4%(364/483)/가중 75.8%(366/483), n64 다수결 75.6%(365/483)/가중 75.4%(364/483). 성공 기준(76.3%+) 미달, n16(75.6%) 대비 추가 이득 없음 — SC 스케일링 정체 확인 | 75.8%(n32 가중, 최고치) | - | remote/eval_vllm.py |
 | 17b | 2026-08-06 | 최적 n 제출 파일 생성 — exp17이 성공 기준(76.3%+) 미달이라 **skip** | - | - | - |
 | 18a | 2026-08-06 | 검증자 학습 데이터 생성 (H9) — `remote/gen_verifier_data.py`, 6000문제×4샘플, 답 일치 자동 라벨링. 양성 16,240 / 음성 7,760 (총 24,000개) → data/verifier.jsonl | - | - | remote/gen_verifier_data.py |
+| 18b | 2026-08-07 | 검증자 어댑터 학습 (H9) — `remote/train_verifier.py`, r16/lr1e-4/ep1, 클래스 균형 1:1(양성 7,760+음성 7,760=15,520), train_loss 0.2288(0.76→0.21로 수렴). [wandb ufarew6n](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/ufarew6n) → outputs/verifier/verifier_final | - | - | remote/train_verifier.py |
 
 ## 실험 17: SC 표본 수 확대 n=32/64 마무리 (H11) (2026-08-06, AWS)
 
@@ -97,6 +98,14 @@
 - **의미**: 양성:음성 비율이 약 2.1:1로 불균형 — exp18b 학습 시 큐 명세대로 클래스 균형 1:1 샘플링 필요(음성 7,760개가 병목이 되어 최대 약 15,520개 균형 데이터 확보 가능)
 - **결과 파일**: `data/verifier.jsonl`(커밋 대상 아님, gitignore), `data/verifier_progress.json`(중단-재개용)
 - **다음**: exp18b-verifier-train (검증자 어댑터 학습) → exp18c(Best-of-N 평가, 성공 기준 verifier_weighted≥76.5%)
+
+## 실험 18b: 검증자 어댑터 학습 (H9) (2026-08-07, AWS)
+
+- **배경**: exp18a에서 생성한 24,000개 (문제,풀이,라벨) 데이터로 "풀이가 맞는지 Yes/No로 답하는" 검증자 LoRA를 학습. 추론 시 생성은 베이스(무어댑터)로, 채점만 이 어댑터로 수행할 예정(exp18c)
+- **설정**: `remote/train_verifier.py` — Qwen2.5-3B-Instruct, r16/alpha32/lr1e-4/ep1, per_device_batch=4×grad_accum=4(유효배치16), max_seq_len=2048, seed=42. 큐 명세대로 클래스 균형 1:1 샘플링(양성 7,760개가 상한이라 양성 7,760+음성 7,760=15,520개, 970 스텝)
+- **결과**: 정상 완료(약 81분 소요, 970/970 스텝). train_loss 시작 0.7613 → 종료 0.2116, 전체 평균 **train_loss 0.2288**. [wandb ufarew6n](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/ufarew6n). 어댑터 저장: `outputs/verifier/verifier_final`
+- **결과 파일**: `train_verifier.log`, `outputs/verifier/verifier_final/`(어댑터, 커밋 대상 아님 — 용량)
+- **다음**: exp18c-bestofn-eval — `remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 8`로 majority/verifier_weighted/best_of_1 측정, 성공 기준 verifier_weighted≥76.5%
 
 ## 실험 16: 오답 정밀 분석 (H13 사전 단계) (2026-08-06, AWS)
 
