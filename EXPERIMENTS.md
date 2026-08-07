@@ -26,7 +26,7 @@
 
 **🚨 정체 3/3 발동 (2026-08-06, exp09b)** → 근본 전환 계획 수립: **docs/pivot-plan.md**. 트랙 A = GRPO 강화학습(H17, KL 제약으로 SFT 실패 원인 회피), 트랙 B = 추론 스택 재설계(H18 자기수정, H19 프롬프트 앙상블). 신규 가설:
 
-| H17 | GRPO: KL 제약 RL — SFT와 달리 기존 조율 보존 + 다양성 유지 | +2~5%p | DeepSeekMath, pivot-plan | ❌ 완료 (exp12) — greedy 69.2%/SC 74.5%/가중 74.9%, 베이스와 사실상 동일(±0.2%p), 성공 기준(SC≥75.7%) 미달. exp13에서 트랙 A(학습 트랙) 완전 동결 확정 |
+| H17 | GRPO: KL 제약 RL — SFT와 달리 기존 조율 보존 + 다양성 유지 | +2~5%p | DeepSeekMath, pivot-plan | ❌ **최종 기각** (exp12 파일럿·exp24 스케일업) — 파일럿(3천문제/400스텝) greedy 69.2%/SC 74.5%/가중 74.9%, 베이스와 사실상 동일(±0.2%p). 스케일업(6천문제/1500스텝)에서도 greedy 69.8%/SC **73.1%**(파일럿보다 더 하락)/가중 74.1% — 성공 기준(SC≥75.7%) 재도전도 미달, "덜 돌려서"가 아니라 GRPO 자체가 SC 다양성을 깎는 방향으로 수렴하는 것으로 결론. exp13에서 트랙 A(학습 트랙) 완전 동결 확정 |
 | H18 | 2단계 자기수정 (풀이→같은 모델이 검토·수정) | +1~3%p | Self-Refine 계열 | ❌ 완료 (exp15) — 69.6%(336/483), 비교기준 greedy 69.4% 대비 +0.2%p로 판정기준(±1%p) 이내 노이즈, 개선 없음 |
 | H19 | 프롬프트 앙상블 SC (표본마다 다른 시스템 프롬프트로 다양성 확대) | +1~3%p | SC 다양성 이론 | ❌ 완료 (exp14) — 74.3%(359/483), 단일 프롬프트 SC n8(74.7%) 대비 -0.4%p로 판정 기준(±1%p) 이내 노이즈, 개선 없음 |
 
@@ -80,6 +80,18 @@
 | 23b | 2026-08-07 | 검증자 v2 어댑터 학습 (H9 재도전) — `remote/train_verifier.py`(data=verifier_v2.jsonl, assistant=근거+Verdict 전문), r16/lr1e-4/ep1, 클래스 균형 1:1(양성 2,198+음성 2,198=4,396, 음성이 제한 클래스), train_loss 0.7129→0.2266(평균 0.2523, 275스텝). [wandb yacah786](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/yacah786) → outputs/verifier_v2/verifier_final |
 | 23c | 2026-08-07 | **검증자 v2 Best-of-N 평가 (H9 재도전) — 목표 미달, H9 최종 기각** — `remote/eval_bestofn_v2.py --verifier outputs/verifier_v2/verifier_final --n 8` (베이스로 생성 n=8, v2 어댑터가 근거+Verdict로 채점). majority 73.7%(356/483), verdict_vote 73.3%(354/483), hybrid 73.7%(356/483). 성공 기준(76.5%+) 미달, 셋 다 v1(exp18c, verifier_weighted 75.4%)보다도 낮음 | 73.7%(majority/hybrid) | - | remote/eval_bestofn_v2.py |
 | 23d | 2026-08-07 | 검증자 v2 선별 제출 파일 생성 — exp23c가 성공 기준(76.5%+) 미달이라 **skip** | - | - | - | - | - | remote/train_verifier.py |
+| 24 | 2026-08-07 | **GRPO 스케일업 (최종 대형 스윙 카드②) — 목표 미달** — `remote/train_grpo.py`(n_problems=6000, max_steps=1500, lr5e-6), train_loss 0.0177, [wandb c637q5at](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/c637q5at). 평가: greedy 69.8%(337/483, +0.4%p), SC n8 **73.1%**(353/483, **-1.6%p**), 가중투표 74.1%(358/483, -0.6%p) — 성공 기준(SC n8≥75.7%) 미달, exp12 파일럿(74.5%)보다도 낮아 스텝 확대가 오히려 역효과 | 73.1%(SC n8) | - | remote/train_grpo.py |
+
+## 실험 24: GRPO 스케일업 (최종 대형 스윙 카드②) — 목표 미달 (2026-08-07, AWS)
+
+- **배경**: exp12(GRPO 파일럿, 3000문제/400스텝)가 베이스와 사실상 동일(중립, 하락 아님)했던 것이 "덜 돌려서"였는지 "GRPO 자체가 이 태스크에 한계가 있는 것"인지 판정 — 최종 대형 스윙 카드②
+- **설정**: `remote/train_grpo.py` CONFIG 수정 — `n_problems=6000`(파일럿의 2배), `max_steps=1500`(파일럿의 3.75배), `output_dir=outputs/grpo_scale`, 나머지(lr5e-6, num_generations=4)는 파일럿과 동일. 학습 후 `remote/eval_vllm.py --mode both --adapter outputs/grpo_scale/grpo_scale_final`로 검증 483문항 평가
+- **학습 결과**: 1500스텝 완료(epoch 0.5, 6000문제의 절반만 소진), train_runtime 27,680초(약 7.7시간), train_loss **0.0177**([wandb c637q5at](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/c637q5at)) — 파일럿(0.02028)과 비슷한 수준으로 낮음. reward_correct/mean이 스텝 전반에 걸쳐 0.4~0.65 사이를 오가며 뚜렷한 상승 추세 없음(400스텝 이후에도 개선 신호 부재) — "파일럿이 덜 돌린 것"이라는 가설과 배치되는 관찰
+- **평가 결과**: greedy **69.8%**(337/483, 베이스 69.4% 대비 +0.4%p), SC n8 **73.1%**(353/483, 베이스 74.7% 대비 **-1.6%p**), 가중투표 74.1%(358/483, -0.6%p) — 성공 기준(SC n8≥75.7%) 미달. exp12 파일럿(SC 74.5%)보다도 **낮아** 스텝을 늘릴수록 오히려 SC 다양성이 줄어드는 방향(자기증류와 유사한 패턴)으로 작용한 것으로 추정
+- **의미**: H17(GRPO) 최종 기각 확정 — 파일럿의 중립적 결과는 "학습 부족"이 아니라 "GRPO가 이 3B 모델·태스크 조합에서 SC 다수결에 필요한 다양성을 깎아먹는 방향으로 수렴"하는 것에 가까움. 학습 트랙(트랙 A)은 QLoRA SFT·GRPO 파일럿·GRPO 스케일업까지 모든 파라다임이 베이스 대비 중립 이하로 마무리
+- **결과 파일**: `results/eval_outputs_grpo_scale_grpo_scale_final.json`, 로그 `train_grpo_scale.log`(학습), `eval24_grpo_scale.log`(평가)
+- **사고 기록**: 세션 진입 시 이미 이전 세션이 백그라운드로 학습(05:16 시작 → 12:58 완료, 약 7.7시간)과 평가(13:06 시작 → 13:18 완료)를 모두 실행·완료해둔 상태를 발견 — GPU 유휴·관련 프로세스 없음 확인, 로그 마지막 줄과 결과 JSON 수치(greedy 0.6977/sc_n8 0.7308/weighted 0.7412)가 정확히 일치함을 확인한 뒤 재실행 없이 기록만 수행
+- **다음**: exp25(잔여 조합 — v1 검증자 × n=32, 큐의 마지막 항목)
 
 ## 실험 23a: 검증자 v2 데이터 생성 (H9 재도전) (2026-08-07, AWS)
 

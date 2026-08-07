@@ -1,0 +1,7 @@
+{
+  "adapter": "outputs/grpo_scale/grpo_scale_final",
+  "val_n": 500,
+  "greedy": 0.6977225672877847,
+  "sc_n8": 0.7308488612836439,
+  "sc_n8_weighted": 0.7412008281573499
+}
