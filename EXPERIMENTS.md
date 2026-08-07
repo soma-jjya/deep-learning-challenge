@@ -77,6 +77,7 @@
 | 21 | 2026-08-07 | **문제 텍스트 정화 (총력전 카드③) — 목표 미달(노이즈 범위)** — `remote/clean_question.py`(번역지시문·이미지링크·Asymptote코드·문두번호 제거) + `remote/eval_question_clean.py`. 검증 483문항 중 정화로 영향받은 문항 25개(5.2%). 전체 greedy: 원문 70.0%(338/483) / 정화 69.4%(335/483, -0.6%p). 영향받은 25문항만: 원문 52.0%(13/25) / 정화 56.0%(14/25, +4.0%p=1문항) | 69.4%(정화, 전체) | - | remote/clean_question.py, remote/eval_question_clean.py |
 | 22 | 2026-08-07 | **적응형 예산 (총력전 카드④) — 목표 미달** — `remote/eval_adaptive_budget.py`, n=8 다수결에서 합의 실패(최다득표≤3표) 문제 90개(18.6%)만 추가 n=24로 재표결(합계 32표), 나머지는 n8 유지. n8 baseline 74.5%(360/483), adaptive **75.2%**(363/483), 문제당 평균 투표수 12.47(균일n16보다 22% 적은 예산). 성공 기준(76.3%+) 미달, 균일 n16(75.6%)보다도 낮음 | 75.2%(adaptive) | - | remote/eval_adaptive_budget.py |
 | 23a | 2026-08-07 | 검증자 v2 데이터 생성 (H9 재도전) — `remote/gen_verifier_v2_data.py`, exp18a verifier.jsonl에서 어려운음성 3,239(다수결을 속인 오답)+어려운양성 506(표결에서 밀린 정답) 전량 + 쉬운양성 4,000/쉬운음성 2,000 다운샘플=9,745쌍 선별, 베이스 모델이 재검산 근거+Verdict 생성(temp0.7, tries=2), 판정이 라벨과 일치하는 근거만 채택. 채택 6,425(65.9%)/근거실패 3,320(34.1%) → data/verifier_v2.jsonl | - | - | remote/gen_verifier_v2_data.py |
+| 23b | 2026-08-07 | 검증자 v2 어댑터 학습 (H9 재도전) — `remote/train_verifier.py`(data=verifier_v2.jsonl, assistant=근거+Verdict 전문), r16/lr1e-4/ep1, 클래스 균형 1:1(양성 2,198+음성 2,198=4,396, 음성이 제한 클래스), train_loss 0.7129→0.2266(평균 0.2523, 275스텝). [wandb yacah786](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/yacah786) → outputs/verifier_v2/verifier_final | - | - | remote/train_verifier.py |
 
 ## 실험 23a: 검증자 v2 데이터 생성 (H9 재도전) (2026-08-07, AWS)
 
@@ -86,6 +87,15 @@
 - **다음**: exp23b(검증자 v2 학습 — assistant 응답을 Yes/No 대신 근거+Verdict 전문으로, 클래스 균형은 label 기준 유지) → exp23c(Best-of-N v2 평가, 성공 기준 76.5%+) → exp23d(성공 시 제출)
 - **결과 파일**: `data/verifier_v2.jsonl`(커밋 제외, 용량), `data/verifier_v2_progress.json`, `gen_verifier_v2.log`
 - **사고 기록**: 세션 진입 시 이미 이전 세션(재부팅 후 러너가 재트리거)이 백그라운드로 실행·완료해둔 결과(03:59경 시작 → 04:16 완료, GPU 유휴 확인)를 발견 — 로그(`gen_verifier_v2.log`)의 진행률 로그(9,745/9,745, 채택 6,425, 실패 3,320)와 `data/verifier_v2.jsonl` 실제 라인 수(6,425줄)가 정확히 일치함을 확인한 뒤 재실행 없이 기록만 수행
+
+## 실험 23b: 검증자 v2 어댑터 학습 (H9 재도전) (2026-08-07, AWS)
+
+- **배경**: exp23a에서 생성한 재검산 근거+Verdict 데이터(data/verifier_v2.jsonl, 6,425쌍)로 `remote/train_verifier.py`를 학습. v1(exp18b)과 달리 assistant 응답이 즉답 Yes/No가 아니라 `r['judge']`(근거 몇 줄 + "Verdict: Yes/No") 전문 — 큐 명세대로 스크립트가 이미 이렇게 구성돼 있어 추가 수정 없이 그대로 실행
+- **설정**: `nohup uv run python remote/train_verifier.py > train_verifier_v2.log 2>&1 &` — data='data/verifier_v2.jsonl', output_dir='outputs/verifier_v2', r16/alpha32/lr1e-4/ep1, 클래스 균형은 label 기준 1:1(max_per_class=12000, 실제로는 음성 2,198개가 제한 클래스라 양성도 2,198개로 다운샘플 → 총 4,396개 학습)
+- **결과**: 275스텝(1 epoch, 배치4×누적4), train_loss 0.7129(step10) → 0.2266(마지막 step) → 평균 0.2523, train_runtime 1,629초(약 27분). [wandb yacah786](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/yacah786). 어댑터 저장: `outputs/verifier_v2/verifier_final`
+- **다음**: exp23c(Best-of-N v2 평가 — 베이스 n=8 생성 후 이 어댑터로 채점, majority/verdict-vote/hybrid 3전략 비교, 성공 기준 최고 전략 ≥76.5%)
+- **결과 파일**: `outputs/verifier_v2/verifier_final`(어댑터, 커밋 제외), `train_verifier_v2.log`
+- **사고 기록**: 세션 진입 시 이미 이전 세션이 백그라운드로 학습을 실행·완료해둔 상태(로그 마지막 줄 `저장: outputs/verifier_v2/verifier_final`, GPU 유휴, 프로세스 종료 확인, 완료 시각 04:51~04:53경으로 이번 세션 진입 직전)를 발견 — 로그의 최종 손실·스텝수·어댑터 파일 존재를 확인한 뒤 재실행 없이 기록만 수행
 
 ## 실험 17: SC 표본 수 확대 n=32/64 마무리 (H11) (2026-08-06, AWS)
 
