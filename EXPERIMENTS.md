@@ -73,6 +73,7 @@
 | 18c | 2026-08-07 | **검증자 Best-of-N 평가 (H9) — 목표 미달** — `remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 8` (베이스로 생성 n=8, 검증자로 채점). majority 74.9%(362/483), verifier_weighted **75.4%**(364/483), best_of_1 72.5%(350/483). 성공 기준(verifier_weighted≥76.5%) 미달 | 75.4%(verifier_weighted) | - | remote/eval_bestofn.py |
 | 18d | 2026-08-07 | 검증자 선별 제출 파일 생성 — exp18c가 성공 기준(76.5%+) 미달이라 **skip** | - | - | - |
 | 19 | 2026-08-07 | **정책 앙상블 (H8) — 목표 미달** — `remote/eval_policy_ensemble.py`, 베이스 n8+QLoRA(exp06) n8=16표, 베이스 n8+GRPO(exp12) n8=16표 합동 다수결. base+qlora 74.9%(362/483), base+grpo 74.7%(361/483) — 균일 n16(75.6%)보다 오히려 낮음, 성공 기준(76.6%+) 미달 | 74.9%(base+qlora) | - | remote/eval_policy_ensemble.py |
+| 20 | 2026-08-07 | **4-shot 프롬프트 (총력전 카드②) — 목표 미달, zero-shot보다 하락** — `remote/eval_fewshot.py`, data/sft_short.jsonl에서 기하/대수/정수론/응용 각 1개(train-005807/005399/002653/013800) 예시로 모든 문제 앞에 붙임. greedy 70.2%(339/483, +0.8%p), SC n8 **73.1%**(353/483, **-1.6%p**) — 성공 기준(SC≥75.7%) 미달, zero-shot SC(74.7%)보다도 하락 | 73.1%(SC n8) | - | remote/eval_fewshot.py |
 
 ## 실험 17: SC 표본 수 확대 n=32/64 마무리 (H11) (2026-08-06, AWS)
 
@@ -129,6 +130,17 @@
 - **의미**: H8 기각. 총력전 사이클 4장 중 1장 소진, 나머지 exp20(퓨샷)·exp21(문제 정화)·exp22(적응형 예산) 진행
 - **결과 파일**: `results/eval_policy_ensemble.json`, `eval19_policy_ensemble.log`
 - **다음**: exp20-fewshot
+
+## 실험 20: 4-shot 프롬프트 (총력전 카드②) — 목표 미달 (2026-08-07, AWS)
+
+- **배경**: 총력전 사이클 카드 ②. 문제 유형별 예시 풀이를 프롬프트에 붙이면(in-context 학습) 모델이 풀이 형식·접근을 모방해 정확도가 오를 것이라는 가설. 학습(파라미터 갱신) 없이 프롬프트만으로 시도하는 저비용 카드
+- **설정**: `remote/eval_fewshot.py` — `data/sft_short.jsonl`(exp06c에서 만든 문제당 최단 정답 풀이 1개 모음, train 세트, 검증셋과 무관)에서 유형이 다른 짧은 풀이 4개를 선정(기하 train-005807, 대수 train-005399, 정수론 train-002653, 응용 train-013800). 모든 문제 앞에 예시 대화(user 문제→assistant 풀이) 4쌍을 고정으로 붙여 greedy와 SC n=8(temp=0.7, top_p=0.8, seed=42) 평가. 검증 483문항(exp05와 동일 세트, seed=123)
+- **결과**: fewshot greedy **70.2%(339/483)**, fewshot SC n8 **73.1%(353/483)**
+- **판정**: 성공 기준(SC n8≥75.7%) **미달**. zero-shot 기준(exp05: greedy 69.4%/SC 74.7%)과 비교하면 greedy는 +0.8%p로 노이즈 범위 내 소폭 상승이나, **SC n8은 -1.6%p로 오히려 하락** — 노이즈 범위(±1%p)를 벗어난 명확한 악화
+- **의미**: 4-shot 예시가 오히려 SC 다수결에 역효과. 예시 풀이 형식에 모든 샘플이 수렴하면서 temp=0.7 샘플링에도 불구하고 풀이 경로의 다양성이 줄어든 것으로 추정(exp06 QLoRA 실패의 "자기증류로 다양성 감소" 가설과 유사한 메커니즘) — SC는 다양한 풀이 경로의 합의에서 이득을 얻는데, few-shot이 그 다양성을 프롬프트 레벨에서 억누른 것으로 해석. 총력전 사이클 4장 중 2장 소진(H8·퓨샷 모두 기각), 나머지 exp21(문제 정화)·exp22(적응형 예산) 진행
+- **결과 파일**: `results/eval_fewshot.json`, `eval20_fewshot.log`
+- **사고 기록**: 실행 자체는 이전 서버 세션에서 이미 완료돼 있었음(02:16 모델 로드 → 02:30 완료, 스크립트 `remote/eval_fewshot.py` 커밋 b15d974까지 돼 있었으나 결과 파일은 미커밋 상태로 남아 있었음). 이번 세션은 로그(`eval20_fewshot.log`)와 결과 파일(`results/eval_fewshot.json`)로 완료를 확인한 뒤 재실행 없이 기록만 수행
+- **다음**: exp21-question-clean
 
 ## 실험 16: 오답 정밀 분석 (H13 사전 단계) (2026-08-06, AWS)
 

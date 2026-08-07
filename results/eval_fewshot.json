@@ -1,0 +1,11 @@
+{
+  "fewshot_ids": [
+    "train-005807",
+    "train-005399",
+    "train-002653",
+    "train-013800"
+  ],
+  "val_n": 483,
+  "fewshot_greedy": 0.7018633540372671,
+  "fewshot_sc_n8": 0.7308488612836439
+}
