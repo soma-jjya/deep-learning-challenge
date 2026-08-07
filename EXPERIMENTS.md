@@ -14,7 +14,7 @@
 | H5 | ~~TIR: 모델이 쓴 파이썬을 실행해 계산 보조~~ | - | - | ❌ **금지** (운영진 Q&A: 추론 시 코드 실행·툴 호출 불허) |
 | H6 | GPTQ/AWQ 양자화 + vLLM으로 SC 샘플 수 증대 | 간접 (속도) | NuminaMath T4 최적화 | 속도 병목 시 |
 | H7 | GRPO 강화학습 | 불확실 | DeepSeekMath | 후순위 |
-| H8 | 멀티 LoRA 어댑터 앙상블 (같은 베이스, 다수결 결합) | +2~5%p | SC의 다양성 확장 | ⏳ 운영진 질의 중 |
+| H8 | 멀티 LoRA 어댑터 앙상블 (같은 베이스, 다수결 결합) | +2~5%p | SC의 다양성 확장 | ❌ 완료 (exp19) — base8+qlora8 74.9%(362/483), base8+grpo8 74.7%(361/483), 둘 다 균일 n16(75.6%)보다 낮고 성공 기준(76.6%+) 미달. 정책 다양성 가설 기각 |
 | H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ❌ 완료 (exp18a·18b·18c) — verifier_weighted 75.4%(다수결 74.9% 대비 +0.5%p)로 방향은 맞으나 성공 기준(76.5%+) 미달, best_of_1 72.5%는 오히려 하락. H9 기각 |
 | H10 | 반복 RFT: 학습된 모델로 데이터 재생성 → 재학습 (2~3라운드) | +3~8%p | STaR의 반복 루프 | ⏭️ 스킵 (exp08) — exp06c 어댑터가 베이스보다 낮아 조건 미충족 |
 | H11 | SC 샘플 수 스케일링 (8→16→32→64) + temperature 탐색 | +1~4%p | 다수결은 표본이 클수록 안정 | ❌ 완료 (exp07, exp17) — n=8→16 +0.9%p, n=16→32→64는 75.4~75.8% 사이에서 정체(비단조), 성공 기준(76.3%+) 미달. SC 스케일링만으로는 추가 이득 없음 확정 |
@@ -72,6 +72,7 @@
 | 18b | 2026-08-07 | 검증자 어댑터 학습 (H9) — `remote/train_verifier.py`, r16/lr1e-4/ep1, 클래스 균형 1:1(양성 7,760+음성 7,760=15,520), train_loss 0.2288(0.76→0.21로 수렴). [wandb ufarew6n](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/ufarew6n) → outputs/verifier/verifier_final | - | - | remote/train_verifier.py |
 | 18c | 2026-08-07 | **검증자 Best-of-N 평가 (H9) — 목표 미달** — `remote/eval_bestofn.py --verifier outputs/verifier/verifier_final --n 8` (베이스로 생성 n=8, 검증자로 채점). majority 74.9%(362/483), verifier_weighted **75.4%**(364/483), best_of_1 72.5%(350/483). 성공 기준(verifier_weighted≥76.5%) 미달 | 75.4%(verifier_weighted) | - | remote/eval_bestofn.py |
 | 18d | 2026-08-07 | 검증자 선별 제출 파일 생성 — exp18c가 성공 기준(76.5%+) 미달이라 **skip** | - | - | - |
+| 19 | 2026-08-07 | **정책 앙상블 (H8) — 목표 미달** — `remote/eval_policy_ensemble.py`, 베이스 n8+QLoRA(exp06) n8=16표, 베이스 n8+GRPO(exp12) n8=16표 합동 다수결. base+qlora 74.9%(362/483), base+grpo 74.7%(361/483) — 균일 n16(75.6%)보다 오히려 낮음, 성공 기준(76.6%+) 미달 | 74.9%(base+qlora) | - | remote/eval_policy_ensemble.py |
 
 ## 실험 17: SC 표본 수 확대 n=32/64 마무리 (H11) (2026-08-06, AWS)
 
@@ -118,6 +119,16 @@
 - **의미**: H9(검증자 Best-of-N) 기각. 트랙 A(학습)·트랙 B(추론 재설계)에 이어 H9까지 목표 미달로 종료되며, 시도 가능한 안전한 가설 풀이 사실상 소진됨(SC 스케일링·프롬프트 앙상블·자기수정·가중투표·QLoRA SFT·GRPO·검증자 모두 시도 완료). 남은 후보는 H13b(검증셋 라벨 재검수, 미등록)와 H15(DPO, 미시도) 정도
 - **결과 파일**: `results/eval_bestofn.json`, `eval18c_bestofn.log`
 - **다음**: exp18d(제출 파일 생성)는 성공 기준 미달로 skip. 로컬 Claude(계획자)가 다음 근본 가설(H15 DPO 또는 H13b 검증셋 재검수)을 큐에 등록 필요 — CONTEXT.md 정체 정책상 안전한 반복만 지속하지 말 것
+
+## 실험 19: 정책 앙상블 (H8) — 목표 미달 (2026-08-07, AWS)
+
+- **배경**: 총력전 사이클 카드 ①. H9(검증자)까지 종료된 뒤 남은 저비용 미검증 가설 중 하나 — 서로 다른 정책(베이스/QLoRA/GRPO)이 생성한 풀이를 합쳐 다수결하면, 단일 정책 SC를 표본만 늘린 것(exp17 균일 n16)보다 다양성 자체의 효과로 더 오를 것이라는 가설(운영진 허용 확정)
+- **설정**: `remote/eval_policy_ensemble.py` — 베이스 모델(Qwen2.5-3B-Instruct)로 n=8 생성 + QLoRA 어댑터(`outputs/qlora/qlora_r16_lr0.0002_ep2_final`, exp06)로 n=8 생성 → 16표 합동 다수결. 같은 방식으로 GRPO 어댑터(`outputs/grpo_pilot/grpo_pilot_final`, exp12)와도 측정. temp=0.7, top_p=0.8, 검증 483문항
+- **결과**: base8+qlora8 앙상블 **74.9%(362/483)**, base8+grpo8 앙상블 **74.7%(361/483)**
+- **판정**: 성공 기준(≥76.6%) **미달**. 비교 기준인 균일 n16 다수결(exp07/17, 75.6%)보다도 두 조합 모두 낮음(-0.7%p, -0.9%p) — 정책 다양성이 표본 다양성보다 나은 신호를 준다는 가설과 반대 방향. QLoRA·GRPO 어댑터 모두 베이스와 성능이 비슷하거나 낮은 상태(exp06/exp12)라 앙상블에 섞여도 오답 쪽 표가 늘어나는 효과가 더 큰 것으로 추정 — 애초에 어댑터 자체가 베이스보다 나은 정책이 아니었으므로(트랙 A 동결 사유) 다양성 이득이 발휘될 전제가 없었음
+- **의미**: H8 기각. 총력전 사이클 4장 중 1장 소진, 나머지 exp20(퓨샷)·exp21(문제 정화)·exp22(적응형 예산) 진행
+- **결과 파일**: `results/eval_policy_ensemble.json`, `eval19_policy_ensemble.log`
+- **다음**: exp20-fewshot
 
 ## 실험 16: 오답 정밀 분석 (H13 사전 단계) (2026-08-06, AWS)
 

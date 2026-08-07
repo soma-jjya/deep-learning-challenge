@@ -1,0 +1,7 @@
+{
+  "val_n": 483,
+  "qlora_ensemble_n16": 0.7494824016563147,
+  "qlora_ensemble_n16_correct": 362,
+  "grpo_ensemble_n16": 0.7474120082815735,
+  "grpo_ensemble_n16_correct": 361
+}
