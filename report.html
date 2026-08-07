@@ -186,6 +186,10 @@ const EXPERIMENTS = [
     local: 71.8, lb: null, note: 'SFT 3연속 실패 → 정체 3/3 발동, 근본 전환(docs/pivot-plan.md). 진단: 이미 정밀 조율된 베이스에 SFT는 구조적으로 해로움 (다양성 붕괴로 SC가 더 크게 하락)', jump: null },
   { exp: 'exp12', date: '2026-08-07', method: 'GRPO 강화학습 파일럿 (KL제약 RL, 3천 문제 400스텝) — 베이스와 동일: SC 74.5%',
     local: 74.5, lb: null, note: 'SFT와 달리 성능을 지키는 데는 성공(KL 제약 작동), 올리지는 못함 → 학습 트랙 동결. exp11: n16+가중투표도 노이즈 범위(74.3~74.7%) — 추론 미세 이득은 ±1%p 측정 한계 확인', jump: null },
+  { exp: 'exp24', date: '2026-08-07', method: 'GRPO 스케일업 (1500스텝) — 실패: SC 73.1%, 보상 곡선 상승 없음',
+    local: 73.1, lb: null, note: '학습 계열 최종 5전 전패 (SFT×3, GRPO×2). 총력전 4장(정책앙상블·few-shot·정화·적응예산)과 검증자 v1/v2도 전부 기준 미달 — 상세는 EXPERIMENTS.md', jump: null },
+  { exp: 'exp25', date: '2026-08-07', method: '최고 로컬 스택 확정: 확신도/검증자 가중 × n=32 = 75.8% (두 방법 독립 일치)',
+    local: 75.8, lb: null, note: '성공 기준(76.3%)엔 미달이나 n8 스택(74.7%) 대비 +1.1%p — exp26에서 이 스택으로 제출 파일 생성, 리더보드 실측 예정', jump: null },
 ];
 const TARGET = 85;
 
