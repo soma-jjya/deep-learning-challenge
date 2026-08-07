@@ -16,13 +16,13 @@ from answer_extract import BS, extract_answer
 
 CONFIG = dict(
     base_model='Qwen/Qwen2.5-3B-Instruct',
-    output_dir='outputs/grpo_pilot',
-    n_problems=3000,        # 파일럿: 중간 난이도 위주 부분집합
+    output_dir='outputs/grpo_scale',
+    n_problems=6000,        # 스케일업: 파일럿(3000)의 2배 범위
     max_prompt_len=768,
     max_completion_len=1024,
     num_generations=4,      # 문제당 생성 수 (그룹 상대 보상)
     lr=5e-6,                # RL은 SFT보다 훨씬 낮게
-    max_steps=400,
+    max_steps=1500,
     per_device_batch=4,     # = num_generations 배수여야 함
     seed=42,
 )
@@ -117,7 +117,7 @@ def main():
         train_dataset=ds,
         args=GRPOConfig(
             output_dir=CONFIG['output_dir'],
-            run_name='grpo_pilot_lr5e-6_s400',
+            run_name='grpo_scale_lr5e-6_s1500',
             report_to='wandb',
             learning_rate=CONFIG['lr'],
             per_device_train_batch_size=CONFIG['per_device_batch'],
@@ -133,7 +133,7 @@ def main():
     )
     trainer.train()
 
-    final = os.path.join(CONFIG['output_dir'], 'grpo_pilot_final')
+    final = os.path.join(CONFIG['output_dir'], 'grpo_scale_final')
     model.save_pretrained(final)
     tokenizer.save_pretrained(final)
     print('저장 완료:', final)
