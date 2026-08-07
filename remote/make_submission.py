@@ -27,10 +27,24 @@ def majority_vote(answers):
     return Counter(votes).most_common(1)[0][0] if votes else 0
 
 
+def weighted_vote(answer_conf_pairs):
+    """확신도(평균 토큰 로그확률) 가중 다수결 — eval_vllm.py와 동일 로직 (exp17/25 최고 스택)."""
+    import math
+    pairs = [(a, lp) for a, lp in answer_conf_pairs if a is not None]
+    if not pairs:
+        return 0
+    m = max(lp for _, lp in pairs)
+    weights = {}
+    for a, lp in pairs:
+        weights[a] = weights.get(a, 0.0) + math.exp((lp - m) * 2.0)
+    return max(weights, key=weights.get)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--adapter', default=None)
     ap.add_argument('--n', type=int, default=8)
+    ap.add_argument('--weighted', action='store_true', help='확신도 가중 투표 사용')
     ap.add_argument('--tag', required=True, help='결과 파일 이름표 (예: exp06)')
     ap.add_argument('--lb-csv', default='deep-learning-challenge-2026/deep_chal_math_leaderboard_filtered.csv')
     args = ap.parse_args()
@@ -53,9 +67,15 @@ def main():
          {'role': 'user', 'content': q}],
         tokenize=False, add_generation_prompt=True) for q in lb['question']]
 
-    sp = SamplingParams(n=args.n, temperature=0.7, top_p=0.8, max_tokens=2048, seed=42)
+    sp = SamplingParams(n=args.n, temperature=0.7, top_p=0.8, max_tokens=2048, seed=42,
+                        logprobs=0 if args.weighted else None)
     outs = llm.generate(prompts, sp, lora_request=lora)
-    preds = [majority_vote([extract_answer(c.text) for c in o.outputs]) for o in outs]
+    if args.weighted:
+        preds = [weighted_vote([
+            (extract_answer(c.text), c.cumulative_logprob / max(1, len(c.token_ids)))
+            for c in o.outputs]) for o in outs]
+    else:
+        preds = [majority_vote([extract_answer(c.text) for c in o.outputs]) for o in outs]
 
     os.makedirs('results', exist_ok=True)
     out_path = f'results/submission_{args.tag}.csv'
