@@ -15,7 +15,7 @@
 | H6 | GPTQ/AWQ 양자화 + vLLM으로 SC 샘플 수 증대 | 간접 (속도) | NuminaMath T4 최적화 | 속도 병목 시 |
 | H7 | GRPO 강화학습 | 불확실 | DeepSeekMath | 후순위 |
 | H8 | 멀티 LoRA 어댑터 앙상블 (같은 베이스, 다수결 결합) | +2~5%p | SC의 다양성 확장 | ❌ 완료 (exp19) — base8+qlora8 74.9%(362/483), base8+grpo8 74.7%(361/483), 둘 다 균일 n16(75.6%)보다 낮고 성공 기준(76.6%+) 미달. 정책 다양성 가설 기각 |
-| H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ❌ 완료 (exp18a·18b·18c) — verifier_weighted 75.4%(다수결 74.9% 대비 +0.5%p)로 방향은 맞으나 성공 기준(76.5%+) 미달, best_of_1 72.5%는 오히려 하락. H9 기각 |
+| H9 | 검증자(verifier) 어댑터로 Best-of-N 선별 | +3~8%p | 소형모델+강한검증자 연구 | ❌ 완료 (exp18a·18b·18c, v1) — verifier_weighted 75.4%(다수결 74.9% 대비 +0.5%p)로 방향은 맞으나 성공 기준(76.5%+) 미달, best_of_1 72.5%는 오히려 하락. **재도전(exp23a·23b·23c, v2, 근거+Verdict 학습) 완료** — majority/hybrid 73.7%(356/483), verdict_vote 73.3%(354/483), 셋 다 v1(75.4%)보다도 낮음. 성공 기준(76.5%+) 미달, 재도전도 실패 — H9 **최종 기각** |
 | H10 | 반복 RFT: 학습된 모델로 데이터 재생성 → 재학습 (2~3라운드) | +3~8%p | STaR의 반복 루프 | ⏭️ 스킵 (exp08) — exp06c 어댑터가 베이스보다 낮아 조건 미충족 |
 | H11 | SC 샘플 수 스케일링 (8→16→32→64) + temperature 탐색 | +1~4%p | 다수결은 표본이 클수록 안정 | ❌ 완료 (exp07, exp17) — n=8→16 +0.9%p, n=16→32→64는 75.4~75.8% 사이에서 정체(비단조), 성공 기준(76.3%+) 미달. SC 스케일링만으로는 추가 이득 없음 확정 |
 | H12 | 외부 CoT 데이터 혼합 비율 실험 (NuminaMath-CoT 정수답 부분집합 0/30/70%) | +3~8%p | NuminaMath 우승, H4 구체화 | ❌ 완료 (exp09a·exp09b) — 외부 30,000+자체 12,923 혼합 학습(lr1e-4/ep1)해도 베이스보다 하락(greedy 67.5%, SC 71.8%). 자기증류 가설 기각, 학습 파이프라인 자체(러닝레이트/포맷/LoRA target) 재검토 필요 |
@@ -77,7 +77,9 @@
 | 21 | 2026-08-07 | **문제 텍스트 정화 (총력전 카드③) — 목표 미달(노이즈 범위)** — `remote/clean_question.py`(번역지시문·이미지링크·Asymptote코드·문두번호 제거) + `remote/eval_question_clean.py`. 검증 483문항 중 정화로 영향받은 문항 25개(5.2%). 전체 greedy: 원문 70.0%(338/483) / 정화 69.4%(335/483, -0.6%p). 영향받은 25문항만: 원문 52.0%(13/25) / 정화 56.0%(14/25, +4.0%p=1문항) | 69.4%(정화, 전체) | - | remote/clean_question.py, remote/eval_question_clean.py |
 | 22 | 2026-08-07 | **적응형 예산 (총력전 카드④) — 목표 미달** — `remote/eval_adaptive_budget.py`, n=8 다수결에서 합의 실패(최다득표≤3표) 문제 90개(18.6%)만 추가 n=24로 재표결(합계 32표), 나머지는 n8 유지. n8 baseline 74.5%(360/483), adaptive **75.2%**(363/483), 문제당 평균 투표수 12.47(균일n16보다 22% 적은 예산). 성공 기준(76.3%+) 미달, 균일 n16(75.6%)보다도 낮음 | 75.2%(adaptive) | - | remote/eval_adaptive_budget.py |
 | 23a | 2026-08-07 | 검증자 v2 데이터 생성 (H9 재도전) — `remote/gen_verifier_v2_data.py`, exp18a verifier.jsonl에서 어려운음성 3,239(다수결을 속인 오답)+어려운양성 506(표결에서 밀린 정답) 전량 + 쉬운양성 4,000/쉬운음성 2,000 다운샘플=9,745쌍 선별, 베이스 모델이 재검산 근거+Verdict 생성(temp0.7, tries=2), 판정이 라벨과 일치하는 근거만 채택. 채택 6,425(65.9%)/근거실패 3,320(34.1%) → data/verifier_v2.jsonl | - | - | remote/gen_verifier_v2_data.py |
-| 23b | 2026-08-07 | 검증자 v2 어댑터 학습 (H9 재도전) — `remote/train_verifier.py`(data=verifier_v2.jsonl, assistant=근거+Verdict 전문), r16/lr1e-4/ep1, 클래스 균형 1:1(양성 2,198+음성 2,198=4,396, 음성이 제한 클래스), train_loss 0.7129→0.2266(평균 0.2523, 275스텝). [wandb yacah786](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/yacah786) → outputs/verifier_v2/verifier_final | - | - | remote/train_verifier.py |
+| 23b | 2026-08-07 | 검증자 v2 어댑터 학습 (H9 재도전) — `remote/train_verifier.py`(data=verifier_v2.jsonl, assistant=근거+Verdict 전문), r16/lr1e-4/ep1, 클래스 균형 1:1(양성 2,198+음성 2,198=4,396, 음성이 제한 클래스), train_loss 0.7129→0.2266(평균 0.2523, 275스텝). [wandb yacah786](https://wandb.ai/loonaticvibe2-11-jin-jason/huggingface/runs/yacah786) → outputs/verifier_v2/verifier_final |
+| 23c | 2026-08-07 | **검증자 v2 Best-of-N 평가 (H9 재도전) — 목표 미달, H9 최종 기각** — `remote/eval_bestofn_v2.py --verifier outputs/verifier_v2/verifier_final --n 8` (베이스로 생성 n=8, v2 어댑터가 근거+Verdict로 채점). majority 73.7%(356/483), verdict_vote 73.3%(354/483), hybrid 73.7%(356/483). 성공 기준(76.5%+) 미달, 셋 다 v1(exp18c, verifier_weighted 75.4%)보다도 낮음 | 73.7%(majority/hybrid) | - | remote/eval_bestofn_v2.py |
+| 23d | 2026-08-07 | 검증자 v2 선별 제출 파일 생성 — exp23c가 성공 기준(76.5%+) 미달이라 **skip** | - | - | - | - | - | remote/train_verifier.py |
 
 ## 실험 23a: 검증자 v2 데이터 생성 (H9 재도전) (2026-08-07, AWS)
 
@@ -96,6 +98,16 @@
 - **다음**: exp23c(Best-of-N v2 평가 — 베이스 n=8 생성 후 이 어댑터로 채점, majority/verdict-vote/hybrid 3전략 비교, 성공 기준 최고 전략 ≥76.5%)
 - **결과 파일**: `outputs/verifier_v2/verifier_final`(어댑터, 커밋 제외), `train_verifier_v2.log`
 - **사고 기록**: 세션 진입 시 이미 이전 세션이 백그라운드로 학습을 실행·완료해둔 상태(로그 마지막 줄 `저장: outputs/verifier_v2/verifier_final`, GPU 유휴, 프로세스 종료 확인, 완료 시각 04:51~04:53경으로 이번 세션 진입 직전)를 발견 — 로그의 최종 손실·스텝수·어댑터 파일 존재를 확인한 뒤 재실행 없이 기록만 수행
+
+## 실험 23c: 검증자 v2 Best-of-N 평가 (H9 재도전, 최종) — 목표 미달, H9 최종 기각 (2026-08-07, AWS)
+
+- **배경**: exp23a·23b에서 만든 v2 검증자(재검산 근거+Verdict 생성)가 v1(즉답 Yes/No, exp18c verifier_weighted 75.4%)보다 신뢰도 높은 판정을 낼 수 있는지 확인 — H9 최종 판정
+- **설정**: `remote/eval_bestofn_v2.py --verifier outputs/verifier_v2/verifier_final --n 8` (신규 작성, 커밋). 검증 483문항에서 베이스 모델로 n=8 풀이 생성(temp0.7 top_p0.8 seed42) → 각 풀이를 v2 어댑터로 채점(greedy, max_tokens 600, `Verdict: Yes/No` 파싱) → 3전략 비교: ①majority(일반 다수결) ②verdict_vote(답별 Yes표 최다) ③hybrid(득표수+Yes표 합산 최대)
+- **결과**: **majority 73.7%(356/483), verdict_vote 73.3%(354/483), hybrid 73.7%(356/483)**. 성공 기준(최고 전략 ≥76.5%) 미달. 셋 다 v1의 verifier_weighted(75.4%)보다도 낮고, 심지어 이 표본의 순수 다수결(majority 73.7%)조차 exp18c 표본의 다수결(74.9%)보다 낮음 — vLLM 생성 비결정성(±1%p) 범위 내로 보이나, v2 검증자가 v1보다 개선됐다는 증거는 없음. 근거 생성 기반 판정이 즉답 Yes/No보다 낫다는 가설은 기각
+- **판정**: H9 재도전 실패 — v1·v2 두 번 모두 성공 기준 미달로 **H9(검증자 Best-of-N) 최종 기각**. 최종 대형 스윙 카드①(검증자 v2) 종료
+- **결과 파일**: `remote/eval_bestofn_v2.py`(커밋), `results/eval_bestofn_v2.json`, `eval23c_verifier_v2.log`
+- **다음**: exp23d는 성공 조건 미충족으로 skip. 큐 다음은 exp24(GRPO 스케일업, 최종 대형 스윙 카드②, 성공 기준 SC n8≥75.7%)
+- **사고 기록**: 세션 진입 시 이미 이전 세션이 백그라운드로 실행·완료해둔 결과(04:56 모델 로드 시작 → 05:11 완료, GPU 유휴·관련 프로세스 없음 확인)를 발견 — 로그(`eval23c_verifier_v2.log`) 마지막 줄과 `results/eval_bestofn_v2.json` 수치가 정확히 일치함을 확인한 뒤 재실행 없이 기록만 수행. runner.log상 이번 세션 진입 직후 exp23c가 재트리거된 흔적이 있으나(05:12 기준 이미 완료된 결과였음), 이전 세션 패턴(exp19·exp23a·exp23b)과 마찬가지로 중복 실행은 없었음
 
 ## 실험 17: SC 표본 수 확대 n=32/64 마무리 (H11) (2026-08-06, AWS)
 

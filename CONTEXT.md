@@ -27,11 +27,11 @@
 
 **하이브리드**: 추론·평가·제출 = Kaggle (무료, 최종 추론 재현성도 Kaggle 환경 기준) / RFT 데이터 생성·QLoRA 학습 = AWS (9시간 벽·T4 속도 병목 회피, 스팟 총 $30~80 예상). 어댑터는 AWS→Kaggle로 가져와 추론.
 
-## 현재 상태 (2026-08-07 갱신 8) — exp23b 완료(검증자 v2 학습, H9 재도전 2단계), 큐 다음은 exp23c(Best-of-N v2 평가)
+## 현재 상태 (2026-08-07 갱신 9) — exp23c 완료(검증자 v2 Best-of-N 평가, H9 최종 기각), 큐 다음은 exp24(GRPO 스케일업, 최종 대형 스윙 카드②)
 
-- **exp23b 완료(검증자 v2 학습)**: `remote/train_verifier.py` — 세션 진입 시 이미 이전 세션이 백그라운드로 학습을 실행·완료해둔 상태(로그 마지막 줄 `저장: outputs/verifier_v2/verifier_final`, GPU 유휴, 완료 시각이 세션 진입 직전인 04:51~04:53경)를 발견해 재실행 없이 로그(`train_verifier_v2.log`)와 어댑터 파일 존재 확인 후 기록만 수행. 스크립트가 큐 명세대로(data=verifier_v2.jsonl, output_dir=outputs/verifier_v2, assistant=r['judge'] 전문) 이미 구성돼 있어 수정 불필요. 클래스 균형 1:1(양성 2,198+음성 2,198=4,396, 음성이 제한 클래스), 275스텝 1epoch, train_loss 0.7129→0.2266(평균 0.2523). wandb yacah786. 어댑터: outputs/verifier_v2/verifier_final
-- **큐 다음 항목**: exp23c-verifier-v2-eval (Best-of-N v2 평가, 새 스크립트 eval_bestofn_v2.py 작성 — 베이스 n=8 생성 후 v2 어댑터로 채점, majority/verdict-vote/hybrid 3전략 비교, 성공 기준 최고 전략 ≥76.5%) → exp23d(성공 시 제출) → exp24(GRPO 스케일업, 성공 기준 SC n8≥75.7%)
-- **운영 메모(러너, 지속 이월)**: 재부팅 후 진행 중이던 실험을 다시 트리거하는 패턴이 exp19·exp23a에 이어 exp23b도 유사(이번엔 세션 진입 시점과 완료 시점이 거의 겹쳐 재트리거 여부는 불명확하나 중복 실행은 없었음). 결과 파일 존재 여부로 매번 안전하게 걸러지고 있으나, 근본 수정(진행 중 실험을 상태 파일로 표시)은 아직 미반영
+- **exp23c 완료(검증자 v2 Best-of-N 평가, H9 재도전 최종)**: `remote/eval_bestofn_v2.py --verifier outputs/verifier_v2/verifier_final --n 8` — 세션 진입 시 이미 이전 세션이 백그라운드로 실행·완료해둔 상태(로그 04:56 모델 로드 → 05:11 완료, GPU 유휴·관련 프로세스 없음 확인)를 발견해 재실행 없이 로그(`eval23c_verifier_v2.log`)와 결과 파일(`results/eval_bestofn_v2.json`) 일치 확인 후 기록만 수행. 결과: majority 73.7%(356/483), verdict_vote 73.3%(354/483), hybrid 73.7%(356/483) — 성공 기준(76.5%+) 미달, v1(exp18c verifier_weighted 75.4%)보다도 낮음. 근거 생성 기반 판정이 즉답 Yes/No보다 낫다는 가설 기각 — **H9(검증자 Best-of-N) v1·v2 모두 실패로 최종 기각**. exp23d(조건부 제출)는 조건 미충족으로 같은 세션에서 skip 기록(exp17b·exp18d 선례와 동일 패턴)
+- **큐 다음 항목**: exp24-grpo-scale (GRPO 스케일업, 최종 대형 스윙 카드② — `remote/train_grpo.py` CONFIG를 n_problems=6000/max_steps=1500/output_dir=outputs/grpo_scale로 수정 후 학습, ~10-15시간, 성공 기준 SC n8≥75.7%). 큐 소진 후에는 로컬 Claude(계획자)가 새 가설(H15 DPO 등) 등록 필요
+- **운영 메모(러너, 지속 이월)**: 재부팅 후 진행 중이던 실험을 다시 트리거하는 패턴이 exp19·exp23a·23b에 이어 exp23c도 동일(이번 세션도 진입 직후 러너가 exp23c를 재트리거했으나 이미 완료된 결과였음, 중복 실행 없음). 결과 파일 존재 여부로 매번 안전하게 걸러지고 있으나, 근본 수정(진행 중 실험을 상태 파일로 표시)은 아직 미반영
 
 ## 이전 상태 (2026-08-07 갱신 6) — exp22 완료(적응형 예산, 목표 미달) — 총력전 사이클 4장 전부 기각, 큐 비어있음
 
