@@ -50,8 +50,13 @@ def main():
     ap.add_argument('--mode', choices=['greedy', 'sc', 'both'], default='both')
     ap.add_argument('--adapter', default=None, help='LoRA 어댑터 경로 (없으면 베이스)')
     ap.add_argument('--n', type=int, default=8, help='SC 샘플 수')
+    ap.add_argument('--temp', type=float, default=0.7, help='SC 샘플링 온도')
+    ap.add_argument('--top-p', type=float, default=0.8)
+    ap.add_argument('--max-tokens', type=int, default=2048)
+    ap.add_argument('--sample-seed', type=int, default=42, help='생성 시드 (시드 앙상블용)')
+    ap.add_argument('--tag', default=None, help='결과 파일 이름표 (없으면 어댑터명)')
     ap.add_argument('--val-n', type=int, default=500)
-    ap.add_argument('--seed', type=int, default=123)
+    ap.add_argument('--seed', type=int, default=123, help='검증셋 추출 시드 — 절대 변경 금지')
     args = ap.parse_args()
 
     from vllm import LLM, SamplingParams
@@ -86,6 +91,11 @@ def main():
         acc = sum(int(p) == int(a) for p, a in zip(preds, val['answer'])) / len(val)
         print(f'[{name}] 정확도: {acc:.1%}')
         results[name] = acc
+        # 토큰 한도에 걸려 잘린 풀이 비율 (잘리면 boxed를 못 써서 무효표가 됨)
+        total = sum(len(o.outputs) for o in outs)
+        trunc = sum(1 for o in outs for c in o.outputs if c.finish_reason == 'length')
+        print(f'[{name}] 잘림 비율: {trunc}/{total} = {trunc/max(1,total):.1%}')
+        results[name + '_trunc_rate'] = trunc / max(1, total)
         # SC일 때는 같은 생성 결과로 가중 투표(H16)도 공짜로 측정
         if sp.n > 1:
             wpreds = [weighted_vote([
@@ -98,14 +108,15 @@ def main():
         return preds
 
     if args.mode in ('greedy', 'both'):
-        run('greedy', SamplingParams(temperature=0, max_tokens=2048))
+        run('greedy', SamplingParams(temperature=0, max_tokens=args.max_tokens))
     if args.mode in ('sc', 'both'):
         # logprobs=0: cumulative_logprob만 필요(가중 투표용), 토큰별 상세 리스트는 불필요 → 비용 최소화
-        run(f'sc_n{args.n}', SamplingParams(n=args.n, temperature=0.7, top_p=0.8,
-                                            max_tokens=2048, seed=42, logprobs=0))
+        run(f'sc_n{args.n}_t{args.temp}', SamplingParams(
+            n=args.n, temperature=args.temp, top_p=args.top_p,
+            max_tokens=args.max_tokens, seed=args.sample_seed, logprobs=0))
 
     os.makedirs('results', exist_ok=True)
-    tag = (args.adapter or 'base').replace('/', '_')
+    tag = args.tag or (args.adapter or 'base').replace('/', '_')
     out = f'results/eval_{tag}.json'
     json.dump(results, open(out, 'w'), indent=2)
     print('저장:', out)
