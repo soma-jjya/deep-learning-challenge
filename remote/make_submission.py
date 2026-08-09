@@ -44,6 +44,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--adapter', default=None)
     ap.add_argument('--n', type=int, default=8)
+    ap.add_argument('--temp', type=float, default=0.7, help='샘플링 온도')
+    ap.add_argument('--top-p', type=float, default=0.8)
+    ap.add_argument('--max-tokens', type=int, default=2048)
     ap.add_argument('--weighted', action='store_true', help='확신도 가중 투표 사용')
     ap.add_argument('--tag', required=True, help='결과 파일 이름표 (예: exp06)')
     ap.add_argument('--lb-csv', default='deep-learning-challenge-2026/deep_chal_math_leaderboard_filtered.csv')
@@ -67,7 +70,8 @@ def main():
          {'role': 'user', 'content': q}],
         tokenize=False, add_generation_prompt=True) for q in lb['question']]
 
-    sp = SamplingParams(n=args.n, temperature=0.7, top_p=0.8, max_tokens=2048, seed=42,
+    sp = SamplingParams(n=args.n, temperature=args.temp, top_p=args.top_p,
+                        max_tokens=args.max_tokens, seed=42,
                         logprobs=0 if args.weighted else None)
     outs = llm.generate(prompts, sp, lora_request=lora)
     if args.weighted:
