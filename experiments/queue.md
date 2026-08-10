@@ -56,9 +56,13 @@
   ② `remote/make_submission.py --n 32 --tag n32m` (가중 없이 단순 다수결 — 가중이 실제로 도움인지 해로운지)
   ※ ①이 5시간 이상 걸리면 ②를 먼저 실행할 것. 각 CSV의 행수(831)·정수·결측 검증 결과도 기록
 - [ ] exp33-lb-dump: **하루 최대 제출 체제의 기반** — 리더보드 표본 1회 대량 덤프. `nohup uv run python remote/dump_lb_samples.py --n 96 > dump_lb.log 2>&1 &` (~3시간). 완료 후 문항 수·표본 수·파일 크기 기록. **results/lb_samples.jsonl은 용량 커서 커밋 금지** (서버 보관). 이후 제출 파일은 GPU 없이 즉시 생성 가능해짐
-- [ ] exp34-submission-batch: exp33 완료 후 — `remote/make_submission_from_dump.py`로 제출 후보 5종을 즉시 생성(각 수 초, **CSV는 전부 커밋**):
-  ① `--rule weighted --n 96 --tag w96` ② `--rule majority --n 96 --tag m96` ③ `--rule weighted --n 32 --tag w32b`(기존 제출 재현 검증용) ④ `--rule drop_trunc --n 96 --tag dt96` ⑤ `--rule tiebreak_conf --n 96 --tag tb96`
-  각 파일의 행수·정수·결측 검증 + **기존 제출(n32w)과 몇 문항 다른지**(스크립트가 자동 출력)를 표로 기록. 서로 차이가 0문항인 조합이 있으면 그 사실도 기록(제출 낭비 방지)
+- [ ] exp34-submission-batch: exp33 완료 후 — `remote/make_submission_from_dump.py`로 제출 후보를 즉시 생성(각 수 초, **CSV는 전부 커밋**). 일일 한도는 없으나 리더보드 과적합을 피하기 위해 **구조적으로 다른 것만** 생성한다:
+  ① `--rule weighted --n 96 --tag w96` (표 최대 + 가중)
+  ② `--rule majority --n 96 --tag m96` (표 최대 + 단순 다수결 → 가중의 실효성 판별)
+  ③ `--rule weighted --n 32 --tag w32b` (기존 제출 재현 — **같은 설정 다른 표본이므로 우리 실행 간 변동폭을 LB에서 직접 측정**하는 대조군)
+  ④ `--rule drop_trunc --n 96 --tag dt96` (잘린 풀이 제외)
+  ⑤ `--rule tiebreak_conf --n 96 --tag tb96` (동률 시 확신도 우선)
+  각 파일의 행수·정수·결측 검증 + **기존 제출(n32w)과 몇 문항 다른지**를 표로 기록. **차이가 15문항 미만인 후보는 "판별 불가"로 표시**(831문항 기준 LB 표준오차 ±1.4%p) — 제출 여부는 로컬 Claude가 판단하므로 서버는 생성·기록까지만
 - [ ] exp32-budget-forcing: **개별 풀이의 질을 올리는 유일한 미탐색 축** (s1 방식, arXiv:2501.19393). 모델이 답을 내려 할 때 "Wait"를 붙여 재검토시킨다. 순서대로 실행하며 각 라운드 정확도를 표로 기록:
   ① `uv run python remote/eval_budget_forcing.py --rounds 2 --n 1` (greedy 기준선 69.4% 대비, ~1시간)
   ② ①에서 round1/round2가 기준선보다 **+2%p 이상** 오르면 → `--rounds 1 --n 8` 실행해 SC와의 결합 효과 측정 (SC n8 74.7% 대비, ~1.5시간)
