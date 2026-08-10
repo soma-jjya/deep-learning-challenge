@@ -12,21 +12,22 @@
     --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
     --series-1: #2a78d6;  /* 로컬 검증 */
     --series-2: #eb6834;  /* 리더보드 */
-    --good: #006300;
+    --good: #0ca30c;      /* 채택 */
+    --bad: #d03b3b;       /* 하락 */
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --page: #0d0d0d; --surface-1: #1a1a19;
       --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
       --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
-      --series-1: #3987e5; --series-2: #d95926; --good: #0ca30c;
+      --series-1: #3987e5; --series-2: #d95926; --good: #0ca30c; --bad: #d03b3b;
     }
   }
   :root[data-theme="dark"] {
     --page: #0d0d0d; --surface-1: #1a1a19;
     --text-primary: #ffffff; --text-secondary: #c3c2b7; --muted: #898781;
     --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
-    --series-1: #3987e5; --series-2: #d95926; --good: #0ca30c;
+    --series-1: #3987e5; --series-2: #d95926; --good: #0ca30c; --bad: #e66767;
   }
   * { box-sizing: border-box; }
   body {
@@ -101,6 +102,21 @@
   <h2>급상승 구간과 그 이유</h2>
   <div id="jumps"><p class="sub" style="margin:0">아직 상승 구간이 없습니다. 실험 2개 이상부터 표시됩니다.</p></div>
 
+  <h2>무엇이 통했고, 무엇이 통하지 않았나</h2>
+  <div class="card">
+    <div class="legend">
+      <span><span class="key" style="background:var(--good)"></span>✓ 채택 (기준선 대비 개선)</span>
+      <span><span class="key" style="background:var(--muted)"></span>~ 노이즈 (±1%p)</span>
+      <span><span class="key" style="background:var(--bad)"></span>✗ 하락</span>
+      <span><span class="key" style="background:var(--baseline); height:1px"></span>pass@6 상한 79.9%</span>
+    </div>
+    <div class="chart-wrap"><svg id="chart2" width="820" height="470" role="img" aria-label="실험별 로컬 정확도 가로 막대 그래프"></svg></div>
+    <p class="sub" style="margin:10px 0 0; font-size:0.84rem">
+      모든 수치는 동일한 검증 483문항 기준. <b>pass@6 = 79.9%</b>는 "6번 풀면 정답이 한 번은 나오는" 비율로,
+      집계 방식만으로 회수 가능한 이론적 상한 — 실제 최고치(75.8%)와의 4.1%p 갭이 검증자·가중투표가 노렸으나 열지 못한 구간이다.
+    </p>
+  </div>
+
   <h2>실험 로그 (표)</h2>
   <div class="card scroll">
     <table id="exp-table">
@@ -152,18 +168,18 @@
   <h2>검증 제출물 체크리스트</h2>
   <div class="card">
     <ul class="check">
-      <li>✅ 추론 코드 (생성→후처리→CSV) <span class="status-badge">필수</span> — kaggle/01·02 노트북</li>
-      <li>✅ 사용 데이터 목록 <span class="status-badge">필수</span> — README (현재: 대회 제공 데이터만)</li>
-      <li>✅ 실행 환경 <span class="status-badge">필수</span> — requirements.txt + 노트북 pip freeze 셀</li>
-      <li>⬜ 최종 모델 체크포인트 <span class="status-badge">필수</span> — SFT 단계에서 Kaggle Dataset 저장 예정</li>
-      <li>⬜ 학습 코드 전체 파이프라인 <span class="status-badge">필수</span> — SFT 노트북(03)에서</li>
-      <li>⬜ 학습 로그 wandb <span class="status-badge">권장</span> — SFT 시작 시 연동</li>
-      <li>✅ 실험 보고서 <span class="status-badge">권장</span> — 이 문서 + EXPERIMENTS.md</li>
+      <li>✅ 추론 코드 (생성→후처리→CSV) <span class="status-badge">필수</span> — <code>remote/make_submission.py</code>, <code>answer_extract.py</code></li>
+      <li>✅ 학습 코드 전체 파이프라인 <span class="status-badge">필수</span> — <code>train_qlora.py</code>, <code>train_grpo.py</code>, <code>train_verifier.py</code>, <code>generate_rft.py</code></li>
+      <li>✅ 사용 데이터 목록 <span class="status-badge">필수</span> — README (대회 데이터 + NuminaMath-CoT + 자체 생성)</li>
+      <li>✅ 실행 환경 <span class="status-badge">필수</span> — requirements.txt + pip freeze</li>
+      <li>⚠️ 최종 모델 체크포인트 <span class="status-badge">필수</span> — <b>최종 스택은 무학습 베이스 모델</b>이므로 "어댑터 미사용"을 명시 필요. 실험용 어댑터 4종은 별도 보관</li>
+      <li>✅ 학습 로그 <span class="status-badge">권장</span> — wandb 7개 run (QLoRA×3, GRPO×2, 검증자×2)</li>
+      <li>✅ 실험 보고서 <span class="status-badge">권장</span> — 이 문서 + EXPERIMENTS.md + docs/presentation.md</li>
       <li>✅ README 재현 가이드 <span class="status-badge">권장</span> — 실행 순서·시드 기재</li>
     </ul>
   </div>
 
-  <p class="sub" style="margin-top:32px">마지막 갱신: 2026-08-01 · 이 파일은 실험 결과가 나올 때마다 갱신됩니다.</p>
+  <p class="sub" style="margin-top:32px">마지막 갱신: 2026-08-10 (exp28까지 반영) · 발표용 서사는 <code>docs/presentation.md</code>, 원본 기록은 <code>experiments/log.csv</code></p>
 </main>
 
 <div id="tooltip"></div>
@@ -193,8 +209,34 @@ const EXPERIMENTS = [
   { exp: 'exp26', date: '2026-08-08', method: '가중 SC n=32 스택 리더보드 제출 — 0.78459 (+0.0144)',
     local: 75.8, lb: 78.459, note: '로컬 75.8% → LB 0.785, 오프셋(+2.7%p) 재확인. 15팀 중 순위 상승, 2등(0.79542)과 갭 0.011 = 9문제',
     jump: '확신도 가중 투표 × n=32 — 26개 실험이 좁혀낸 최종 추론 스택의 실측 확인' },
+  { exp: 'exp28', date: '2026-08-09', method: '온도 차원 탐색 종료 — 단일(0.4/1.0)·혼합(24표) 모두 t=0.7 기준 미달',
+    local: 74.9, lb: null, note: '온도 0.4: 74.1% / 1.0: 75.4% / 혼합 24표: 74.9% — 전부 기준(75.6%) 이하. 덤으로 풀이 잘림 1.5~2.2% 확인(토큰 한도로 얻을 점수 없음). 마지막 미검증 차원 소진', jump: null },
 ];
 const TARGET = 85;
+
+// ── 전체 실험 성적 (무엇이 통했나) ──
+// verdict: win(채택) / noise(±1%p 이내) / loss(하락)
+const ALL_RUNS = [
+  { name: 'greedy (기준선)', acc: 69.4, verdict: 'base', note: '단일 풀이' },
+  { name: 'SC n=8 다수결', acc: 74.7, verdict: 'win', note: '+5.3%p — 최대 이득' },
+  { name: 'SC n=16', acc: 75.6, verdict: 'win', note: '+0.9%p' },
+  { name: 'SC n=32 가중', acc: 75.8, verdict: 'win', note: '최종 채택 스택' },
+  { name: 'SC n=64 가중', acc: 75.4, verdict: 'noise', note: '표 2배에도 이득 없음' },
+  { name: '확신도 가중 (n8)', acc: 74.5, verdict: 'noise', note: 'n16에선 부호 반전' },
+  { name: '검증자 v1 Best-of-N', acc: 75.4, verdict: 'noise', note: '자체 채점 어댑터' },
+  { name: '검증자 v2 (근거생성)', acc: 73.7, verdict: 'loss', note: 'v1보다 하락' },
+  { name: '적응형 예산', acc: 75.2, verdict: 'noise', note: '어려운 문제에 표 집중' },
+  { name: '프롬프트 앙상블', acc: 74.3, verdict: 'noise', note: '4종 프롬프트 혼합' },
+  { name: '온도 혼합 (24표)', acc: 74.9, verdict: 'noise', note: '0.4/0.7/1.0 섞기' },
+  { name: '정책 앙상블', acc: 74.9, verdict: 'noise', note: '베이스+어댑터 표 합산' },
+  { name: 'QLoRA SFT (자체)', acc: 73.5, verdict: 'loss', note: '자기증류 −1.2%p' },
+  { name: 'QLoRA SFT (완만)', acc: 73.3, verdict: 'loss', note: 'lr↓·최단풀이' },
+  { name: 'QLoRA SFT (외부혼합)', acc: 71.8, verdict: 'loss', note: '최악 −2.9%p' },
+  { name: 'Few-shot 4예시', acc: 73.1, verdict: 'loss', note: '다양성 축소' },
+  { name: 'GRPO 파일럿', acc: 74.5, verdict: 'noise', note: 'KL 제약으로 보존만' },
+  { name: 'GRPO 스케일업', acc: 73.1, verdict: 'loss', note: '4배 규모에도 하락' },
+];
+const PASS_AT_6 = 79.9;
 
 // ── 상단 타일 ──
 const last = EXPERIMENTS[EXPERIMENTS.length - 1];
@@ -284,9 +326,61 @@ function draw() {
     }
   }
 }
+// ── 차트 2: 전체 실험 성적 (가로 막대) ──
+const svg2 = document.getElementById('chart2');
+const W2 = 820, M2 = { t: 14, r: 150, b: 30, l: 150 };
+const BAR = 20, GAP = 4;
+const x2Min = 66, x2Max = 82;
+const el2 = (tag, attrs, text) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  svg2.appendChild(e); return e;
+};
+const VERDICT = {
+  base:  { c: '--text-secondary', mark: '·' },
+  win:   { c: '--good',           mark: '✓' },
+  noise: { c: '--muted',          mark: '~' },
+  loss:  { c: '--bad',            mark: '✗' },
+};
+
+function draw2() {
+  const rows = [...ALL_RUNS].sort((a, b) => b.acc - a.acc);
+  const H2 = M2.t + M2.b + rows.length * (BAR + GAP);
+  svg2.setAttribute('height', H2);
+  svg2.innerHTML = '';
+  const plotW = W2 - M2.l - M2.r;
+  const xs = v => M2.l + (v - x2Min) / (x2Max - x2Min) * plotW;
+
+  // 세로 그리드 + 눈금
+  for (let v = 68; v <= 80; v += 4) {
+    el2('line', { x1: xs(v), x2: xs(v), y1: M2.t, y2: H2 - M2.b, stroke: css('--grid'), 'stroke-width': 1 });
+    el2('text', { x: xs(v), y: H2 - M2.b + 16, 'text-anchor': 'middle', class: 'tick' }, v + '%');
+  }
+  // pass@6 상한선
+  el2('line', { x1: xs(PASS_AT_6), x2: xs(PASS_AT_6), y1: M2.t, y2: H2 - M2.b,
+    stroke: css('--baseline'), 'stroke-width': 1.5, 'stroke-dasharray': '5 4' });
+  el2('text', { x: xs(PASS_AT_6) + 6, y: M2.t + 10, class: 'dlabel' }, 'pass@6 79.9%');
+
+  rows.forEach((r, i) => {
+    const yTop = M2.t + i * (BAR + GAP);
+    const v = VERDICT[r.verdict];
+    const color = css(v.c);
+    // 막대 (기준선 66%에서 시작)
+    el2('rect', { x: M2.l, y: yTop, width: Math.max(2, xs(r.acc) - M2.l), height: BAR,
+      fill: color, rx: 4 });
+    // 왼쪽 이름
+    el2('text', { x: M2.l - 10, y: yTop + BAR - 6, 'text-anchor': 'end', class: 'dlabel' }, r.name);
+    // 오른쪽 값 + 판정 기호(색만으로 구분하지 않도록)
+    el2('text', { x: xs(r.acc) + 8, y: yTop + BAR - 6, class: 'dlabel' },
+      `${v.mark} ${r.acc.toFixed(1)}%  ${r.note}`);
+  });
+}
 draw();
-new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+draw2();
+const redraw = () => { draw(); draw2(); };
+new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
 </script>
 </body>
 </html>
