@@ -81,7 +81,7 @@
 ② **최종 test(8/31) 제출은 절대 자동으로 하지 말 것** — 사용자 확인 필수
 ③ 결과가 나올 때마다 log.csv·EXPERIMENTS.md·queue.md 갱신은 기존대로, 추가로 **report.html의 EXPERIMENTS 배열과 ALL_RUNS 배열에도 한 줄 추가**할 것(시각화 최신 유지)
 
-- [ ] exp35-bf-scale: exp32(Budget Forcing) 결과에 따라 분기. **성공(greedy +2%p↑)이면**: `--rounds 2 --n 8`, `--rounds 1 --n 32` 순으로 실행해 최적 조합을 찾고, 최적 설정으로 리더보드 제출 파일 생성(make_submission.py에 budget forcing 이식 필요 — eval_budget_forcing.py의 이어붙이기 로직 참고, 커밋)해 **제출까지**. **실패면** skip으로 기록하고 넘어감
+- [x] exp35-bf-scale: exp32(Budget Forcing) 결과에 따라 분기. **성공(greedy +2%p↑)이면**: `--rounds 2 --n 8`, `--rounds 1 --n 32` 순으로 실행해 최적 조합을 찾고, 최적 설정으로 리더보드 제출 파일 생성(make_submission.py에 budget forcing 이식 필요 — eval_budget_forcing.py의 이어붙이기 로직 참고, 커밋)해 **제출까지**. **실패면** skip으로 기록하고 넘어감 → 결과: exp32가 greedy +0.6%p(성공 기준 +2%p 미달)로 **skip** 처리, 실행 없이 다음 항목(exp36)으로 이동
 - [ ] exp36-sampling-knobs: 미탐색 샘플링 파라미터. `remote/eval_vllm.py --mode sc --n 16 --top-p 0.95 --tag tp95`, 이어서 `--top-p 1.0 --tag tp100` 실행. 기준 top_p=0.8 n16(75.6%)과 비교. ±1%p는 노이즈 원칙 적용. 유의미하면 그 설정으로 덤프·제출까지
 - [ ] exp37-pairwise-tournament: 검증자 실패의 대안 — **독립 채점 대신 쌍대 비교**. results/val_samples.jsonl(exp31a)에서 상위 2개 후보 답이 접전인 문제만 골라, 두 후보의 대표 풀이를 나란히 제시하고 "A와 B 중 어느 쪽이 옳은가"를 베이스 모델에게 5회 물어 다수결(일회용 스크립트 작성·커밋). LLM은 절대 평가보다 상대 비교를 잘한다는 점을 노림. 기준: SC n=32 가중 75.8%. **성공: +1.5%p 이상**
 - [ ] exp41-variance-stack: **exp34b 발견(동일 설정 재실행 LB 변동 0.48%p) 후속 — 변동성 자체를 줄이는 스택.** 평균 정확도가 아니라 **분산**을 줄이는 것이 목표(최종전은 새 2,000문항이므로 운에 덜 흔들리는 쪽이 유리). 방법: 서로 다른 시드로 뽑은 표본 3세트(각 n=32)를 **합쳐서 96표로 집계**하면 표본 평균이 안정되어 재실행 변동이 줄어드는지 검증. `remote/dump_lb_samples.py`에 `--seed` 인자를 추가(커밋)해 시드 43·44로 각각 n=32 덤프 → 기존 덤프와 합쳐 96표 가중 집계로 제출 파일 생성(`--tag s3x32`). **검증 방법**: 같은 방식으로 시드 45·46·47 세트를 하나 더 만들어 두 결과의 차이 문항 수를 비교 — 단일 시드 n=32 재실행의 차이(67문항)보다 뚜렷히 적으면 분산 감소 성공

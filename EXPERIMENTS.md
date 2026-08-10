@@ -95,6 +95,7 @@
 | 31a | 2026-08-10 | 검증셋 표본 1회 덤프 — `remote/dump_samples.py --n 64`, 베이스 모델, 483문항×64샘플(temp0.7/top_p0.8) → results/val_samples.jsonl(커밋). 이전 세션이 백그라운드로 완주해둔 결과(dump_samples.log 정상 종료, GPU 유휴 확인)를 검증 후 기록 대행(재실행 없음) | - | - | remote/dump_samples.py |
 | 31b | 2026-08-10 | **집계 전략 12종 스윕 (GPU 불필요) — n=32에서 trim_lowconf25%가 기준 대비 +5문제(76.4%)** — `remote/sweep_aggregation.py`를 n={64,8,16,32}로 실행. n=32: trim_lowconf25%/trim+weighted **76.4%(369/483, +5)** (성공 기준 충족) — 나머지 n(8/16/64)은 최대 +1문제. pass@n 상한(집계로 회수 가능한 최대치): n8 82.0%/n16 84.9%/n32 87.8%/n64 89.9% | **76.4%(n32, trim_lowconf25%)** | - | remote/sweep_aggregation.py |
 | 31c | 2026-08-10 | exp31b가 성공 기준(+5문제) 충족 → 리더보드 제출 파일 생성. trim25 전략은 이미 `remote/make_submission_from_dump.py`에 구현·커밋돼 있어 별도 이식 불필요 — exp33 덤프(831문항×96샘플)로 `--rule trim25 --n 32 --tag agg` 실행(GPU 불필요, 수 초). 831행/정수/결측·중복 없음 확인, n32w 대비 76문항 다름 | - | 제출 보류(한도 소진) | remote/make_submission_from_dump.py |
+| 35 | 2026-08-10 | Budget Forcing 스케일업 (H20 후속) — 큐 명세대로 exp32 결과(greedy +0.6%p)가 분기 조건인 성공 기준(+2%p 이상)에 미달이라 **skip**, 실행 없이 다음 항목으로 이동 | - | - | - |
 
 ## 실험 31: 집계 전략 대량 탐색 — 생성/집계 분리, n=32에서 trim_lowconf25%가 유일한 양의 신호 (2026-08-10, AWS)
 
