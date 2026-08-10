@@ -113,7 +113,7 @@ def main():
         best = {}
         for c in o.outputs:
             a = extract_answer(c.text)
-            if a is None:
+            if a is None or c.cumulative_logprob is None:
                 continue
             ntok = max(1, len(c.token_ids))
             lp = c.cumulative_logprob / ntok
