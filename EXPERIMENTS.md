@@ -88,6 +88,31 @@
 | 29-1 | 2026-08-10 | **LB 판별 후보① n=64 가중 — 기존(n32w) 대비 하락** — `remote/make_submission.py --n 64 --weighted --tag n64w` (베이스, temp0.7). 831행/정수/결측·중복 없음 확인, n32w 대비 69문항 다름(구조적으로 다른 후보 기준 충족) | - | 0.77978 | remote/make_submission.py |
 | 29-2 | 2026-08-10 | **LB 판별 후보② n=32 단순 다수결(가중 없음) — 기존(n32w) 대비 하락** — `remote/make_submission.py --n 32 --tag n32m` (베이스, temp0.7). 831행/정수/결측·중복 없음 확인, n32w 대비 67문항 다름 | - | 0.77737 | remote/make_submission.py |
 | 33 | 2026-08-10 | 리더보드 표본 대량 덤프 (하루 최대 제출 체제의 기반) — `remote/dump_lb_samples.py`, 베이스 모델, 831문항×96샘플(temp0.7/top_p0.8), results/lb_samples.jsonl(5.5MB, 서버 보관·커밋 안 함) | - | - | remote/dump_lb_samples.py |
+| 34 | 2026-08-10 | 집계 전략 5종 제출 후보 생성 (덤프 기반, GPU 불필요) — `remote/make_submission_from_dump.py --rule <규칙> --n <n> --tag <태그>` 5회. w48(가중,n48) n32w 대비 63문항 / tr32(trim25,n32) 76문항 / w32b(가중,n32,대조군) 67문항 / dt32(drop_trunc,n32) 70문항 / tb32(tiebreak_conf,n32) 67문항 다름 — 전부 판별 기준(15문항+) 충족, 제출은 로컬 Claude 판단 대기 | - | - | remote/make_submission_from_dump.py |
+
+## 실험 34: 집계 전략 5종 제출 후보 생성 — 덤프 기반, GPU 불필요 (2026-08-10, AWS)
+
+- **배경**: exp33 덤프(831문항×96샘플) 완료로 이후 제출 후보는 GPU 없이 수 초 만에 생성 가능. 리더보드 과적합을 피하려 구조적으로 다른 축만 생성 — 표본 최대화+가중(①), 가중 실효성 판별용 단순다수결(②), 기존 제출(n32w)과 동일 설정의 재현 대조군(③, 우리 실행 간 변동폭 측정용), 잘린 풀이 제외(④), 동률 시 확신도 우선(⑤)
+- **설정**: `remote/make_submission_from_dump.py --dump results/lb_samples.jsonl` 5회 실행
+  ① `--rule weighted --n 48 --tag w48`
+  ② `--rule trim25 --n 32 --tag tr32`
+  ③ `--rule weighted --n 32 --tag w32b` (n32w와 동일 설정 — 표본만 다른 재현 대조군)
+  ④ `--rule drop_trunc --n 32 --tag dt32`
+  ⑤ `--rule tiebreak_conf --n 32 --tag tb32`
+- **결과**: 5개 CSV 모두 831행 / id·answer 2열 / answer 정수 / 결측·중복 없음 확인. 기존 제출(n32w) 대비 차이 문항 수:
+
+| 태그 | 규칙 | n | n32w 대비 차이 | 판별 가능? (15문항 기준) |
+|---|---|---|---|---|
+| w48 | weighted | 48 | 63문항 | 가능 |
+| tr32 | trim25 | 32 | 76문항 | 가능 |
+| w32b | weighted(대조군) | 32 | 67문항 | 가능 |
+| dt32 | drop_trunc | 32 | 70문항 | 가능 |
+| tb32 | tiebreak_conf | 32 | 67문항 | 가능 |
+
+- **의미**: 5개 후보 모두 LB 표준오차(±1.4%p) 이상으로 판별 가능한 구조적 차이를 가짐. w32b는 n32w와 완전히 동일한 방법(가중 SC n=32)이지만 다른 표본 실행이므로, 이 둘의 LB 점수 차이가 그대로 "같은 설정의 실행 간 변동폭"이 됨 — exp29의 중복 제출 사고 교훈을 반영해 제출 전 이력 확인 필수
+- **제출 여부**: 큐 명세대로 서버는 생성·기록까지만 수행, **제출 판단은 로컬 Claude(계획자) 담당**
+- **결과 파일**: `results/submission_w48.csv`, `results/submission_tr32.csv`, `results/submission_w32b.csv`, `results/submission_dt32.csv`, `results/submission_tb32.csv` (5개 모두 커밋 대상)
+- **다음**: exp32-budget-forcing
 
 ## 실험 33: 리더보드 표본 대량 덤프 (2026-08-10, AWS)
 
