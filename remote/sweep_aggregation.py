@@ -91,50 +91,115 @@ def plausible_only(ss, base=majority):
     return base(kept if any(s['ans'] is not None for s in kept) else ss)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--file', default='results/val_samples.jsonl')
-    ap.add_argument('--n', type=int, default=None, help='앞에서 n개만 사용 (표본 수 효과 확인)')
-    args = ap.parse_args()
+# ── exp44: trim_lowconf 정밀 탐색 변형들 ──────────────────────────
+def trunc_then_trim(ss, frac=0.25, base=majority):
+    """② 잘린 풀이(trunc) 먼저 제외한 뒤, 남은 표에서 확신도 하위 frac을 추가로 버림."""
+    kept = [s for s in ss if not s['trunc']]
+    if not kept:
+        kept = ss
+    return trim_lowconf(kept, frac, base)
 
-    rows = load(args.file)
-    if args.n:
-        for r in rows:
-            r['samples'] = r['samples'][:args.n]
-    total = len(rows)
-    nsamp = len(rows[0]['samples'])
-    print(f'{total}문항 × {nsamp}표본으로 집계 전략 비교' + chr(10))
 
+def length_trim(ss, low_pct=10, high_pct=90, base=majority):
+    """④ 문항 내에서 비정상적으로 짧거나(low_pct 미만) 긴(high_pct 초과) 풀이를 제외."""
+    v = [s for s in ss if s['ans'] is not None]
+    if len(v) < 4:
+        return base(ss)
+    lens = sorted(s['len'] for s in v)
+
+    def pct(p):
+        idx = min(int(len(lens) * p / 100), len(lens) - 1)
+        return lens[idx]
+
+    lo, hi = pct(low_pct), pct(high_pct)
+    kept = [s for s in v if lo <= s['len'] <= hi]
+    return base(kept if len(kept) >= 2 else v)
+
+
+def trim_with_fallback(ss, frac=0.25, min_votes=3, base=majority):
+    """⑤ trim 후 최다 득표가 min_votes 미만(합의 실패)이면 원본 전체 표로 폴백."""
+    v = [s for s in ss if s['ans'] is not None]
+    if len(v) < 4:
+        return base(ss)
+    v_sorted = sorted(v, key=lambda s: s['logp'], reverse=True)
+    keep = v_sorted[:max(2, int(len(v_sorted) * (1 - frac)))]
+    top_votes = Counter(s['ans'] for s in keep).most_common(1)[0][1]
+    return base(v) if top_votes < min_votes else base(keep)
+
+
+def build_strategies():
+    trim_fracs = [0.10, 0.20, 0.25, 0.30, 0.40, 0.50]
     strategies = {
         'majority (기준)': majority,
-        'weighted s=1.0': lambda ss: weighted(ss, 1.0),
         'weighted s=2.0': lambda ss: weighted(ss, 2.0),
-        'weighted s=4.0': lambda ss: weighted(ss, 4.0),
         'drop_truncated': drop_truncated,
-        'trim_lowconf 25%': lambda ss: trim_lowconf(ss, 0.25),
-        'trim_lowconf 50%': lambda ss: trim_lowconf(ss, 0.5),
-        'trim+weighted': lambda ss: trim_lowconf(ss, 0.25, lambda x: weighted(x, 2.0)),
         'prefer_short(동률시)': prefer_short,
         'tiebreak_by_conf': tiebreak_by_conf,
         'plausible_only': plausible_only,
-        'plausible+weighted': lambda ss: plausible_only(ss, lambda x: weighted(x, 2.0)),
     }
+    # ① trim 비율 스윕
+    for f in trim_fracs:
+        strategies[f'trim_lowconf {int(f * 100)}%'] = (lambda f: lambda ss: trim_lowconf(ss, f))(f)
+    # ② trim 후 가중 결합
+    for f in trim_fracs:
+        strategies[f'trim{int(f * 100)}%+weighted'] = (
+            lambda f: lambda ss: trim_lowconf(ss, f, lambda x: weighted(x, 2.0)))(f)
+    # ③ 잘린 풀이 제외 + trim 조합
+    for f in [0.10, 0.25, 0.40]:
+        strategies[f'trunc제외+trim{int(f * 100)}%'] = (lambda f: lambda ss: trunc_then_trim(ss, f))(f)
+    # ④ 길이 기반 trim (다른 퍼센타일 폭)
+    for lo, hi in [(10, 90), (5, 95), (20, 80)]:
+        strategies[f'length_trim {lo}-{hi}pct'] = (lambda lo, hi: lambda ss: length_trim(ss, lo, hi))(lo, hi)
+    # ⑤ trim 후 최소 득표 미달 시 전체 표로 폴백
+    for mv in [2, 3, 4]:
+        strategies[f'trim25%+fallback(min{mv})'] = (
+            lambda mv: lambda ss: trim_with_fallback(ss, 0.25, mv))(mv)
+    return strategies
 
+
+def run(rows, strategies):
+    total = len(rows)
     results = {}
     for name, fn in strategies.items():
         hit = sum(1 for r in rows if fn(r['samples']) == r['gold'])
         results[name] = hit
-    base_hit = results['majority (기준)']
+    return results, total
 
-    print(f'{"전략":<24}{"정확도":>10}{"맞힌수":>9}{"기준대비":>10}')
-    for name, hit in sorted(results.items(), key=lambda x: -x[1]):
-        d = hit - base_hit
-        print(f'{name:<24}{hit/total:>9.1%}{hit:>9}{d:>+10}')
 
-    # 상한 참고: 표본 중 정답이 하나라도 있으면 맞힌 것으로 계산
-    oracle = sum(1 for r in rows if any(s['ans'] == r['gold'] for s in r['samples']))
-    print(chr(10) + f'참고 상한(pass@{nsamp}): {oracle/total:.1%} ({oracle}/{total}) '
-          f'— 집계로 회수 가능한 최대치')
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--file', default='results/val_samples.jsonl')
+    ap.add_argument('--n', type=int, default=None, help='앞에서 n개만 사용 (표본 수 효과 확인)')
+    ap.add_argument('--sweep-n', default=None,
+                     help='콤마구분 n 목록 — 지정 시 각 n에서 전체 전략 비교를 순차 실행 (예: 16,32,64)')
+    args = ap.parse_args()
+
+    all_rows = load(args.file)
+    strategies = build_strategies()
+
+    ns = [int(x) for x in args.sweep_n.split(',')] if args.sweep_n else [args.n]
+
+    for n in ns:
+        rows = [dict(r) for r in all_rows]
+        if n:
+            for r in rows:
+                r['samples'] = r['samples'][:n]
+        results, total = run(rows, strategies)
+        nsamp = len(rows[0]['samples'])
+        base_hit = results['majority (기준)']
+
+        print(f'{total}문항 × {nsamp}표본으로 집계 전략 비교' + chr(10))
+        print(f'{"전략":<28}{"정확도":>10}{"맞힌수":>9}{"기준대비":>10}')
+        for name, hit in sorted(results.items(), key=lambda x: -x[1]):
+            d = hit - base_hit
+            flag = '  <-- 성공기준(+8)' if d >= 8 else ''
+            print(f'{name:<28}{hit/total:>9.1%}{hit:>9}{d:>+10}{flag}')
+
+        # 상한 참고: 표본 중 정답이 하나라도 있으면 맞힌 것으로 계산
+        oracle = sum(1 for r in rows if any(s['ans'] == r['gold'] for s in r['samples']))
+        print(chr(10) + f'참고 상한(pass@{nsamp}): {oracle/total:.1%} ({oracle}/{total}) '
+              f'— 집계로 회수 가능한 최대치')
+        print(chr(10) + ('=' * 70) + chr(10))
 
 
 if __name__ == '__main__':

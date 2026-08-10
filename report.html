@@ -217,6 +217,10 @@ const EXPERIMENTS = [
     local: null, lb: 77.737, note: '기존(n32w 78.459) 대비 -0.722 — 가중 제거 시 LB에서도 하락 (H16 가중 투표 유효성 재확인). 최종 스택은 여전히 n32w(가중 SC n=32)', jump: null },
   { exp: 'exp30', date: '2026-08-10', method: '최종 test 실전 리허설 — 확정 스택으로 831문항 완주, 시간·자원 실측 (성능 실험 아님)',
     local: null, lb: null, note: '4.44초/문항 → 2,000문항 환산 약 2시간28분. GPU 최대 95.1%, CPU RSS 5.07GiB. 핵심 발견: make_submission.py는 체크포인트 없어 중단 시 재개 불가 — 8/31 당일은 dump_lb_samples.py(재개 가능)+make_submission_from_dump.py 조합 권장', jump: null },
+  { exp: 'exp31b', date: '2026-08-10', method: '집계 전략 12종 스윕 (GPU 불필요) — n=32에서 trim_lowconf25%가 majority 대비 +5문제(76.4%)로 로컬 최고',
+    local: 76.4, lb: null, note: '표를 세는 규칙만 바꿔 도달한 새 로컬 최고. n=8/16/64에서는 최대 +1문제로 미미 — n=32 단일 지점에서만 튀는 비단조 패턴, exp34b(재실행 LB 0.48%p 변동) 교훈상 노이즈 가능성 배제 못 함', jump: 'trim_lowconf(확신도 하위 25% 표 제외) — 첫 집계-단(생성과 분리된 GPU-불필요 후처리)에서 나온 신호' },
+  { exp: 'exp44', date: '2026-08-10', method: 'trim_lowconf 정밀 탐색 (비율스윕·가중결합·trunc조합·길이trim·폴백 등 27개 변형, GPU 불필요) — 성공 기준(+8문제) 미달',
+    local: 76.4, lb: null, note: 'n=32 최고 76.4%(+5, 7전략 동률)로 exp31b와 완전히 동일 — 정교화해도 같은 87.8%(pass@32) 부분집합에 수렴. n=16/64도 각 +3/+2로 소폭 개선했으나 n=32를 못 넘음. 집계 규칙 탐색 트랙 최종 종료(상한 확정)', jump: null },
 ];
 const TARGET = 85;
 
@@ -241,6 +245,9 @@ const ALL_RUNS = [
   { name: 'Few-shot 4예시', acc: 73.1, verdict: 'loss', note: '다양성 축소' },
   { name: 'GRPO 파일럿', acc: 74.5, verdict: 'noise', note: 'KL 제약으로 보존만' },
   { name: 'GRPO 스케일업', acc: 73.1, verdict: 'loss', note: '4배 규모에도 하락' },
+  { name: 'trim_lowconf 25% (n32)', acc: 76.4, verdict: 'win', note: '집계 규칙 변경만으로 로컬 최고(exp31b)' },
+  { name: 'Budget Forcing (Wait 재검토)', acc: 70.0, verdict: 'noise', note: 'greedy 기준, +0.6%p로 성공기준 미달' },
+  { name: 'trim_lowconf 정밀탐색 27종', acc: 76.4, verdict: 'noise', note: 'exp44 — exp31b 상한과 동률, 갱신 없음' },
 ];
 const PASS_AT_6 = 79.9;
 
