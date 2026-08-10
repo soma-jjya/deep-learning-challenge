@@ -61,7 +61,14 @@
 
 **하이브리드**: 추론·평가·제출 = Kaggle (무료, 최종 추론 재현성도 Kaggle 환경 기준) / RFT 데이터 생성·QLoRA 학습 = AWS (9시간 벽·T4 속도 병목 회피, 스팟 총 $30~80 예상). 어댑터는 AWS→Kaggle로 가져와 추론.
 
-## 현재 상태 (2026-08-10 오후, 갱신 20) — exp30 완료(최종 리허설, 운영 리스크 점검), 큐 다음은 exp31a(집계 전략 탐색)
+## 현재 상태 (2026-08-10 저녁, 갱신 21) — exp31a/b/c 완료(집계 전략 탐색, n=32 trim_lowconf25%가 +5문제 신호), 큐 다음은 exp35(자율 운영 프로그램)
+
+- **exp31a/b 완료(집계 전략 대량 탐색, GPU는 exp31a 덤프에만 사용, exp31b는 GPU 불필요)**: `dump_samples.py --n 64`로 검증 483문항×64샘플 덤프(이전 세션이 이미 완주해둔 것을 검증 후 채택) → `sweep_aggregation.py`를 n={8,16,32,64}로 스윕. **n=32에서만 trim_lowconf25%(확신도 하위 25% 표 제외 후 다수결)가 majority 대비 +5문제(76.4%, 369/483)** — 성공 기준(+5) 정확히 충족. 다른 n(8/16/64)은 최대 +1문제로 미미해, n=32라는 단일 지점에서만 튀는 비단조 패턴 — exp34b의 "동일 설정 재실행 LB 0.48%p 변동" 교훈상 노이즈일 가능성을 배제 못 함
+- **exp31c 완료(제출 파일 생성, 제출은 보류)**: trim25 규칙이 이미 `make_submission_from_dump.py`에 구현·커밋돼 있어 exp33 리더보드 덤프로 즉시 생성 — `--rule trim25 --n 32 --tag agg` → `results/submission_agg.csv`(831행, n32w 대비 76문항 다름). **오늘(2026-08-10) 일일 제출 한도 5건이 이미 소진**(tr32/w32b/n32m/n64w×2, exp34b와 일치)돼 있어 제출은 시도하지 않음 — **다음 가용일에 `submission_agg.csv` 제출 필요**(로컬 또는 서버 Claude가 `kaggle competitions submissions`로 한도 회복 확인 후 진행)
+- **큐 다음 항목**: exp35-bf-scale(exp32가 실패했으므로 skip 예정) → exp36~43(자율 운영 프로그램: 샘플링 파라미터, 쌍대 비교, 분산 축소 스택, 발표 자산화 등)
+- **순위**: 15팀 중, 목표 2등(0.79542) 이내, 갭 0.011=9문제(n32w 0.78459 기준, submission_agg 제출 후 갱신 예정)
+
+## 이전 상태 (2026-08-10 오후, 갱신 20) — exp30 완료(최종 리허설, 운영 리스크 점검), 큐 다음은 exp31a(집계 전략 탐색)
 
 - **exp30 완료(최종 test 실전 리허설) — 운영 리스크 점검, 성능 판정 없음**: `remote/make_submission.py --n 32 --weighted --tag rehearsal`로 리더보드 831문항 완주해 시간·자원 실측. **4.44초/문항 → 2,000문항 환산 약 2시간28분**, GPU 메모리 최대 21,891MiB/23,028MiB(95.1%), CPU RSS 최대 5.07GiB, CPU 사용률 37%(GPU 바운드), 오류 0건. **핵심 발견: `make_submission.py`는 체크포인트가 없어 중단 시 재개 불가능**(830문항째 죽어도 결과 0건, 전량 재실행 필요) — 반면 `dump_lb_samples.py`는 청크마다 저장해 재개가 실제로 동작(exp33 검증). **8/31 당일은 `dump_lb_samples.py`(재개 가능) + `make_submission_from_dump.py`(집계, GPU 불필요) 조합으로 대체 권장**. results/rehearsal_report.md(체크리스트 포함), results/submission_rehearsal.csv, gpu_mem_rehearsal.csv
 - **큐 다음 항목**: exp31a-dump-samples(검증셋 표본 덤프) → exp31b(집계 전략 12종 비교) → exp31c(조건부 제출) → exp35~43(자율 운영 프로그램)

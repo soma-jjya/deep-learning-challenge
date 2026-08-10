@@ -71,9 +71,9 @@
 
 ## 집계 전략 대량 탐색 사이클 (2026-08-10) — 생성과 집계의 분리
 
-- [ ] exp31a-dump-samples: 검증셋 표본 1회 덤프. `nohup uv run python remote/dump_samples.py --n 64 > dump_samples.log 2>&1 &` (~1.5시간). 483문항 × 64샘플의 (추출답, 평균로그확률, 잘림여부, 길이)를 results/val_samples.jsonl로 저장(작은 파일 — **커밋 대상**). 이후 집계 실험은 GPU 없이 가능해짐
-- [ ] exp31b-sweep-aggregation: 집계 전략 12종 비교. `uv run python remote/sweep_aggregation.py` (수 초). 이어서 `--n 8` `--n 16` `--n 32`도 실행해 표본 수별 표를 만들 것. 출력 표 전체를 EXPERIMENTS.md에 기록하고, **기준(majority) 대비 +3문제 이상인 전략이 있으면** 그 전략명과 수치를 강조 기록. pass@n 상한도 함께 기록(집계로 회수 가능한 최대치)
-- [ ] exp31c-submission-beststrategy: exp31b에서 기준 대비 **+5문제 이상** 개선된 전략이 있을 때만 실행 — 해당 전략을 make_submission.py에 이식(커밋)해 리더보드 제출 파일 생성(results/submission_agg.csv). 없으면 skip으로 기록
+- [x] exp31a-dump-samples: 검증셋 표본 1회 덤프. `nohup uv run python remote/dump_samples.py --n 64 > dump_samples.log 2>&1 &` (~1.5시간). 483문항 × 64샘플의 (추출답, 평균로그확률, 잘림여부, 길이)를 results/val_samples.jsonl로 저장(작은 파일 — **커밋 대상**). 이후 집계 실험은 GPU 없이 가능해짐 → 결과: 이전 세션이 백그라운드로 완주해둔 결과(dump_samples.log 정상 종료, 483문항×64샘플, GPU 유휴 확인)를 검증 후 기록 대행(재실행 없음)
+- [x] exp31b-sweep-aggregation: 집계 전략 12종 비교. `uv run python remote/sweep_aggregation.py` (수 초). 이어서 `--n 8` `--n 16` `--n 32`도 실행해 표본 수별 표를 만들 것. 출력 표 전체를 EXPERIMENTS.md에 기록하고, **기준(majority) 대비 +3문제 이상인 전략이 있으면** 그 전략명과 수치를 강조 기록. pass@n 상한도 함께 기록(집계로 회수 가능한 최대치) → 결과: n=32에서 trim_lowconf25%/trim+weighted **76.4%(369/483, +5문제)** — 다른 n(8/16/64)은 최대 +1문제. pass@n 상한: n8 82.0%/n16 84.9%/n32 87.8%/n64 89.9%. 두 동점 전략은 483문항 중 2문항만 답이 달라 사실상 동일
+- [x] exp31c-submission-beststrategy: exp31b에서 기준 대비 **+5문제 이상** 개선된 전략이 있을 때만 실행 — 해당 전략을 make_submission.py에 이식(커밋)해 리더보드 제출 파일 생성(results/submission_agg.csv). 없으면 skip으로 기록 → 결과: n=32 trim_lowconf25%가 +5문제로 기준 충족(경계값). trim25 규칙이 이미 `remote/make_submission_from_dump.py`에 구현·커밋돼 있어 별도 이식 없이 exp33 덤프로 즉시 생성 — `--rule trim25 --n 32 --tag agg` → results/submission_agg.csv(831행, 정수, 결측·중복 없음, n32w 대비 76문항 다름). **제출은 보류**: 오늘(2026-08-10) 일일 제출 한도 5건 이미 소진(exp34b와 일치) — 다음 가용일에 제출 필요. n=32 단일 지점 개선이라 exp34b 교훈(LB 변동 0.48%p)상 노이즈 가능성 있어 LB 실측 전까지 잠정 신호
 
 ## 자율 운영 프로그램 (2026-08-10 ~ 08-20, 사용자 위임)
 

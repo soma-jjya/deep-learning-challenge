@@ -92,6 +92,34 @@
 | 34 | 2026-08-10 | 집계 전략 5종 제출 후보 생성 (덤프 기반, GPU 불필요) — `remote/make_submission_from_dump.py --rule <규칙> --n <n> --tag <태그>` 5회. w48(가중,n48) n32w 대비 63문항 / tr32(trim25,n32) 76문항 / w32b(가중,n32,대조군) 67문항 / dt32(drop_trunc,n32) 70문항 / tb32(tiebreak_conf,n32) 67문항 다름 — 전부 판별 기준(15문항+) 충족, 제출은 로컬 Claude 판단 대기 | - | - | remote/make_submission_from_dump.py |
 | 32 | 2026-08-10 | **Budget Forcing (s1 방식, H20) — 목표 미달** — `remote/eval_budget_forcing.py --rounds 2 --n 1` (베이스, greedy, "Wait" 재검토 이어붙이기). round0(기준) 69.4%(335/483) → round1 70.0%(338/483, +0.6%p) → round2 70.0%(338/483, round1과 동일=수렴). 성공 기준(+2%p 이상) 미달로 SC 결합(②) 미실행 | 70.0%(round1=round2) | - | remote/eval_budget_forcing.py |
 | 30 | 2026-08-10 | **최종 test 실전 리허설 (운영 리스크 점검, 성능 실험 아님)** — `remote/make_submission.py --n 32 --weighted --tag rehearsal` 831문항 완주 시간·자원 실측. 4.44초/문항, 2,000문항 환산 **약 2시간 28분**, GPU 최대 21,891MiB(95%), CPU RSS 최대 5.07GiB. **핵심 발견: make_submission.py는 중단 시 재개 불가(체크포인트 없음)** — 8/31 당일은 dump_lb_samples.py(재개 가능)+make_submission_from_dump.py 조합 권장 | - | - | results/rehearsal_report.md |
+| 31a | 2026-08-10 | 검증셋 표본 1회 덤프 — `remote/dump_samples.py --n 64`, 베이스 모델, 483문항×64샘플(temp0.7/top_p0.8) → results/val_samples.jsonl(커밋). 이전 세션이 백그라운드로 완주해둔 결과(dump_samples.log 정상 종료, GPU 유휴 확인)를 검증 후 기록 대행(재실행 없음) | - | - | remote/dump_samples.py |
+| 31b | 2026-08-10 | **집계 전략 12종 스윕 (GPU 불필요) — n=32에서 trim_lowconf25%가 기준 대비 +5문제(76.4%)** — `remote/sweep_aggregation.py`를 n={64,8,16,32}로 실행. n=32: trim_lowconf25%/trim+weighted **76.4%(369/483, +5)** (성공 기준 충족) — 나머지 n(8/16/64)은 최대 +1문제. pass@n 상한(집계로 회수 가능한 최대치): n8 82.0%/n16 84.9%/n32 87.8%/n64 89.9% | **76.4%(n32, trim_lowconf25%)** | - | remote/sweep_aggregation.py |
+| 31c | 2026-08-10 | exp31b가 성공 기준(+5문제) 충족 → 리더보드 제출 파일 생성. trim25 전략은 이미 `remote/make_submission_from_dump.py`에 구현·커밋돼 있어 별도 이식 불필요 — exp33 덤프(831문항×96샘플)로 `--rule trim25 --n 32 --tag agg` 실행(GPU 불필요, 수 초). 831행/정수/결측·중복 없음 확인, n32w 대비 76문항 다름 | - | 제출 보류(한도 소진) | remote/make_submission_from_dump.py |
+
+## 실험 31: 집계 전략 대량 탐색 — 생성/집계 분리, n=32에서 trim_lowconf25%가 유일한 양의 신호 (2026-08-10, AWS)
+
+- **배경**: 지금까지 모든 실험은 "표를 어떻게 세는가"를 다수결/가중 정도로만 시도했다. `dump_samples.py`(exp31a)로 검증셋 표본(답·평균 로그확률·잘림여부·길이)을 한 번 저장해두면, `sweep_aggregation.py`(exp31b)로 **GPU 없이 수 초 만에** 12가지 집계 규칙을 표본 수(8/16/32/64)별로 비교할 수 있다
+- **exp31a 설정**: `nohup uv run python remote/dump_samples.py --n 64 > dump_samples.log 2>&1 &` — 검증 483문항(500 중 오류 문항 제외, seed=123, 학습에 미사용) × 64샘플(temp=0.7, top_p=0.8, max_tokens=2048). 세션 진입 시 이미 이전 세션이 완주해둔 결과(로그 정상 종료, `results/val_samples.jsonl` 483줄×64샘플, GPU 유휴)를 확인 후 재실행 없이 채택
+- **exp31b 결과 (n=32, 최고 구간)**:
+
+| 전략 | 정확도 | 맞힌 수 | 기준 대비 |
+|---|---|---|---|
+| trim_lowconf 25% | **76.4%** | 369/483 | **+5** |
+| trim+weighted (trim25+가중s2.0) | **76.4%** | 369/483 | **+5** |
+| weighted s=1.0/2.0/4.0 | 75.8% | 366/483 | +2 |
+| tiebreak_by_conf | 75.8% | 366/483 | +2 |
+| plausible+weighted | 75.8% | 366/483 | +2 |
+| majority (기준) | 75.4% | 364/483 | +0 |
+| drop_truncated / prefer_short / plausible_only | 75.4% | 364/483 | +0 |
+| trim_lowconf 50% | 74.7% | 361/483 | -3 |
+
+  다른 표본 수에서는 개선폭이 작았다: n=8 최고 74.5%(가중, +1), n=16 최고 75.4%(majority=drop_trunc=plausible, +0), n=64 최고 75.8%(trim_lowconf25%/trim+weighted, +1) — **n=32에서만 +5로 뚜렷하게 튀는 비단조 패턴**. pass@n 상한(표본 중 정답이 하나라도 있으면 명중 처리): n8 82.0%(396)/n16 84.9%(410)/n32 87.8%(424)/n64 89.9%(434) — 집계 개선의 이론적 여지는 아직 10%p 이상 남아있음
+- **trim_lowconf25% vs trim+weighted 동점 분석**: 483문항 중 **2문항만 답이 다름** — 사실상 같은 전략(trim이 주효과, 가중은 부차적). 제출에는 더 단순한 trim_lowconf25%(=trim 후 단순 다수결) 채택
+- **exp31c 판정**: 큐 기준 "+5문제 이상"을 정확히 충족(경계값)하여 제출 파일 생성 진행. 이미 리더보드용 덤프(exp33, 831문항×96샘플)와 `make_submission_from_dump.py`의 `trim25` 규칙이 존재해 별도 코드 이식 없이 즉시 생성 가능 — `uv run python remote/make_submission_from_dump.py --dump results/lb_samples.jsonl --rule trim25 --n 32 --tag agg` (수 초, GPU 불필요) → `results/submission_agg.csv` (831행, id/answer 2열, 정수만, 결측·중복 없음 확인). 기존 최고 제출(n32w) 대비 76문항 달라 구조적으로 다른 후보
+- **제출 보류 사유**: `python -m kaggle competitions submissions` 확인 결과 오늘(2026-08-10) 이미 5건 제출(tr32/w32b/n32m/n64w×2) — exp34b에서 "일일 한도 5회, 오늘 소진" 기록과 일치. 한도 낭비를 피하기 위해 이번 세션에서는 제출을 시도하지 않고 CSV 생성·검증·기록까지만 완료. **다음 가용일에 `submission_agg.csv` 제출 필요**
+- **주의**: n=32 한 지점에서만 나타난 개선이라 exp34b의 교훈(동일 설정 재실행 LB 변동 0.48%p)을 고려하면 로컬 +5문제(약 +1.0%p)가 노이즈일 가능성을 배제할 수 없음 — **LB 실측 전까지는 잠정 신호**로 취급할 것
+- **결과 파일**: `results/val_samples.jsonl`(커밋), `dump_samples.log`, `results/submission_agg.csv`(커밋)
+- **다음**: `submission_agg.csv` 제출(다음 가용일) 후 LB 점수로 최종 판정. 큐 다음 항목은 exp35(budget forcing 분기, skip 예정)~exp43(자율 운영 프로그램)
 
 ## 실험 32: Budget Forcing (s1 방식, H20) — 목표 미달, 유일 남은 "표 하나의 질" 축도 소진 (2026-08-10, AWS)
 
