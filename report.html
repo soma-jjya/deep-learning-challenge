@@ -221,6 +221,8 @@ const EXPERIMENTS = [
     local: 76.4, lb: null, note: '표를 세는 규칙만 바꿔 도달한 새 로컬 최고. n=8/16/64에서는 최대 +1문제로 미미 — n=32 단일 지점에서만 튀는 비단조 패턴, exp34b(재실행 LB 0.48%p 변동) 교훈상 노이즈 가능성 배제 못 함', jump: 'trim_lowconf(확신도 하위 25% 표 제외) — 첫 집계-단(생성과 분리된 GPU-불필요 후처리)에서 나온 신호' },
   { exp: 'exp44', date: '2026-08-10', method: 'trim_lowconf 정밀 탐색 (비율스윕·가중결합·trunc조합·길이trim·폴백 등 27개 변형, GPU 불필요) — 성공 기준(+8문제) 미달',
     local: 76.4, lb: null, note: 'n=32 최고 76.4%(+5, 7전략 동률)로 exp31b와 완전히 동일 — 정교화해도 같은 87.8%(pass@32) 부분집합에 수렴. n=16/64도 각 +3/+2로 소폭 개선했으나 n=32를 못 넘음. 집계 규칙 탐색 트랙 최종 종료(상한 확정)', jump: null },
+  { exp: 'exp37', date: '2026-08-10', method: '쌍대 비교 토너먼트 (H21, 검증자 대안) — 접전 65문항 재생성, 양쪽 후보 답 재현 0건으로 토너먼트 미실행',
+    local: 75.8, lb: null, note: 'baseline(가중 SC n=32, 75.8%)과 완전 동일(delta +0.0%p) — 대표 풀이 확보 단계 병목으로 가설 자체는 미검증. 성공 기준(+1.5%p) 미달로 기각', jump: null },
 ];
 const TARGET = 85;
 
@@ -248,6 +250,7 @@ const ALL_RUNS = [
   { name: 'trim_lowconf 25% (n32)', acc: 76.4, verdict: 'win', note: '집계 규칙 변경만으로 로컬 최고(exp31b)' },
   { name: 'Budget Forcing (Wait 재검토)', acc: 70.0, verdict: 'noise', note: 'greedy 기준, +0.6%p로 성공기준 미달' },
   { name: 'trim_lowconf 정밀탐색 27종', acc: 76.4, verdict: 'noise', note: 'exp44 — exp31b 상한과 동률, 갱신 없음' },
+  { name: '쌍대 비교 토너먼트', acc: 75.8, verdict: 'noise', note: 'exp37 — 접전 문항 재현 실패로 baseline과 동일' },
 ];
 const PASS_AT_6 = 79.9;
 
