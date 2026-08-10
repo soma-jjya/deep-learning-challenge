@@ -91,6 +91,7 @@
 | 33 | 2026-08-10 | 리더보드 표본 대량 덤프 (하루 최대 제출 체제의 기반) — `remote/dump_lb_samples.py`, 베이스 모델, 831문항×96샘플(temp0.7/top_p0.8), results/lb_samples.jsonl(5.5MB, 서버 보관·커밋 안 함) | - | - | remote/dump_lb_samples.py |
 | 34 | 2026-08-10 | 집계 전략 5종 제출 후보 생성 (덤프 기반, GPU 불필요) — `remote/make_submission_from_dump.py --rule <규칙> --n <n> --tag <태그>` 5회. w48(가중,n48) n32w 대비 63문항 / tr32(trim25,n32) 76문항 / w32b(가중,n32,대조군) 67문항 / dt32(drop_trunc,n32) 70문항 / tb32(tiebreak_conf,n32) 67문항 다름 — 전부 판별 기준(15문항+) 충족, 제출은 로컬 Claude 판단 대기 | - | - | remote/make_submission_from_dump.py |
 | 32 | 2026-08-10 | **Budget Forcing (s1 방식, H20) — 목표 미달** — `remote/eval_budget_forcing.py --rounds 2 --n 1` (베이스, greedy, "Wait" 재검토 이어붙이기). round0(기준) 69.4%(335/483) → round1 70.0%(338/483, +0.6%p) → round2 70.0%(338/483, round1과 동일=수렴). 성공 기준(+2%p 이상) 미달로 SC 결합(②) 미실행 | 70.0%(round1=round2) | - | remote/eval_budget_forcing.py |
+| 30 | 2026-08-10 | **최종 test 실전 리허설 (운영 리스크 점검, 성능 실험 아님)** — `remote/make_submission.py --n 32 --weighted --tag rehearsal` 831문항 완주 시간·자원 실측. 4.44초/문항, 2,000문항 환산 **약 2시간 28분**, GPU 최대 21,891MiB(95%), CPU RSS 최대 5.07GiB. **핵심 발견: make_submission.py는 중단 시 재개 불가(체크포인트 없음)** — 8/31 당일은 dump_lb_samples.py(재개 가능)+make_submission_from_dump.py 조합 권장 | - | - | results/rehearsal_report.md |
 
 ## 실험 32: Budget Forcing (s1 방식, H20) — 목표 미달, 유일 남은 "표 하나의 질" 축도 소진 (2026-08-10, AWS)
 
@@ -108,6 +109,29 @@
 - **의미**: "표 하나의 질을 올리는" 유일하게 남은 미탐색 축도 무의미로 판정됨 — 지금까지 시도한 모든 축(SC 스케일링, 온도, 가중투표, 프롬프트 앙상블, 자기수정, 검증자 Best-of-N, QLoRA SFT, GRPO, Budget Forcing)이 전부 ±1%p 안팎에서 정체. 로컬 최선 스택은 여전히 exp25/26(확신도 가중 SC n=32, 로컬 75.8% / LB 0.78459)
 - **결과 파일**: `results/eval_bf_r2_n1.json`, `eval32_bf_r2n1.log`
 - **다음**: exp30-final-rehearsal (최종 test 실전 리허설)
+
+## 실험 30: 최종 test 실전 리허설 (운영 리스크 점검) (2026-08-10, AWS)
+
+- **배경**: 8/31 최종 test는 2,000문항을 하루 안에 무사고로 처리해야 하는 이번 대회 최대 실행 리스크. 성능이 아니라 **운영**을 검증하기 위해 리더보드 831문항을 대역 삼아 확정 스택(가중 SC n=32, temp 0.7)으로 `make_submission.py`를 1회 완주하며 시간·GPU/CPU 메모리를 실측
+- **설정**: `uv run python remote/make_submission.py --n 32 --weighted --tag rehearsal --lb-csv deep-learning-challenge-2026/deep_chal_math_leaderboard_filtered.csv` (`/usr/bin/time -v`로 감싸 CPU/시간 측정, 별도 프로세스로 `nvidia-smi`를 10초 간격 폴링해 GPU 메모리 시계열 기록)
+- **발견 경위**: 세션 진입 시 이미 이전 세션이 15:49~16:50에 백그라운드로 완주해둔 결과(`make_submission_rehearsal.log`, `gpu_mem_rehearsal.csv`, `results/submission_rehearsal.csv`)가 커밋·기록 없이 남아 있는 상태를 발견. 로그 무결성(에러 0건, 831/831 완료, 답 결측 0건) 확인 후 재실행 없이 채택
+- **결과**:
+
+| 항목 | 값 |
+|---|---|
+| 처리 문항 | 831/831 |
+| 총 소요 | 1:01:30 (3,690초) |
+| 문항당 처리 시간 | **4.44초/문항** |
+| 2,000문항 환산 | **약 2시간 28분** (8,881초) |
+| GPU 메모리 최대 | 21,891 MiB / 23,028 MiB (**95.1%**) |
+| CPU RSS 최대 | 5.07 GiB |
+| CPU 사용률 | 37% (GPU 바운드 확인) |
+| 오류 | 없음 |
+
+- **핵심 발견 — 재개 불가능**: `make_submission.py`는 100문항 청크로 메모리만 관리할 뿐 **디스크 체크포인트가 없다**. 831문항 중 830번째에서 죽어도 결과 0건 — 재시작 시 전량(약 2.5시간, 2,000문항 기준) 재실행 필요. 반면 `dump_lb_samples.py`는 청크마다 `.jsonl`+`.progress`로 저장해 실제 재개가 동작함(exp33에서 검증됨)이 확인됨 — **8/31 당일은 `dump_lb_samples.py`(재개 가능) + `make_submission_from_dump.py`(GPU 불필요, 수 초) 조합으로 대체 권장**
+- **의미**: 2.5시간이라는 소요 시간 자체는 하루 안에 충분히 여유 있으나(중단 1회 가정해도 최대 5시간), 재개 불가라는 운영 리스크가 이번 리허설의 가장 중요한 산출물. 성공/실패 판정 대상 아님(운영 점검)
+- **결과 파일**: `results/rehearsal_report.md`(전체 체크리스트 포함), `results/submission_rehearsal.csv`, `gpu_mem_rehearsal.csv`, `make_submission_rehearsal.log`
+- **다음**: exp31a-dump-samples (집계 전략 대량 탐색 사이클)
 
 ## 실험 34: 집계 전략 5종 제출 후보 생성 — 덤프 기반, GPU 불필요 (2026-08-10, AWS)
 

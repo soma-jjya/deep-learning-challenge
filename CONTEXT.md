@@ -61,10 +61,10 @@
 
 **하이브리드**: 추론·평가·제출 = Kaggle (무료, 최종 추론 재현성도 Kaggle 환경 기준) / RFT 데이터 생성·QLoRA 학습 = AWS (9시간 벽·T4 속도 병목 회피, 스팟 총 $30~80 예상). 어댑터는 AWS→Kaggle로 가져와 추론.
 
-## 현재 상태 (2026-08-10 오후, 갱신 19) — exp32 완료(Budget Forcing 실패), 큐 다음은 exp30(최종 리허설)
+## 현재 상태 (2026-08-10 오후, 갱신 20) — exp30 완료(최종 리허설, 운영 리스크 점검), 큐 다음은 exp31a(집계 전략 탐색)
 
-- **exp32 완료(Budget Forcing, H20) — 목표 미달**: `remote/eval_budget_forcing.py --rounds 2 --n 1`(베이스, greedy). round0(기준) 69.4%(335/483) → round1 70.0%(338/483, +0.6%p) → round2 70.0%(338/483, round1과 동일=수렴). 성공 기준(+2%p 이상) 미달로 SC 결합 단계(②, `--rounds 1 --n 8`)는 **미실행**. "표 하나의 질을 올리는" 유일하게 남았던 축도 소진 — 지금까지 시도한 모든 축(SC스케일링/온도/가중투표/프롬프트앙상블/자기수정/검증자/QLoRA/GRPO/BudgetForcing)이 전부 ±1%p 안팎에서 정체. results/eval_bf_r2_n1.json
-- **큐 다음 항목**: exp30-final-rehearsal(최종 test 실전 리허설, 성능 실험 아닌 운영 리스크 점검) → exp31a/b/c(집계 전략 대량 탐색) → exp35~40(자율 운영 프로그램)
+- **exp30 완료(최종 test 실전 리허설) — 운영 리스크 점검, 성능 판정 없음**: `remote/make_submission.py --n 32 --weighted --tag rehearsal`로 리더보드 831문항 완주해 시간·자원 실측. **4.44초/문항 → 2,000문항 환산 약 2시간28분**, GPU 메모리 최대 21,891MiB/23,028MiB(95.1%), CPU RSS 최대 5.07GiB, CPU 사용률 37%(GPU 바운드), 오류 0건. **핵심 발견: `make_submission.py`는 체크포인트가 없어 중단 시 재개 불가능**(830문항째 죽어도 결과 0건, 전량 재실행 필요) — 반면 `dump_lb_samples.py`는 청크마다 저장해 재개가 실제로 동작(exp33 검증). **8/31 당일은 `dump_lb_samples.py`(재개 가능) + `make_submission_from_dump.py`(집계, GPU 불필요) 조합으로 대체 권장**. results/rehearsal_report.md(체크리스트 포함), results/submission_rehearsal.csv, gpu_mem_rehearsal.csv
+- **큐 다음 항목**: exp31a-dump-samples(검증셋 표본 덤프) → exp31b(집계 전략 12종 비교) → exp31c(조건부 제출) → exp35~43(자율 운영 프로그램)
 - **순위**: 15팀 중, 목표 2등(0.79542) 이내, 갭 0.011=9문제(n32w 0.78459 기준, 갱신 대기)
 
 ## 이전 상태 (2026-08-10 오후, 갱신 18) — exp34 완료(제출 후보 5종 생성, 미제출), 큐 다음은 exp32(budget forcing)

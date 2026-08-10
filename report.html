@@ -215,6 +215,8 @@ const EXPERIMENTS = [
     local: null, lb: 77.978, note: '기존(n32w 78.459) 대비 -0.481 — 표본 확대 무의미함을 깨끗한 LB로 재확인 (H11 정체 재확인)', jump: null },
   { exp: 'exp29-2', date: '2026-08-10', method: 'LB 판별 후보②: n=32 단순 다수결 (가중 제거)',
     local: null, lb: 77.737, note: '기존(n32w 78.459) 대비 -0.722 — 가중 제거 시 LB에서도 하락 (H16 가중 투표 유효성 재확인). 최종 스택은 여전히 n32w(가중 SC n=32)', jump: null },
+  { exp: 'exp30', date: '2026-08-10', method: '최종 test 실전 리허설 — 확정 스택으로 831문항 완주, 시간·자원 실측 (성능 실험 아님)',
+    local: null, lb: null, note: '4.44초/문항 → 2,000문항 환산 약 2시간28분. GPU 최대 95.1%, CPU RSS 5.07GiB. 핵심 발견: make_submission.py는 체크포인트 없어 중단 시 재개 불가 — 8/31 당일은 dump_lb_samples.py(재개 가능)+make_submission_from_dump.py 조합 권장', jump: null },
 ];
 const TARGET = 85;
 
