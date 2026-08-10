@@ -30,6 +30,7 @@ def main():
     ap.add_argument('--temp', type=float, default=0.7)
     ap.add_argument('--top-p', type=float, default=0.8)
     ap.add_argument('--max-tokens', type=int, default=2048)
+    ap.add_argument('--chunk', type=int, default=100, help='이 단위로 생성·저장 (OOM 방지·재개 지원)')
     ap.add_argument('--lb-csv', default='deep-learning-challenge-2026/deep_chal_math_leaderboard_filtered.csv')
     ap.add_argument('--out', default='results/lb_samples.jsonl')
     args = ap.parse_args()
@@ -43,27 +44,44 @@ def main():
     llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
               gpu_memory_utilization=0.85, max_model_len=4096)
     tok = llm.get_tokenizer()
-    prompts = [tok.apply_chat_template(
-        [{'role': 'system', 'content': SYSTEM_PROMPT},
-         {'role': 'user', 'content': q}],
-        tokenize=False, add_generation_prompt=True) for q in lb['question']]
 
-    outs = llm.generate(prompts, SamplingParams(
-        n=args.n, temperature=args.temp, top_p=args.top_p,
-        max_tokens=args.max_tokens, seed=42, logprobs=0))
-
+    # ── 청크 처리 + 중간 저장 (2026-08-10) ──
+    # 831문항 × 96샘플을 한 번에 생성하면 결과가 통째로 RAM에 쌓여 OOM으로 죽는다
+    # (실제로 exp29가 이 방식으로 사망). 청크마다 디스크에 쓰고 메모리를 비우면
+    # 사용량이 1/N로 줄고, 중간에 죽어도 done 목록을 보고 이어서 재개된다.
     os.makedirs('results', exist_ok=True)
-    with open(args.out, 'w', encoding='utf-8') as f:
-        for i, o in enumerate(outs):
-            samples = []
-            for c in o.outputs:
-                ntok = max(1, len(c.token_ids))
-                samples.append({'ans': extract_answer(c.text),
-                                'logp': c.cumulative_logprob / ntok,
-                                'trunc': c.finish_reason == 'length',
-                                'len': ntok})
-            f.write(json.dumps({'id': lb['id'][i], 'samples': samples},
-                               ensure_ascii=False) + chr(10))
+    prog = args.out + '.progress'
+    done = set()
+    if os.path.exists(prog) and os.path.exists(args.out):
+        done = set(json.load(open(prog))['done'])
+        print(f'이어서 진행: {len(done)}문항 완료됨')
+
+    todo = [(i, q) for i, q in enumerate(lb['question']) if lb['id'][i] not in done]
+    sp = SamplingParams(n=args.n, temperature=args.temp, top_p=args.top_p,
+                        max_tokens=args.max_tokens, seed=42, logprobs=0)
+
+    for s in range(0, len(todo), args.chunk):
+        part = todo[s:s + args.chunk]
+        prompts = [tok.apply_chat_template(
+            [{'role': 'system', 'content': SYSTEM_PROMPT},
+             {'role': 'user', 'content': q}],
+            tokenize=False, add_generation_prompt=True) for _, q in part]
+        outs = llm.generate(prompts, sp)
+        with open(args.out, 'a', encoding='utf-8') as f:
+            for (i, _), o in zip(part, outs):
+                samples = []
+                for c in o.outputs:
+                    ntok = max(1, len(c.token_ids))
+                    samples.append({'ans': extract_answer(c.text),
+                                    'logp': c.cumulative_logprob / ntok,
+                                    'trunc': c.finish_reason == 'length',
+                                    'len': ntok})
+                f.write(json.dumps({'id': lb['id'][i], 'samples': samples},
+                                   ensure_ascii=False) + chr(10))
+                done.add(lb['id'][i])
+        json.dump({'done': sorted(done)}, open(prog, 'w'))
+        del outs
+        print(f'진행 {len(done)}/{len(lb)}문항 저장됨')
     print(f'저장: {args.out} ({len(lb)}문항 × {args.n})')
     print('다음: remote/make_submission_from_dump.py 로 원하는 만큼 제출 파일 생성 (GPU 불필요)')
 

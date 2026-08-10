@@ -12,8 +12,8 @@ notify() {
   [ -n "$NTFY_TOPIC" ] && curl -s -d "$1" "ntfy.sh/$NTFY_TOPIC" > /dev/null || true
 }
 
-notify "실험 러너 시작"
-
+# systemd(Restart=always)가 이 스크립트를 관리한다 → 죽어도 5분 내 자동 재기동.
+# 재기동마다 알림이 오면 시끄러우므로 시작 알림은 생략하고, 실험 단위로만 알린다.
 while true; do
   # pull 실패(로컬 변경 충돌)가 러너를 죽이지 않게: 자동 커밋 후 재시도
   if ! git pull --rebase; then
@@ -22,10 +22,13 @@ while true; do
     git pull --rebase || { echo "pull 재실패 — 5분 후 재시도"; sleep 300; continue; }
   fi
   if ! grep -q '^- \[ \]' experiments/queue.md; then
-    echo "큐가 비었습니다. 러너 종료."
-    notify "실험 큐 완료 — 서버는 곧 자동 정지됩니다"
-    break
+    echo "$(date +%H:%M) 큐가 비었습니다 — 10분 후 종료 (systemd가 5분 뒤 재기동해 다시 확인)"
+    # 알림은 최초 1회만 (systemd 재기동마다 반복 알림 방지)
+    [ -f /tmp/queue_empty_notified ] || { notify "실험 큐 완료 — 서버는 곧 자동 정지됩니다"; touch /tmp/queue_empty_notified; }
+    sleep 600
+    exit 0
   fi
+  rm -f /tmp/queue_empty_notified
 
   # 실험 프로세스가 이미 돌고 있으면 Claude를 부르지 않고 대기 (구독 사용량 절약)
   # 패턴을 "uv run python remote/"로 일반화 — 개별 스크립트명을 나열하면 새 스크립트(예: gen_verifier_data.py) 추가 시

@@ -73,13 +73,19 @@ def main():
     sp = SamplingParams(n=args.n, temperature=args.temp, top_p=args.top_p,
                         max_tokens=args.max_tokens, seed=42,
                         logprobs=0 if args.weighted else None)
-    outs = llm.generate(prompts, sp, lora_request=lora)
-    if args.weighted:
-        preds = [weighted_vote([
-            (extract_answer(c.text), c.cumulative_logprob / max(1, len(c.token_ids)))
-            for c in o.outputs]) for o in outs]
-    else:
-        preds = [majority_vote([extract_answer(c.text) for c in o.outputs]) for o in outs]
+    # 청크 처리 — n이 클 때 결과가 통째로 RAM에 쌓여 OOM으로 죽는 것 방지 (exp29 사망 원인, 2026-08-10)
+    CHUNK = 100
+    preds = []
+    for s in range(0, len(prompts), CHUNK):
+        outs = llm.generate(prompts[s:s + CHUNK], sp, lora_request=lora)
+        if args.weighted:
+            preds += [weighted_vote([
+                (extract_answer(c.text), c.cumulative_logprob / max(1, len(c.token_ids)))
+                for c in o.outputs]) for o in outs]
+        else:
+            preds += [majority_vote([extract_answer(c.text) for c in o.outputs]) for o in outs]
+        del outs
+        print(f'  진행 {len(preds)}/{len(prompts)}문항')
 
     os.makedirs('results', exist_ok=True)
     out_path = f'results/submission_{args.tag}.csv'
