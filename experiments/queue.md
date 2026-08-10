@@ -55,13 +55,13 @@
   ① `remote/make_submission.py --n 64 --weighted --tag n64w` (표 수 축: 32→64가 깨끗한 데이터에서도 무의미한지)
   ② `remote/make_submission.py --n 32 --tag n32m` (가중 없이 단순 다수결 — 가중이 실제로 도움인지 해로운지)
   ※ ①이 5시간 이상 걸리면 ②를 먼저 실행할 것. 각 CSV의 행수(831)·정수·결측 검증 결과도 기록 → 결과: 두 CSV 모두 831행/정수/결측·중복 없음 확인, n32w 대비 각각 69문항(n64w)·67문항(n32m) 달라 구조적 차이 기준 충족. 둘 다 제출: **n64w LB 0.77978**(기존 0.78459 대비 -0.00481), **n32m LB 0.77737**(-0.00722) — 둘 다 기존 최고(n32w) 대비 하락, 성공 후보 없음. n=32→64 표본 확대 무의미(H11 정체 LB로 재확인), 가중 제거 시 하락(H16 가중 투표 유효성 LB로 재확인). 최종 스택은 여전히 n32w(가중 SC n=32) 확정. **운영 사고**: n64w는 이전 세션이 11:24에 이미 제출해뒀던 것을 모르고 12:27에 중복 제출(일일 한도 1건 낭비) — 향후 제출 전 `kaggle competitions submissions`로 이력 확인 필수. 또한 Kaggle CLI가 매 제출마다 잔여 건수를 출력해 **일일 제출 한도가 실제로 존재함**을 확인(CONTEXT.md의 "일일 한도 없음" 기록은 오류, 정정 필요)
-- [ ] exp33-lb-dump: **하루 최대 제출 체제의 기반** — 리더보드 표본 1회 대량 덤프. `nohup uv run python remote/dump_lb_samples.py --n 96 > dump_lb.log 2>&1 &` (~3시간). 완료 후 문항 수·표본 수·파일 크기 기록. **results/lb_samples.jsonl은 용량 커서 커밋 금지** (서버 보관). 이후 제출 파일은 GPU 없이 즉시 생성 가능해짐
+- [ ] exp33-lb-dump: **하루 최대 제출 체제의 기반** — 리더보드 표본 1회 덤프 (exp29에서 n=64가 n=32보다 나쁨이 확인돼 96→48로 축소, 3시간→1.5시간). `nohup uv run python remote/dump_lb_samples.py --n 48 > dump_lb.log 2>&1 &` (~3시간). 완료 후 문항 수·표본 수·파일 크기 기록. **results/lb_samples.jsonl은 용량 커서 커밋 금지** (서버 보관). 이후 제출 파일은 GPU 없이 즉시 생성 가능해짐
 - [ ] exp34-submission-batch: exp33 완료 후 — `remote/make_submission_from_dump.py`로 제출 후보를 즉시 생성(각 수 초, **CSV는 전부 커밋**). 일일 한도는 없으나 리더보드 과적합을 피하기 위해 **구조적으로 다른 것만** 생성한다:
-  ① `--rule weighted --n 96 --tag w96` (표 최대 + 가중)
-  ② `--rule majority --n 96 --tag m96` (표 최대 + 단순 다수결 → 가중의 실효성 판별)
+  ① `--rule weighted --n 48 --tag w48` (표 최대 + 가중)
+  ② `--rule trim25 --n 32 --tag tr32` (표 최대 + 단순 다수결 → 가중의 실효성 판별)
   ③ `--rule weighted --n 32 --tag w32b` (기존 제출 재현 — **같은 설정 다른 표본이므로 우리 실행 간 변동폭을 LB에서 직접 측정**하는 대조군)
-  ④ `--rule drop_trunc --n 96 --tag dt96` (잘린 풀이 제외)
-  ⑤ `--rule tiebreak_conf --n 96 --tag tb96` (동률 시 확신도 우선)
+  ④ `--rule drop_trunc --n 32 --tag dt32` (잘린 풀이 제외)
+  ⑤ `--rule tiebreak_conf --n 32 --tag tb32` (동률 시 확신도 우선)
   각 파일의 행수·정수·결측 검증 + **기존 제출(n32w)과 몇 문항 다른지**를 표로 기록. **차이가 15문항 미만인 후보는 "판별 불가"로 표시**(831문항 기준 LB 표준오차 ±1.4%p) — 제출 여부는 로컬 Claude가 판단하므로 서버는 생성·기록까지만
 - [ ] exp32-budget-forcing: **개별 풀이의 질을 올리는 유일한 미탐색 축** (s1 방식, arXiv:2501.19393). 모델이 답을 내려 할 때 "Wait"를 붙여 재검토시킨다. 순서대로 실행하며 각 라운드 정확도를 표로 기록:
   ① `uv run python remote/eval_budget_forcing.py --rounds 2 --n 1` (greedy 기준선 69.4% 대비, ~1시간)
