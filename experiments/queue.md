@@ -56,3 +56,9 @@
   ② `remote/make_submission.py --n 32 --tag n32m` (가중 없이 단순 다수결 — 가중이 실제로 도움인지 해로운지)
   ※ ①이 5시간 이상 걸리면 ②를 먼저 실행할 것. 각 CSV의 행수(831)·정수·결측 검증 결과도 기록
 - [ ] exp30-final-rehearsal: **최종 test 실전 리허설** (8/31 하루 안에 2,000문항을 무사고로 처리해야 함 — 이번 대회 최대 실행 리스크). 리더보드 파일(831문항)을 최종 test(2,000문항)의 대역으로 삼아 **전 과정을 시간 측정하며 1회 완주**: 확정 스택(n=32 가중, temp 0.7)으로 make_submission 실행 → 소요 시간을 문항당 초로 환산해 2,000문항 예상 시간 산출 → results/rehearsal_report.md에 기록(문항당 처리 시간, 2,000문항 환산 시간, GPU 메모리 최대치, 중단 시 재개 가능 여부, 병목 지점, 8/31 당일 실행 체크리스트 초안). **이 항목은 성능 실험이 아니라 운영 리스크 점검이므로 성공/실패 기준 없음 — 측정과 문서화가 목적**
+
+## 집계 전략 대량 탐색 사이클 (2026-08-10) — 생성과 집계의 분리
+
+- [ ] exp31a-dump-samples: 검증셋 표본 1회 덤프. `nohup uv run python remote/dump_samples.py --n 64 > dump_samples.log 2>&1 &` (~1.5시간). 483문항 × 64샘플의 (추출답, 평균로그확률, 잘림여부, 길이)를 results/val_samples.jsonl로 저장(작은 파일 — **커밋 대상**). 이후 집계 실험은 GPU 없이 가능해짐
+- [ ] exp31b-sweep-aggregation: 집계 전략 12종 비교. `uv run python remote/sweep_aggregation.py` (수 초). 이어서 `--n 8` `--n 16` `--n 32`도 실행해 표본 수별 표를 만들 것. 출력 표 전체를 EXPERIMENTS.md에 기록하고, **기준(majority) 대비 +3문제 이상인 전략이 있으면** 그 전략명과 수치를 강조 기록. pass@n 상한도 함께 기록(집계로 회수 가능한 최대치)
+- [ ] exp31c-submission-beststrategy: exp31b에서 기준 대비 **+5문제 이상** 개선된 전략이 있을 때만 실행 — 해당 전략을 make_submission.py에 이식(커밋)해 리더보드 제출 파일 생성(results/submission_agg.csv). 없으면 skip으로 기록
