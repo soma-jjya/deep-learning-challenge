@@ -27,6 +27,7 @@ SYSTEM_PROMPT = (
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--n', type=int, default=96)
+    ap.add_argument('--seed', type=int, default=42, help='vLLM 샘플링 시드 (분산 측정용 다중 표본 세트 생성 시 변경)')
     ap.add_argument('--temp', type=float, default=0.7)
     ap.add_argument('--top-p', type=float, default=0.8)
     ap.add_argument('--max-tokens', type=int, default=2048)
@@ -39,7 +40,7 @@ def main():
 
     lb = pd.read_csv(args.lb_csv)
     lb.columns = lb.columns.str.strip()
-    print(f'리더보드 {len(lb)}문항 × {args.n}샘플 덤프 시작')
+    print(f'리더보드 {len(lb)}문항 × {args.n}샘플 덤프 시작 (seed={args.seed})')
 
     llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
               gpu_memory_utilization=0.85, max_model_len=4096)
@@ -58,7 +59,7 @@ def main():
 
     todo = [(i, q) for i, q in enumerate(lb['question']) if lb['id'][i] not in done]
     sp = SamplingParams(n=args.n, temperature=args.temp, top_p=args.top_p,
-                        max_tokens=args.max_tokens, seed=42, logprobs=0)
+                        max_tokens=args.max_tokens, seed=args.seed, logprobs=0)
 
     for s in range(0, len(todo), args.chunk):
         part = todo[s:s + args.chunk]
