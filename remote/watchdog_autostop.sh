@@ -18,6 +18,23 @@ if [ "$busy" -gt 10 ] || [ "$procs" -gt 0 ]; then
   exit 0
 fi
 
+# ── 러너 자동 부활 (2026-08-10 추가) ──
+# 작업 프로세스가 없는 지금, 큐에 할 일이 남았는데 러너까지 죽었다면 되살린다.
+# (2026-08-09에 러너가 2회 죽어 3시간을 유휴로 낭비한 사고의 근본 대책)
+REPO=/home/ubuntu/work/deep-learning-challenge
+if [ -d "$REPO" ] && grep -q '^- \[ \]' "$REPO/experiments/queue.md" 2>/dev/null; then
+  if ! pgrep -f "run_experiment[s].sh" > /dev/null; then
+    logger "ajudl watchdog: 큐에 할 일이 있는데 러너 없음 — 재시작"
+    [ -n "$NTFY_TOPIC" ] && curl -s -d "러너 사망 감지 — 자동 부활" "ntfy.sh/$NTFY_TOPIC" > /dev/null
+    cd "$REPO" || exit 0
+    echo "=== watchdog revival $(date -u) ===" >> runner.log
+    sudo -u ubuntu env PATH="/home/ubuntu/.local/bin:$PATH" \
+      nohup setsid bash remote/run_experiments.sh >> runner.log 2>&1 < /dev/null &
+    echo 0 > $STATE   # 부활시켰으니 유휴 카운터 초기화
+    exit 0
+  fi
+fi
+
 n=$(cat $STATE 2>/dev/null || echo 0)
 n=$((n + 1))
 echo $n > $STATE
