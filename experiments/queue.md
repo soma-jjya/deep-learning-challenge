@@ -74,3 +74,16 @@
 - [ ] exp31a-dump-samples: 검증셋 표본 1회 덤프. `nohup uv run python remote/dump_samples.py --n 64 > dump_samples.log 2>&1 &` (~1.5시간). 483문항 × 64샘플의 (추출답, 평균로그확률, 잘림여부, 길이)를 results/val_samples.jsonl로 저장(작은 파일 — **커밋 대상**). 이후 집계 실험은 GPU 없이 가능해짐
 - [ ] exp31b-sweep-aggregation: 집계 전략 12종 비교. `uv run python remote/sweep_aggregation.py` (수 초). 이어서 `--n 8` `--n 16` `--n 32`도 실행해 표본 수별 표를 만들 것. 출력 표 전체를 EXPERIMENTS.md에 기록하고, **기준(majority) 대비 +3문제 이상인 전략이 있으면** 그 전략명과 수치를 강조 기록. pass@n 상한도 함께 기록(집계로 회수 가능한 최대치)
 - [ ] exp31c-submission-beststrategy: exp31b에서 기준 대비 **+5문제 이상** 개선된 전략이 있을 때만 실행 — 해당 전략을 make_submission.py에 이식(커밋)해 리더보드 제출 파일 생성(results/submission_agg.csv). 없으면 skip으로 기록
+
+## 자율 운영 프로그램 (2026-08-10 ~ 08-20, 사용자 위임)
+
+**서버 실행자 유의사항**: ① CSV가 생성되면 **바로 제출까지 할 것** — `python -m kaggle competitions submit -c deep-learning-challenge-2026 -f <csv> -m "<expNN | 방법 | local XX%>"`. `KAGGLE_API_TOKEN`이 환경에 없으면 제출은 건너뛰고 "토큰 없음"으로 기록. 제출 후 `python -m kaggle competitions submissions -c deep-learning-challenge-2026`로 점수를 확인해 log.csv의 leaderboard 열에 기록(점수 반영에 몇 분 걸릴 수 있으니 다음 실험 후 재확인)
+② **최종 test(8/31) 제출은 절대 자동으로 하지 말 것** — 사용자 확인 필수
+③ 결과가 나올 때마다 log.csv·EXPERIMENTS.md·queue.md 갱신은 기존대로, 추가로 **report.html의 EXPERIMENTS 배열과 ALL_RUNS 배열에도 한 줄 추가**할 것(시각화 최신 유지)
+
+- [ ] exp35-bf-scale: exp32(Budget Forcing) 결과에 따라 분기. **성공(greedy +2%p↑)이면**: `--rounds 2 --n 8`, `--rounds 1 --n 32` 순으로 실행해 최적 조합을 찾고, 최적 설정으로 리더보드 제출 파일 생성(make_submission.py에 budget forcing 이식 필요 — eval_budget_forcing.py의 이어붙이기 로직 참고, 커밋)해 **제출까지**. **실패면** skip으로 기록하고 넘어감
+- [ ] exp36-sampling-knobs: 미탐색 샘플링 파라미터. `remote/eval_vllm.py --mode sc --n 16 --top-p 0.95 --tag tp95`, 이어서 `--top-p 1.0 --tag tp100` 실행. 기준 top_p=0.8 n16(75.6%)과 비교. ±1%p는 노이즈 원칙 적용. 유의미하면 그 설정으로 덤프·제출까지
+- [ ] exp37-pairwise-tournament: 검증자 실패의 대안 — **독립 채점 대신 쌍대 비교**. results/val_samples.jsonl(exp31a)에서 상위 2개 후보 답이 접전인 문제만 골라, 두 후보의 대표 풀이를 나란히 제시하고 "A와 B 중 어느 쪽이 옳은가"를 베이스 모델에게 5회 물어 다수결(일회용 스크립트 작성·커밋). LLM은 절대 평가보다 상대 비교를 잘한다는 점을 노림. 기준: SC n=32 가중 75.8%. **성공: +1.5%p 이상**
+- [ ] exp38-daily-submit: 제출 다양성 유지 — exp33 덤프에서 아직 제출하지 않은 집계 규칙 조합으로 후보를 만들고(기존 제출과 15문항 이상 다른 것만), 제출·점수 기록. 이미 제출한 것과 답이 같으면 생성만 하고 제출은 생략. **하루 3건 이내로 제한**(리더보드 과적합 방지)
+- [ ] exp39-final-pipeline-freeze: 최종 파이프라인 동결 문서 작성. 지금까지 LB 점수가 확인된 모든 제출을 표로 정리하고, **로컬+LB 양쪽에서 일관되게 좋은 설정**을 최종 스택으로 선정해 `docs/final-pipeline.md`에 기록: 정확한 명령어, 시드, 예상 소요 시간(2,000문항 환산), 실패 시 대비책(중단 재개 방법), 8/31 당일 체크리스트. **LB 최고점이 아니라 원리적으로 설명 가능한 것을 고를 것**(과적합 방지)
+- [ ] exp40-idle-guard: 큐가 여기까지 오면 남은 기간 동안 서버는 대기 상태. 이 항목은 **체크하지 말고 그대로 둘 것** — 미완료 항목이 남아 있어야 watchdog이 러너를 유지한다. 대신 6시간마다 `python -m kaggle competitions submissions -c deep-learning-challenge-2026`로 점수 반영을 확인해 log.csv를 갱신하고, 새 점수가 있으면 커밋·푸시할 것. 사용자가 새 지시를 주면 큐 상단에 항목이 추가됨
