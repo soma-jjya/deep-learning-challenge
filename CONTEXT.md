@@ -8,6 +8,16 @@
 - 방법 불문: 후처리, 프롬프트, Self-Consistency, QLoRA SFT, GRPO 등 전부 후보
 - 모든 실험은 EXPERIMENTS.md에, 시각화·보고서는 report.html에 기록
 
+## 제출 자동화 (2026-08-10 연결 완료)
+
+- **대회 slug**: `deep-learning-challenge-2026`
+- **인증**: 사용자 환경변수 `KAGGLE_API_TOKEN` (KGAT_ 형식 신규 토큰 — 기존 kaggle.json username/key 방식 아님). CLI 2.2.4에서 동작 확인
+- **제출 명령**: `python -m kaggle competitions submit -c deep-learning-challenge-2026 -f <csv> -m "<설명>"`
+- **이력 확인**: `python -m kaggle competitions submissions -c deep-learning-challenge-2026`
+- **설명(-m) 형식**: `expNN | 방법 | local XX%`
+- **Claude가 지킬 선**: 하루 한도 내에서만 / 제출 즉시 사용자에게 보고 / 동일 답 파일 중복 제출 금지 / probing 금지 / **8/31 최종 test 제출은 자동 금지 — 반드시 사용자 확인 후**
+- ⚠️ 보안: 토큰이 채팅에 노출됨(2026-08-10) → 대회 종료 후 Kaggle에서 재발급 권장
+
 ## 제출 정책 (2026-08-10 사용자 지시로 변경)
 
 - **기존(폐기)**: 로컬 검증에서 최고 스택을 이길 때만 제출 → 총 3회만 제출함
