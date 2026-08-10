@@ -6,3 +6,5 @@ outputs/
 __pycache__/
 wandb/
 unsloth_compiled_cache/
+results/lb_samples.jsonl
+results/lb_samples.jsonl.progress
