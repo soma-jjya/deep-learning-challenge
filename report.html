@@ -225,6 +225,8 @@ const EXPERIMENTS = [
     local: 75.8, lb: null, note: 'baseline(가중 SC n=32, 75.8%)과 완전 동일(delta +0.0%p) — 대표 풀이 확보 단계 병목으로 가설 자체는 미검증. 성공 기준(+1.5%p) 미달로 기각', jump: null },
   { exp: 'exp41-A/B', date: '2026-08-11', method: '분산 축소 스택(H22) — 독립 시드 3세트(n=32×3) 결합 96표 가중 SC, 서로 다른 조합 두 개(s3x32/s3x32v)를 LB에 제출해 재실행 변동 직접 측정',
     local: null, lb: 78.459, note: 'A(seed42+43+44) 0.77617 / B(seed45+46+47) 0.78459(=n32w와 정답수 동일) — 둘의 차이 0.842%p(7문항)가 exp34b의 단일n=32 재실행 변동(0.481%p)보다 큼. 로컬 예측답차이(35문항)는 기준(67문항)보다 줄었으나 실제 LB 변동은 오히려 커진 역설 — H22(분산 축소) LB 골드스탠다드 기준 기각', jump: null },
+  { exp: 'exp38', date: '2026-08-11', method: '제출 다양성 유지 — exp34의 미제출 후보 4종 중 중복 제외 후 w48(weighted,n48)·dt32(drop_trunc,n32) 2건만 제출',
+    local: null, lb: 78.219, note: 'agg는 이미 제출된 tr32와 완전 동일(diff=0)이라 제외, tb32는 이미 제출된 w32b와 5문항만 달라(15문항 기준 미달) 제외. w48 0.78219(-0.24%p, 역대 2위)/dt32 0.77978(-0.48%p, w32b·n64w와 동점) — 둘 다 노이즈 범위 내, 새 최고 없음. 최종 스택 n32w 유지', jump: null },
 ];
 const TARGET = 85;
 
@@ -253,6 +255,7 @@ const ALL_RUNS = [
   { name: 'Budget Forcing (Wait 재검토)', acc: 70.0, verdict: 'noise', note: 'greedy 기준, +0.6%p로 성공기준 미달' },
   { name: 'trim_lowconf 정밀탐색 27종', acc: 76.4, verdict: 'noise', note: 'exp44 — exp31b 상한과 동률, 갱신 없음' },
   { name: '쌍대 비교 토너먼트', acc: 75.8, verdict: 'noise', note: 'exp37 — 접전 문항 재현 실패로 baseline과 동일' },
+  { name: '제출 다양성 (w48/dt32, LB)', acc: 78.2, verdict: 'noise', note: 'exp38 — LB 0.78219/0.77978, n32w(0.78459) 대비 소폭 하락, 노이즈 범위' },
 ];
 const PASS_AT_6 = 79.9;
 

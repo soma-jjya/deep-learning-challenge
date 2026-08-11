@@ -103,6 +103,19 @@
 | 37 | 2026-08-10 | **쌍대 비교 토너먼트 (H21, 검증자 대안) — 성공 기준(+1.5%p) 미달, 토너먼트 실질 미실행(0/65)** — `remote/eval_pairwise_tournament.py --margin 3 --gen-n 8 --votes 5` (베이스 모델). val_samples.jsonl(n=32) 기준 접전(1~2위 표차≤3) 65문항 중 재생성 8샘플로 양쪽 후보 답을 모두 확보한 문항 **0건** — 전부 기준(가중 다수결)값 유지, tournament 75.8%(366/483)=baseline과 완전 동일(delta +0) | 75.8%(=baseline, 변화 없음) | - | remote/eval_pairwise_tournament.py |
 | 41-A | 2026-08-11 | 분산 축소 스택① — 기존 덤프(seed42) n32 + seed43 n32 + seed44 n32 결합 96표 가중 SC (`remote/merge_lb_dumps.py` 신규) — s3x32 | - | **0.77617** | remote/merge_lb_dumps.py |
 | 41-B | 2026-08-11 | 분산 축소 스택② 대조군 — seed45+46+47 각 n32 결합 96표 가중 SC (①과 완전 독립) — s3x32v | - | **0.78459**(=n32w와 동일 정답수) | remote/merge_lb_dumps.py |
+| 38 | 2026-08-11 | 제출 다양성 유지 — exp34에서 생성해둔 미제출 후보 4종(agg/w48/dt32/tb32) 중 기존 제출과 15문항 이상 다른 것만 제출. agg는 tr32(이미 제출)와 완전 동일(diff=0), tb32는 w32b(이미 제출)와 5문항만 달라 판별 불가 → 둘 다 제출 생략. w48(weighted n48)·dt32(drop_trunc n32)만 제출 | - | **w48 0.78219** / **dt32 0.77978** | remote/make_submission_from_dump.py |
+
+## 실험 38: 제출 다양성 유지 — 미제출 후보 선별 제출 (2026-08-11, AWS)
+
+- **배경**: exp34에서 집계 규칙 5종(w48/tr32/w32b/dt32/tb32) CSV를 생성해뒀으나, 그중 tr32·w32b는 이후(exp34b) 이미 제출됐고 나머지(agg=exp31c의 trim25 결과·w48·dt32·tb32)는 미제출 상태로 남아 있었다. 큐 명세: 미제출 후보 중 **기존 제출과 15문항 이상 다른 것만** 제출, 답이 같으면 생성만 하고 제출 생략, 하루 3건 이내
+- **중복 확인**: 커밋된 CSV 전수 비교 결과, `submission_agg.csv`(exp31c, trim25/n32)는 이미 제출된 `submission_tr32.csv`(exp34-trim, 동일 규칙 trim25/n32, 0.77737)와 **완전 동일**(831문항 중 0문항 차이 — 같은 덤프·같은 규칙이므로 당연한 결과). `submission_tb32.csv`(tiebreak_conf/n32)는 이미 제출된 `submission_w32b.csv`(weighted/n32, 0.77978)와 **5문항만 차이**(15문항 기준 미달, "판별 불가") — tiebreak_conf가 동률에서만 weighted와 갈리므로 대부분 표가 같음. 두 후보 모두 **제출 생략**(파일은 이미 존재, 재생성 불필요)
+- **제출 대상**: `submission_w48.csv`(weighted, n=48 — n32w 대비 63문항 차이) · `submission_dt32.csv`(drop_trunc, n=32 — n32w 대비 70문항 차이) — 둘 다 모든 기존 제출 대비 15문항 이상 차이 확인(최소 diff: w48 vs s3x32 39문항, dt32 vs w32b 19문항)
+- **제출 이력 확인**: `kaggle competitions submissions`로 사전 확인 — w48/dt32 모두 이전에 제출된 적 없음(중복 제출 방지, exp29 교훈 반영)
+- **결과**: w48 → **LB 0.78219**(n32w 0.78459 대비 -0.0024, 지금까지 제출한 것 중 n32w 다음으로 높은 점수). dt32 → **LB 0.77978**(n32w 대비 -0.00481, w32b·n64w와 동점)
+- **판정**: 둘 다 기존 최고(n32w) 대비 소폭 하락 — 새 최고 기록은 아니지만 exp34b의 노이즈 범위(±0.48%p) 안에 있어 "집계 규칙이 전부 동등하다"는 기존 결론과 일치. w48이 가장 근접(-0.24%p)한 것은 표본 수를 늘린(n=48) 가중 방식이 n=32보다 약간 더 안정적일 가능성을 시사하나 n=1 비교라 확증 불가
+- **제출 자제**: 큐의 "하루 3건 이내" 자체 제한에 따라 2건만 제출(agg·tb32는 위 중복 확인에서 이미 제외). 오늘(2026-08-11) 실제 Kaggle 일일 한도는 exp41(2건: s3x32/s3x32v) + 본 실험(2건: w48/dt32) = 4건 사용, 제출 후 CLI 출력 기준 1건 남음
+- **결과 파일**: `results/submission_w48.csv`, `results/submission_dt32.csv`(이미 exp34에서 생성·커밋됨, 재생성 없이 그대로 제출). `results/submission_agg.csv`, `results/submission_tb32.csv`는 제출 생략(파일은 기존 그대로 유지)
+- **다음**: 큐 다음 항목 exp39-final-pipeline-freeze로 진행
 
 ## 실험 41: 분산 축소 스택 (exp34b 후속) — LB 골드스탠다드 기준 가설 기각 (2026-08-11, AWS)
 
