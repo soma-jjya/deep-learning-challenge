@@ -117,6 +117,21 @@
     </p>
   </div>
 
+  <h2>12%p는 어디에 있나 — 선택 여지의 순위별 분해</h2>
+  <div class="card">
+    <p class="sub" style="margin:0 0 12px">
+      pass@32(87.8%)와 실제 채택(75.8%) 사이 <b>12%p</b>가 전부 손에 닿는 것은 아니다.
+      정답이 후보 순위 어디에 있는지로 쪼개면, 재순위화로 도달 가능한 몫이 드러난다 (검증 483문항, n=32).
+    </p>
+    <div id="ceiling-bars"></div>
+    <p class="sub" style="margin:12px 0 0; font-size:0.84rem">
+      <b>2등(LB 0.79542)에 필요한 +1.5%p는 "상위 2후보 헤드룸"(+4.14%p)의 35%만 건지면 달성된다.</b>
+      즉 필요한 것은 완전한 신탁이 아니라 <b>1·2위를 가릴 줄 아는 심판 하나</b>였다.
+      그러나 절대 채점(검증자 +0.5%p)·상대 비교(쌍대 토너먼트 +0.21%p)·암묵적 보상 학습(DPO 보상정확도 0.60)
+      세 갈래 모두 실패했다 — 같은 3B 모델은 자기 풀이의 정오를 인식하지 못한다.
+    </p>
+  </div>
+
   <h2>실험 로그 (표)</h2>
   <div class="card scroll">
     <table id="exp-table">
@@ -256,9 +271,18 @@ const ALL_RUNS = [
   { name: 'trim_lowconf 25% (n32)', acc: 76.4, verdict: 'win', note: '집계 규칙 변경만으로 로컬 최고(exp31b)' },
   { name: 'Budget Forcing (Wait 재검토)', acc: 70.0, verdict: 'noise', note: 'greedy 기준, +0.6%p로 성공기준 미달' },
   { name: 'trim_lowconf 정밀탐색 27종', acc: 76.4, verdict: 'noise', note: 'exp44 — exp31b 상한과 동률, 갱신 없음' },
-  { name: '쌍대 비교 토너먼트', acc: 75.8, verdict: 'noise', note: 'exp37 — 접전 문항 재현 실패로 baseline과 동일' },
+  { name: '쌍대 비교 토너먼트 (버그 상태)', acc: 75.8, verdict: 'noise', note: 'exp37 — logprobs=0 누락 버그로 판정 0/65건 호출, 무효' },
+  { name: '쌍대 비교 토너먼트 (수정 후)', acc: 76.0, verdict: 'noise', note: 'exp37b — 57/65문항 실제 판정, +1문항(+0.21%p). 완벽한 심판이라도 상한 +1.86%p' },
   { name: '제출 다양성 (w48/dt32, LB)', acc: 78.2, verdict: 'noise', note: 'exp38 — LB 0.78219/0.77978, n32w(0.78459) 대비 소폭 하락, 노이즈 범위' },
   { name: 'Budget Forcing + SC n8', acc: 74.5, verdict: 'noise', note: 'exp42 — round0 대비 +0.6%p지만 exp05 SC n8(74.7%) 대비 -0.2%p, H20 최종 기각' },
+  { name: 'DPO (선호쌍 1,832개)', acc: 76.6, verdict: 'noise', note: 'exp47 — 시드42 기준 +0.8%p. 단 같은 어댑터 다른 측정에선 75.2%로 1.4%p 어긋남 = 노이즈에 묻힘. 학습 6전 중 유일하게 하락하지 않은 실행' },
+];
+// 순위별 선택 여지 분해 (n=32, exp37b 후속 분석) — "12%p 중 실제로 손에 닿는 몫"
+const SELECTION_CEILING = [
+  { name: '현재 스택 (가중 투표)', acc: 75.8, note: '실제 채택' },
+  { name: '상위 2후보 중 완벽 선택', acc: 79.9, note: '+4.14%p — 2등에 필요한 몫은 이 헤드룸의 35%' },
+  { name: '상위 3후보 중 완벽 선택', acc: 83.0, note: '+7.25%p' },
+  { name: 'pass@32 (완전한 신탁)', acc: 87.8, note: '+12.01%p — 이론적 상한' },
 ];
 const PASS_AT_6 = 79.9;
 
@@ -400,8 +424,32 @@ function draw2() {
       `${v.mark} ${r.acc.toFixed(1)}%  ${r.note}`);
   });
 }
+// 선택 여지 분해 — SVG 없이 CSS 막대로 그린다(테마 변수만 쓰므로 다시 그릴 필요 없음)
+function drawCeiling() {
+  const box = document.getElementById('ceiling-bars');
+  if (!box) return;
+  const base = SELECTION_CEILING[0].acc;
+  const max = SELECTION_CEILING[SELECTION_CEILING.length - 1].acc;
+  box.innerHTML = SELECTION_CEILING.map((r, i) => {
+    const pct = ((r.acc - 70) / (max - 70) * 100).toFixed(1);
+    const delta = r.acc - base;
+    const color = i === 0 ? 'var(--good)' : 'var(--muted)';
+    return `<div style="display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:10px;align-items:center;margin:7px 0">
+      <div style="font-size:0.82rem;text-align:right;opacity:0.85">${r.name}</div>
+      <div>
+        <div style="background:${color};height:20px;width:${pct}%;border-radius:4px;min-width:3px;
+                    ${i === 0 ? '' : 'opacity:0.55;'}"></div>
+        <div style="font-size:0.78rem;opacity:0.75;margin-top:2px">
+          ${r.acc.toFixed(1)}%${delta > 0 ? ` (+${delta.toFixed(2)}%p)` : ''} — ${r.note}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 draw();
 draw2();
+drawCeiling();
 const redraw = () => { draw(); draw2(); };
 new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
