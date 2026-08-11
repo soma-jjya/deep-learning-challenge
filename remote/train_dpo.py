@@ -93,6 +93,15 @@ def main():
     print('--- prompt 예시 ---' + chr(10) + dataset[0]['prompt'][:400])
     print('--- chosen 예시 ---' + chr(10) + dataset[0]['chosen'][:300])
 
+    # TRL 0.24의 DPOTrainer.__init__(dpo_trainer.py:405)가
+    # `model.warnings_issued["estimate_tokens"] = True`를 실행하는데, 이 속성은
+    # transformers 5.x에서 삭제됐다. PEFT 래퍼는 __getattr__을 베이스 모델로 넘기므로
+    # 양쪽 모두에 빈 dict를 심어 두면 조회가 성공한다. 학습 자체와는 무관한 로깅용 속성.
+    for m in (model, getattr(model, 'base_model', None),
+              getattr(getattr(model, 'base_model', None), 'model', None)):
+        if m is not None and not hasattr(m, 'warnings_issued'):
+            m.warnings_issued = {}
+
     trainer = DPOTrainer(
         model=model,
         ref_model=None,          # PEFT 어댑터를 끈 상태가 곧 참조 모델 (메모리 절약)
