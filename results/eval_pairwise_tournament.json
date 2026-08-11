@@ -5,13 +5,13 @@
   "votes": 5,
   "total": 483,
   "contested": 65,
-  "skipped_no_rep": 7,
-  "tourney_n": 58,
+  "skipped_no_rep": 9,
+  "tourney_n": 56,
   "baseline_acc": 0.7577639751552795,
   "baseline_correct": 366,
   "tournament_acc": 0.7598343685300207,
   "tournament_correct": 367,
   "delta_problems": 1,
-  "subset_baseline_correct": 10,
-  "subset_tournament_correct": 11
+  "subset_baseline_correct": 9,
+  "subset_tournament_correct": 10
 }
