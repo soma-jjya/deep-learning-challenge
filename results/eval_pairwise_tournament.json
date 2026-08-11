@@ -1,17 +1,17 @@
 {
   "n": 32,
-  "margin": 2,
+  "margin": 3,
   "gen_n": 32,
   "votes": 5,
   "total": 483,
-  "contested": 50,
-  "skipped_no_rep": 50,
-  "tourney_n": 0,
+  "contested": 65,
+  "skipped_no_rep": 8,
+  "tourney_n": 57,
   "baseline_acc": 0.7577639751552795,
   "baseline_correct": 366,
-  "tournament_acc": 0.7577639751552795,
-  "tournament_correct": 366,
-  "delta_problems": 0,
-  "subset_baseline_correct": 0,
-  "subset_tournament_correct": 0
+  "tournament_acc": 0.7598343685300207,
+  "tournament_correct": 367,
+  "delta_problems": 1,
+  "subset_baseline_correct": 10,
+  "subset_tournament_correct": 11
 }
