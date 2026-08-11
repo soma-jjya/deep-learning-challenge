@@ -227,6 +227,8 @@ const EXPERIMENTS = [
     local: null, lb: 78.459, note: 'A(seed42+43+44) 0.77617 / B(seed45+46+47) 0.78459(=n32w와 정답수 동일) — 둘의 차이 0.842%p(7문항)가 exp34b의 단일n=32 재실행 변동(0.481%p)보다 큼. 로컬 예측답차이(35문항)는 기준(67문항)보다 줄었으나 실제 LB 변동은 오히려 커진 역설 — H22(분산 축소) LB 골드스탠다드 기준 기각', jump: null },
   { exp: 'exp38', date: '2026-08-11', method: '제출 다양성 유지 — exp34의 미제출 후보 4종 중 중복 제외 후 w48(weighted,n48)·dt32(drop_trunc,n32) 2건만 제출',
     local: null, lb: 78.219, note: 'agg는 이미 제출된 tr32와 완전 동일(diff=0)이라 제외, tb32는 이미 제출된 w32b와 5문항만 달라(15문항 기준 미달) 제외. w48 0.78219(-0.24%p, 역대 2위)/dt32 0.77978(-0.48%p, w32b·n64w와 동점) — 둘 다 노이즈 범위 내, 새 최고 없음. 최종 스택 n32w 유지', jump: null },
+  { exp: 'exp42', date: '2026-08-11', method: 'Budget Forcing(H20) + SC n=8 결합 — round0 73.9% → round1(WAIT 재검토) 74.5%',
+    local: 74.5, lb: null, note: 'round0 대비 +0.6%p로 exp32 greedy와 방향 일치하나, 진짜 비교 기준 exp05 SC n8(74.7%) 대비로는 -0.2%p로 판정 기준(+1%p) 미달. H20(Budget Forcing) 최종 기각 — greedy·SC 결합 둘 다 실패', jump: null },
 ];
 const TARGET = 85;
 
@@ -256,6 +258,7 @@ const ALL_RUNS = [
   { name: 'trim_lowconf 정밀탐색 27종', acc: 76.4, verdict: 'noise', note: 'exp44 — exp31b 상한과 동률, 갱신 없음' },
   { name: '쌍대 비교 토너먼트', acc: 75.8, verdict: 'noise', note: 'exp37 — 접전 문항 재현 실패로 baseline과 동일' },
   { name: '제출 다양성 (w48/dt32, LB)', acc: 78.2, verdict: 'noise', note: 'exp38 — LB 0.78219/0.77978, n32w(0.78459) 대비 소폭 하락, 노이즈 범위' },
+  { name: 'Budget Forcing + SC n8', acc: 74.5, verdict: 'noise', note: 'exp42 — round0 대비 +0.6%p지만 exp05 SC n8(74.7%) 대비 -0.2%p, H20 최종 기각' },
 ];
 const PASS_AT_6 = 79.9;
 
