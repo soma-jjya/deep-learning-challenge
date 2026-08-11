@@ -8,3 +8,5 @@ wandb/
 unsloth_compiled_cache/
 results/lb_samples.jsonl
 results/lb_samples.jsonl.progress
+results/lb_samples_s3x32.jsonl
+results/lb_samples_s3x32v.jsonl
