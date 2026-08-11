@@ -61,7 +61,31 @@
 
 **하이브리드**: 추론·평가·제출 = Kaggle (무료, 최종 추론 재현성도 Kaggle 환경 기준) / RFT 데이터 생성·QLoRA 학습 = AWS (9시간 벽·T4 속도 병목 회피, 스팟 총 $30~80 예상). 어댑터는 AWS→Kaggle로 가져와 추론.
 
-## 현재 상태 (2026-08-11, 갱신 28) — 🛑 탐색 종료·인스턴스 정지, 8/31 최종전까지 대기
+## 현재 상태 (2026-08-11, 갱신 29) — ▶️ 탐색 재개, 인스턴스 기동 (exp46/37b/47)
+
+**사용자 판단으로 재개.** 목표를 다시 계산하니 멈출 자리가 아니었다 — 로컬↔LB 오프셋이 +2.7%p로 일관되므로 **LB 0.80 = 로컬 77.3%, 즉 현재 75.8%에서 +1.5%p면 된다.** pass@32=87.8%가 여전히 위에 떠 있고, 남은 카드도 있다.
+
+### 사용자가 선택한 범위 (2026-08-11)
+- **채택**: exp37b(쌍대 비교 재실행) + exp47(DPO). 추가 현금 지출 없이 GPU 시간만 사용
+- **보류**: 상용 API 증류(규칙 5.3에서 명시 허용, `prd.md:30`). 학습 5전이 전부 자기생성(RFT)·NuminaMath였고 강한 교사 풀이는 한 번도 안 써봤다는 점에서 유일하게 천장이 높은 카드지만, 이번엔 제외. **되살릴 경우 예상 비용: Sonnet 5 배치 약 $31~60**(못 푸는 ~3천 문항 × 정답 대조 필터)
+- **보류**: spot 인스턴스 전환(g5.2xlarge $0.44/h vs 현재 온디맨드 $1.21/h). 현재는 온디맨드 유지 — **비용이 계속 발생하므로 실험 종료 시 반드시 정지할 것**
+
+### 진행 중인 큐
+1. `exp46-stack-smoke` — 아래 venv 변경 후 vLLM 생성이 정상인지 확인(최우선, 수 분)
+2. `exp37b-pairwise-fix` — **원인 재규명 완료**. 이전 진단 "n=8 표본 부족"은 **틀렸다**: 새벽 재시도가 이미 `--gen-n 32`(4배)로 돌렸는데도 재현이 0/50이었다(`results/eval_pairwise_tournament.json`). 진짜 원인은 `eval_pairwise_tournament.py`의 재생성 `SamplingParams`에 **`logprobs=0`이 빠져** vLLM이 `cumulative_logprob`을 전부 `None`으로 주고, 대표 풀이 선정 루프가 후보를 전량 걸러낸 것. 수정 커밋 완료
+3. `exp47-dpo` — H15. `data/verifier.jsonl`(24k) 재활용, 추가 생성 0. **평가는 반드시 SC n=32로** (exp09b: greedy가 올라도 SC가 내려가면 최종 스택에선 손해)
+
+### ⚠️ venv 변경 이력 (2026-08-11) — 재현 환경 제출 시 반영 필요
+TRL 0.24의 `DPOTrainer`가 `mergekit`을 강제 임포트하는데, mergekit이 transformers 5.x에서 삭제된 `TRANSFORMERS_CACHE`를 참조해 깨진다.
+- **하면 안 되는 것**: `uv pip install mergekit`을 그냥 실행하면 transformers가 5.14.1→5.12.1로 **다운그레이드되어 vLLM(=8/31 최종 파이프라인)이 위험해진다.** 실제로 한 번 발생시켰고 즉시 원복함
+- **한 조치**: `--no-deps`로만 설치(mergekit, llm-blender, dataclasses-json, marshmallow, typing-inspect, mypy-extensions, weave, gql, backoff, graphql-core, tenacity, diskcache) + `train_dpo.py` 안에서만 `TRANSFORMERS_CACHE` shim. **transformers 5.14.1 / vLLM 0.26.0 유지 확인 완료**
+
+### 확정 사항 (변동 없음)
+- **최종 스택**: 무학습 베이스 + 확신도 가중 SC n=32 (temp 0.7 / top_p 0.8 / seed 42). `docs/final-pipeline.md`
+- **성적**: LB 최고 0.78459 (참값 0.780±0.005), 2등 0.79542와 약 1.5%p 차
+- 위 실험들이 기준(+5문항 / +1.5%p)을 넘지 못하면 **최종 스택은 그대로 둔다** — 노이즈 하한이 0.48%p임을 잊지 말 것
+
+## 이전 상태 (2026-08-11, 갱신 28) — 🛑 탐색 종료·인스턴스 정지, 8/31 최종전까지 대기
 
 **사용자 지시로 인스턴스 정지 (2026-08-11).** 45개 실험으로 규칙 내 모든 축을 소진했고, 남은 것은 최종전 실행뿐이다.
 
