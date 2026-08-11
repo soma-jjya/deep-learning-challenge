@@ -29,9 +29,14 @@ def main():
     ap.add_argument('--temp', type=float, default=0.7)
     ap.add_argument('--top-p', type=float, default=0.8)
     ap.add_argument('--out', default='results/val_samples.jsonl')
+    ap.add_argument('--adapter', default=None,
+                    help='LoRA 어댑터 경로 (없으면 베이스). 학습이 표본 다양성에 준 영향을 '
+                         '베이스 덤프와 직접 비교하기 위한 인자')
+    ap.add_argument('--seed', type=int, default=42)
     args = ap.parse_args()
 
     from vllm import LLM, SamplingParams
+    from vllm.lora.request import LoRARequest
 
     df = pd.read_csv('deep-learning-challenge-2026/deep_chal_math_train.csv')
     df.columns = df.columns.str.strip()
@@ -43,7 +48,9 @@ def main():
     print(f'검증 {len(val)}문항 × {args.n}샘플 덤프')
 
     llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
-              gpu_memory_utilization=0.85, max_model_len=4096)
+              gpu_memory_utilization=0.85, max_model_len=4096,
+              enable_lora=args.adapter is not None, max_lora_rank=64)
+    lora = LoRARequest('adapter', 1, args.adapter) if args.adapter else None
     tok = llm.get_tokenizer()
     prompts = [tok.apply_chat_template(
         [{'role': 'system', 'content': SYSTEM_PROMPT},
@@ -52,7 +59,7 @@ def main():
 
     outs = llm.generate(prompts, SamplingParams(
         n=args.n, temperature=args.temp, top_p=args.top_p,
-        max_tokens=2048, seed=42, logprobs=0))
+        max_tokens=2048, seed=args.seed, logprobs=0), lora_request=lora)
 
     os.makedirs('results', exist_ok=True)
     with open(args.out, 'w', encoding='utf-8') as f:
