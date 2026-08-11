@@ -72,7 +72,7 @@ def main():
     ap.add_argument('--samples', default='results/val_samples.jsonl')
     ap.add_argument('--n', type=int, default=32, help='표 계산에 쓸 표본 수 (기준 스택과 동일)')
     ap.add_argument('--margin', type=int, default=3, help='접전 판정 기준 (top1표-top2표 <= margin)')
-    ap.add_argument('--gen-n', type=int, default=8, help='접전 문제당 대표 풀이 확보용 재생성 수')
+    ap.add_argument('--gen-n', type=int, default=32, help='접전 문제당 대표 풀이 확보용 재생성 수')
     ap.add_argument('--votes', type=int, default=5, help='쌍대 비교 질의 횟수')
     args = ap.parse_args()
 
@@ -105,8 +105,10 @@ def main():
         [{'role': 'system', 'content': SYSTEM_PROMPT},
          {'role': 'user', 'content': qmap[cid]}],
         tokenize=False, add_generation_prompt=True) for cid, _, _ in contested]
+    # logprobs=0 필수 — 빠뜨리면 vLLM이 cumulative_logprob을 None으로 돌려주고
+    # 아래 확신도 비교에서 모든 후보가 걸러진다(exp37이 0/65가 된 원인, 2026-08-11 수정).
     gen_outs = llm.generate(gen_prompts, SamplingParams(
-        n=args.gen_n, temperature=0.7, top_p=0.8, max_tokens=2048, seed=42))
+        n=args.gen_n, temperature=0.7, top_p=0.8, max_tokens=2048, seed=42, logprobs=0))
 
     reps = {}  # id -> {answer: (text, logp)}
     for (cid, a1, a2), o in zip(contested, gen_outs):
