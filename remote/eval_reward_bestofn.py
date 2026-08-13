@@ -61,40 +61,54 @@ def main():
     ap.add_argument('--seed', type=int, default=42)
     ap.add_argument('--rm-batch', type=int, default=8, help='보상 점수 채점 배치')
     ap.add_argument('--tag', default=None)
+    # vLLM과 HF 모델을 한 프로세스에 연달아 올리면 vLLM이 잡은 GPU 메모리가 완전히
+    # 반환되지 않아 OOM이 난다(del + empty_cache로도 부족). 단계를 프로세스로 분리한다.
+    ap.add_argument('--stage', choices=['gen', 'score', 'both'], default='both',
+                    help='gen: 생성만 하고 텍스트 저장 / score: 저장분을 채점')
     args = ap.parse_args()
+
+    val = load_val()
+    gen_path = f'results/rm_gen_seed{args.seed}_n{args.n}.jsonl'
+
+    # ── 1단계: 생성 (풀이 텍스트 보존) ──
+    if args.stage in ('gen', 'both'):
+        from vllm import LLM, SamplingParams
+        print(f'[gen] 검증 {len(val)}문항 x {args.n}샘플 (seed={args.seed})')
+        llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
+                  gpu_memory_utilization=0.85, max_model_len=4096)
+        tok = llm.get_tokenizer()
+        prompts = [tok.apply_chat_template(
+            [{'role': 'system', 'content': SYSTEM_PROMPT},
+             {'role': 'user', 'content': q}],
+            tokenize=False, add_generation_prompt=True) for q in val['question']]
+        outs = llm.generate(prompts, SamplingParams(
+            n=args.n, temperature=args.temp, top_p=args.top_p,
+            max_tokens=args.max_tokens, seed=args.seed, logprobs=0))
+        os.makedirs('results', exist_ok=True)
+        with open(gen_path, 'w', encoding='utf-8') as f:
+            for i, o in enumerate(outs):
+                cands = []
+                for c in o.outputs:
+                    ntok = max(1, len(c.token_ids))
+                    cands.append({'text': c.text.strip()[:6000],
+                                  'ans': extract_answer(c.text),
+                                  'logp': c.cumulative_logprob / ntok})
+                f.write(json.dumps({'id': val['id'][i], 'gold': int(val['answer'][i]),
+                                    'cands': cands}, ensure_ascii=False) + chr(10))
+        print(f'[gen] 저장: {gen_path}')
+        if args.stage == 'gen':
+            print('다음: 같은 명령에 --stage score 를 주고 별도 프로세스로 실행할 것')
+            return
 
     import torch
     import torch.nn as nn
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import PeftModel
-    from vllm import LLM, SamplingParams
 
-    val = load_val()
-    print(f'검증 {len(val)}문항 x {args.n}샘플 (seed={args.seed})')
-
-    # ── 1단계: 생성 (풀이 텍스트 보존) ──
-    llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
-              gpu_memory_utilization=0.55, max_model_len=4096)
-    tok = llm.get_tokenizer()
-    prompts = [tok.apply_chat_template(
-        [{'role': 'system', 'content': SYSTEM_PROMPT},
-         {'role': 'user', 'content': q}],
-        tokenize=False, add_generation_prompt=True) for q in val['question']]
-    outs = llm.generate(prompts, SamplingParams(
-        n=args.n, temperature=args.temp, top_p=args.top_p,
-        max_tokens=args.max_tokens, seed=args.seed, logprobs=0))
-
-    per_problem = []
-    for i, o in enumerate(outs):
-        cands = []
-        for c in o.outputs:
-            ntok = max(1, len(c.token_ids))
-            cands.append({'text': c.text.strip(), 'ans': extract_answer(c.text),
-                          'logp': c.cumulative_logprob / ntok})
-        per_problem.append(cands)
-
-    del llm, outs
-    torch.cuda.empty_cache()
+    rows = [json.loads(l) for l in open(gen_path, encoding='utf-8')]
+    per_problem = [r['cands'] for r in rows]
+    qmap = {i: q for i, q in enumerate(val['question'])}
+    print(f'[score] {len(rows)}문항 채점 시작')
 
     # ── 2단계: 보상 점수 ──
     htok = AutoTokenizer.from_pretrained('Qwen/Qwen2.5-3B-Instruct')
@@ -125,7 +139,7 @@ def main():
         return out
 
     for i, cands in enumerate(per_problem):
-        for c, r in zip(cands, rewards(val['question'][i], cands)):
+        for c, r in zip(cands, rewards(qmap[i], cands)):
             c['rm'] = r
         if (i + 1) % 50 == 0:
             print(f'  채점 {i+1}/{len(per_problem)}', flush=True)
@@ -156,7 +170,7 @@ def main():
             return max(w, key=w.get)
         raise ValueError(mode)
 
-    gold = [int(a) for a in val['answer']]
+    gold = [r['gold'] for r in rows]
     res = {}
     for mode in ('baseline', 'rm_best', 'rm_vote', 'rm_plus_conf'):
         ok = sum(1 for cands, g in zip(per_problem, gold) if pick(cands, mode) == g)
