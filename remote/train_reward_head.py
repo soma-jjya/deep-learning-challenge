@@ -80,13 +80,17 @@ def main():
             bnb_4bit_quant_type='nf4', bnb_4bit_use_double_quant=True))
     base.config.use_cache = False
     base = prepare_model_for_kbit_training(base, use_gradient_checkpointing=True)
-    base.gradient_checkpointing_enable()
-    base.enable_input_require_grads()
     base = get_peft_model(base, LoraConfig(
         r=CONFIG['lora_r'], lora_alpha=CONFIG['lora_alpha'], lora_dropout=0.0,
         target_modules=['q_proj', 'k_proj', 'v_proj', 'o_proj',
                         'gate_proj', 'up_proj', 'down_proj'],
         task_type='FEATURE_EXTRACTION'))
+    # 순서와 train()이 둘 다 중요하다. PEFT로 감싼 **뒤에** 체크포인팅을 켜야 어댑터
+    # 모듈까지 적용되고, HF 디코더는 model.training이 True일 때만 체크포인팅 경로를 탄다.
+    # 이걸 빠뜨려 3번째 OOM이 났다(활성값 19GB) — 켜졌는지 아래에서 실측 검증한다.
+    base.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant': False})
+    base.enable_input_require_grads()
+    base.train()
 
     hidden = base.config.hidden_size
     head = nn.Linear(hidden, 1, dtype=torch.bfloat16).cuda()
@@ -120,6 +124,17 @@ def main():
     params = [p for p in base.parameters() if p.requires_grad] + list(head.parameters())
     opt = torch.optim.AdamW(params, lr=CONFIG['learning_rate'])
     dl = DataLoader(ds, batch_size=CONFIG['per_device_batch'], shuffle=True)
+
+    # 체크포인팅이 실제로 걸렸는지 첫 스텝에서 실측한다. 활성값이 수 GB면 꺼진 것이므로
+    # 몇 시간 돌린 뒤 OOM으로 죽는 대신 즉시 알 수 있다(같은 이유로 3번 OOM 났다).
+    torch.cuda.reset_peak_memory_stats()
+    _probe = score(['테스트' * 200, '테스트' * 200])
+    _probe.sum().backward()
+    opt.zero_grad(set_to_none=True)
+    peak = torch.cuda.max_memory_allocated() / 2**30
+    print(f'[점검] train 모드={base.training}, 1스텝 최대 메모리 {peak:.2f} GiB '
+          f'({"체크포인팅 정상" if peak < 8 else "⚠️ 체크포인팅 미작동 의심"})', flush=True)
+    torch.cuda.empty_cache()
 
     step = 0
     run_loss = run_acc = seen = 0.0
