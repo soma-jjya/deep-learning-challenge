@@ -1,0 +1,9 @@
+{
+  "adapter": "outputs/dpo/dpo_r8_b0.3_lr5e-06_final",
+  "val_n": 500,
+  "greedy": 0.7060041407867494,
+  "greedy_trunc_rate": 0.028985507246376812,
+  "sc_n32_t0.7": 0.7494824016563147,
+  "sc_n32_t0.7_trunc_rate": 0.019539337474120084,
+  "sc_n32_t0.7_weighted": 0.7515527950310559
+}
