@@ -26,7 +26,7 @@ CONFIG = dict(
     base_model='Qwen/Qwen2.5-3B-Instruct',   # 대회 규칙: 고정
     data_path='data/reward_pairs.jsonl',
     output_dir='outputs/reward_head',
-    max_seq_len=1536,          # 문제+풀이. 너무 길면 배치가 안 들어간다
+    max_seq_len=1024,          # 문제+풀이. A10G 22GB에 맞춘 값
     lora_r=8,                  # 표현을 조금 움직일 여지만 (헤드만으로는 약할 수 있음)
     lora_alpha=16,
     learning_rate=1e-5,
@@ -35,6 +35,12 @@ CONFIG = dict(
     grad_accum=16,
     seed=42,
 )
+# 메모리 설계 메모 (2026-08-11, OOM 2회 후 수정):
+#  ① AutoModelForCausalLM 대신 AutoModel(= 트랜스포머 본체)만 쓴다.
+#     보상 헤드는 은닉상태만 필요한데 LM 헤드는 어휘 151,936차원 로짓과 그 기울기까지
+#     만들어 배치당 1GB 가까이 먹는다 — 전혀 쓰지 않는 계산이다.
+#  ② 4bit 양자화로 가중치를 6.2GB -> 약 2GB로 낮춘다.
+#  ③ gradient checkpointing으로 역전파용 활성값을 줄인다.
 
 RUN_NAME = f"rm_r{CONFIG['lora_r']}_lr{CONFIG['learning_rate']}"
 
@@ -59,22 +65,28 @@ def main():
     import torch
     import torch.nn as nn
     from torch.utils.data import Dataset, DataLoader
-    from transformers import AutoTokenizer, AutoModelForCausalLM
-    from peft import LoraConfig, get_peft_model
+    from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
+    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
     tok = AutoTokenizer.from_pretrained(CONFIG['base_model'])
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
 
-    base = AutoModelForCausalLM.from_pretrained(
+    # AutoModel = LM 헤드 없는 트랜스포머 본체. last_hidden_state만 돌려준다.
+    base = AutoModel.from_pretrained(
         CONFIG['base_model'], dtype=torch.bfloat16, device_map='cuda',
-        output_hidden_states=True)
+        quantization_config=BitsAndBytesConfig(
+            load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_quant_type='nf4', bnb_4bit_use_double_quant=True))
     base.config.use_cache = False
+    base = prepare_model_for_kbit_training(base, use_gradient_checkpointing=True)
+    base.gradient_checkpointing_enable()
+    base.enable_input_require_grads()
     base = get_peft_model(base, LoraConfig(
         r=CONFIG['lora_r'], lora_alpha=CONFIG['lora_alpha'], lora_dropout=0.0,
         target_modules=['q_proj', 'k_proj', 'v_proj', 'o_proj',
                         'gate_proj', 'up_proj', 'down_proj'],
-        task_type='CAUSAL_LM'))
+        task_type='FEATURE_EXTRACTION'))
 
     hidden = base.config.hidden_size
     head = nn.Linear(hidden, 1, dtype=torch.bfloat16).cuda()
@@ -99,12 +111,11 @@ def main():
     def score(texts):
         enc = tok(texts, return_tensors='pt', padding=True, truncation=True,
                   max_length=CONFIG['max_seq_len']).to('cuda')
-        out = base(**enc, output_hidden_states=True)
-        h = out.hidden_states[-1]                       # (B, T, H)
-        # 좌패딩이 아니므로 각 시퀀스의 마지막 유효 토큰을 직접 고른다
+        h = base(**enc).last_hidden_state               # (B, T, H) — 로짓 계산 없음
+        # 우패딩이므로 각 시퀀스의 마지막 유효 토큰 위치를 직접 고른다
         idx = enc['attention_mask'].sum(1) - 1
-        last = h[torch.arange(h.size(0)), idx]          # (B, H)
-        return head(last).squeeze(-1)                   # (B,)
+        last = h[torch.arange(h.size(0), device=h.device), idx]   # (B, H)
+        return head(last.to(head.weight.dtype)).squeeze(-1)       # (B,)
 
     params = [p for p in base.parameters() if p.requires_grad] + list(head.parameters())
     opt = torch.optim.AdamW(params, lr=CONFIG['learning_rate'])

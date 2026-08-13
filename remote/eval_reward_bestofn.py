@@ -102,7 +102,7 @@ def main():
 
     import torch
     import torch.nn as nn
-    from transformers import AutoTokenizer, AutoModelForCausalLM
+    from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
     from peft import PeftModel
 
     rows = [json.loads(l) for l in open(gen_path, encoding='utf-8')]
@@ -114,8 +114,12 @@ def main():
     htok = AutoTokenizer.from_pretrained('Qwen/Qwen2.5-3B-Instruct')
     if htok.pad_token is None:
         htok.pad_token = htok.eos_token
-    base = AutoModelForCausalLM.from_pretrained(
-        'Qwen/Qwen2.5-3B-Instruct', dtype=torch.bfloat16, device_map='cuda')
+    # 학습과 동일하게 AutoModel(LM 헤드 없음) + 4bit — 어댑터 키가 맞아야 하므로 형태를 맞춘다
+    base = AutoModel.from_pretrained(
+        'Qwen/Qwen2.5-3B-Instruct', dtype=torch.bfloat16, device_map='cuda',
+        quantization_config=BitsAndBytesConfig(
+            load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_quant_type='nf4', bnb_4bit_use_double_quant=True))
     model = PeftModel.from_pretrained(base, args.rm).eval()
     head = nn.Linear(base.config.hidden_size, 1, dtype=torch.bfloat16).cuda()
     head.load_state_dict(torch.load(os.path.join(args.rm, 'reward_head.pt')))
@@ -131,11 +135,11 @@ def main():
         out = []
         for s in range(0, len(texts), args.rm_batch):
             enc = htok(texts[s:s + args.rm_batch], return_tensors='pt',
-                       padding=True, truncation=True, max_length=1536).to('cuda')
-            h = model(**enc, output_hidden_states=True).hidden_states[-1]
+                       padding=True, truncation=True, max_length=1024).to('cuda')
+            h = model(**enc).last_hidden_state
             idx = enc['attention_mask'].sum(1) - 1
-            last = h[torch.arange(h.size(0)), idx]
-            out.extend(head(last).squeeze(-1).float().tolist())
+            last = h[torch.arange(h.size(0), device=h.device), idx]
+            out.extend(head(last.to(head.weight.dtype)).squeeze(-1).float().tolist())
         return out
 
     for i, cands in enumerate(per_problem):
