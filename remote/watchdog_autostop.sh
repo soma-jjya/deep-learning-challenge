@@ -11,7 +11,14 @@ busy=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/d
 busy=${busy:-0}
 # 실제 작업 프로세스만 센다 — claude/runner가 유령 상태로 매달려도 유휴면 정지되게
 # (정지돼도 부팅 자동시작이 러너를 되살리므로 안전)
-procs=$(pgrep -cf "train_qlora|generate_rft|eval_vllm|make_submission|prep_numina" || true)
+#
+# ⚠️ 2026-08-11 수정: 예전에는 스크립트 이름을 하드코딩했다
+#   ("train_qlora|generate_rft|eval_vllm|make_submission|prep_numina").
+#   그래서 새로 만든 train_reward_head.py가 목록에 없어 **학습 중인데도 유휴로 세어
+#   인스턴스를 꺼뜨렸다**(exp51 holdout 채점 중 사고). 새 스크립트를 만들 때마다
+#   목록을 고쳐야 하는 구조 자체가 잘못이므로, remote/ 아래 파이썬 작업 전반과
+#   체인 스크립트를 포괄하는 패턴으로 바꾼다.
+procs=$(pgrep -cf "python +remote/|remote/[a-z_]+\.py|run_.*_chain\.sh|run_paired_seeds\.sh" || true)
 
 if [ "$busy" -gt 10 ] || [ "$procs" -gt 0 ]; then
   echo 0 > $STATE
