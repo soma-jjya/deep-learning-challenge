@@ -7,7 +7,7 @@
 
 **Qwen2.5-3B-Instruct (무학습 베이스) + 확신도 가중 Self-Consistency n=32, temperature 0.7, top_p 0.8, seed=42**
 
-- 어댑터 미사용 — 학습 5전(SFT×3, GRPO×2) 전부 베이스 이하로 확인돼 최종 스택에서 제외
+- 어댑터 미사용 — 학습 **6전**(SFT×3, GRPO×2, DPO×1) 전부 성공 기준 미달로 확인돼 최종 스택에서 제외 (exp48: DPO는 시드 대응 비교에서 부호가 섞여 효과 없음 확정)
 - 근거: 로컬 검증 75.8%, 리더보드 0.78459 (참값은 재실행 변동 감안 시 0.780±0.005 — 아래 "선정 근거" 참고)
 
 ## LB 점수가 확인된 전체 제출 이력
@@ -105,7 +105,7 @@ python -c "import csv; print('문항 수:', sum(1 for _ in csv.DictReader(open('
 
 ## 사전 점검 (전날)
 
-- [ ] 인스턴스 기동·GPU 인식 (`nvidia-smi`)
+- [ ] `powershell -File aws\start.ps1`로 인스턴스 기동 → **SSH 안 되면 `aws\ensure-ssh.ps1` 먼저** (IP 로테이션) → GPU 인식 확인 (`nvidia-smi`)
 - [ ] `git pull`로 최신 스크립트 확보
 - [ ] 최종 test CSV를 `deep-learning-challenge-2026/`에 배치, 컬럼명(`id`,`question`) 확인
 - [ ] 디스크 여유 1GB 이상 (덤프 jsonl + 로그)
@@ -129,6 +129,6 @@ python -c "import csv; print('문항 수:', sum(1 for _ in csv.DictReader(open('
 |---|---|
 | 생성 프로세스 사망 | 같은 명령 재실행 → 완료분 건너뛰고 재개 |
 | 러너/서버 무응답 | AWS API로 재부팅 (SSH 불가해도 가능) → systemd가 러너 자동 기동 |
-| SSH 차단 | 네트워크 문제 — AWS API·ntfy는 별개로 동작, 재부팅 경로로 우회 |
+| **SSH 접속 timeout** | **먼저 `powershell -File aws\ensure-ssh.ps1`을 실행할 것.** 2026-08-11에 원인이 규명됐다 — 네트워크 차단이 아니라 **ISP의 공인 IP 로테이션**으로 보안그룹 허용에서 이탈하는 것이었다(한 세션 안에서 211.235.66.89 → 58.231.140.230으로 변경). 이 스크립트가 현재 IP를 멱등 재등록한다. 그래도 안 되면 AWS API·ntfy는 별개로 동작하므로 재부팅 경로로 우회 |
 | GPU 메모리 부족 | `--chunk 50`으로 청크 축소 (리허설 최대 95% 사용, 여유 적음) |
 | 시간 부족 | `--n 16`으로 축소 (로컬 75.6% — n32와 0.2%p 차이, 노이즈 안쪽). 망설이지 말 것 — 미제출이 유일한 실패다 |
