@@ -72,8 +72,14 @@ def main():
     out_path = args.out or f'data/teacher_{args.tag}.jsonl'
     os.makedirs(os.path.dirname(out_path) or '.', exist_ok=True)
 
+    # 교사도 틀린 문제는 학습에서 빼되 버리지는 않는다 — 3B도 못 풀고 교사도 못 푸는 문제는
+    # 문제 자체가 깨졌을 가능성이 높다(exp16: 오답 표본의 23%가 라벨 의심).
+    # 나중에 검증셋 신뢰도를 재검토할 때 근거가 된다.
+    rej_path = out_path.replace('.jsonl', '_rejected.jsonl')
+
     seen = set()
     kept = wrong = noans = unknown = dup = 0
+    rej = open(rej_path, 'w', encoding='utf-8')
     with open(out_path, 'w', encoding='utf-8') as w:
         for path in files:
             text = open(path, encoding='utf-8').read()
@@ -94,11 +100,15 @@ def main():
                     continue
                 if ans != gold[pid]:
                     wrong += 1
+                    rej.write(json.dumps({'id': pid, 'teacher_answer': ans,
+                                          'gold': gold[pid], 'solution': body},
+                                         ensure_ascii=False) + chr(10))
                     continue
                 w.write(json.dumps({'id': pid, 'solution': body, 'answer': ans},
                                    ensure_ascii=False) + chr(10))
                 kept += 1
 
+    rej.close()
     total = kept + wrong + noans
     print(f'응답 파일 {len(files)}개 처리')
     print(f'  채택(정답 일치) : {kept}')
@@ -109,6 +119,7 @@ def main():
     if total:
         print(f'  교사 정답률      : {kept/total:.1%}  ← 이 값이 이 트랙의 상한을 결정')
     print(f'저장: {out_path}')
+    print(f'교사 오답 보관: {rej_path} ({wrong}건 — 학습 미사용, 문제 품질 재검토용)')
     print()
     print('다음: python api/build_sft_from_teacher.py --teacher ' + out_path)
 
