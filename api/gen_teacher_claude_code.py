@@ -16,12 +16,15 @@ train 문제만 대상이며(prd.md:31 준수), 추론 단계에서는 어떤 �
 """
 import argparse
 import csv
+import glob
 import os
+import re
 import subprocess
 import sys
 import time
 
 csv.field_size_limit(10 ** 7)
+DONE_PAT = re.compile(r'^#{2,4}\s*ID\s*[:：]\s*([A-Za-z0-9_-]+)\s*$', re.MULTILINE)
 BS = chr(92)
 NL = chr(10)
 
@@ -53,10 +56,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--src', default='data/hard_problems_top.csv')
     ap.add_argument('--out-dir', default='data/teacher_out')
-    ap.add_argument('--batch', type=int, default=5, help='한 번의 호출에 넣을 문제 수')
+    ap.add_argument('--batch', type=int, default=2, help='한 번의 호출에 넣을 문제 수')
     ap.add_argument('--limit', type=int, default=None, help='앞에서 N문제만 (파일럿)')
     ap.add_argument('--offset', type=int, default=0)
-    ap.add_argument('--timeout', type=int, default=900, help='호출당 최대 대기(초)')
+    ap.add_argument('--timeout', type=int, default=600, help='호출당 최대 대기(초)')
     ap.add_argument('--retries', type=int, default=1)
     args = ap.parse_args()
 
@@ -65,19 +68,29 @@ def main():
         rows = rows[:args.limit]
     os.makedirs(args.out_dir, exist_ok=True)
 
+    # 재개는 "배치 번호"가 아니라 **이미 풀린 문제 ID**로 판정한다.
+    # 배치 크기를 바꾸면 배치 번호가 가리키는 문제가 달라져서, 번호 기반 건너뛰기는
+    # 엉뚱한 문제를 이미 했다고 착각한다(2026-08-14 배치 5→2 조정 때 드러난 함정).
+    # 출력물이 어차피 '## ID:' 헤더를 갖고 있으므로 그걸 직접 읽는 편이 정확하다.
+    done_ids = set()
+    for p_ in glob.glob(os.path.join(args.out_dir, '*.txt')):
+        try:
+            done_ids.update(DONE_PAT.findall(open(p_, encoding='utf-8').read()))
+        except OSError:
+            pass
+    rows = [r for r in rows if r['id'] not in done_ids]
+    print(f'이미 생성됨 {len(done_ids)}문제 → 이번 워커가 맡을 잔여 {len(rows)}문제')
+
     n_batches = (len(rows) + args.batch - 1) // args.batch
     print(f'대상 {len(rows)}문제 → {n_batches}회 호출 (배치 {args.batch})')
     done = ok = 0
     t0 = time.time()
 
     for b in range(n_batches):
-        idx = args.offset // args.batch + b
-        out_path = os.path.join(args.out_dir, f'out_{idx:04d}.txt')
-        if os.path.exists(out_path) and os.path.getsize(out_path) > 200:
-            done += 1
-            continue                     # 이미 만든 것은 건너뛴다(재개 가능)
-
         batch = rows[b * args.batch:(b + 1) * args.batch]
+        # 파일명도 문제 ID로 — 배치 크기와 무관하게 충돌하지 않는다
+        idx = batch[0]['id']
+        out_path = os.path.join(args.out_dir, f'out_{idx}.txt')
         prompt = build_prompt(batch)
         for attempt in range(args.retries + 1):
             try:
