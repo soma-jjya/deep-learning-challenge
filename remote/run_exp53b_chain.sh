@@ -20,13 +20,24 @@ cd $HOME/work/deep-learning-challenge
 
 ADAPTER=outputs/qlora_teacher_ep1/qlora_r16_lr5e-05_ep1_final
 
-echo "[$(date +%H:%M)] 앞선 덤프(seed 43) 종료 대기 — GPU 경합 방지"
-while pgrep -f 'dump_sample[s].py' > /dev/null; do sleep 60; done
-
-# 시드 44 덤프가 이어서 뜨지 않도록 평가 체인을 먼저 정리한다
-pkill -f 'run_teacher_eval_chai[n].sh' 2>/dev/null || true
-sleep 5
-while pgrep -f 'dump_sample[s].py' > /dev/null; do sleep 30; done
+# ⚠️ 프로세스 종료만 기다리면 부족하다. vLLM은 `EngineCore` 자식 프로세스를 따로 띄우는데,
+# 부모를 죽여도 그 자식이 살아남아 GPU 메모리를 20GB 넘게 붙들고 있다(2026-08-14 실측:
+# 부모 종료 직후 곧바로 학습을 시작했다가 4bit 모델이 안 올라가 실패). 실제로 비었는지는
+# **GPU 여유 메모리**로 확인해야 한다.
+echo "[$(date +%H:%M)] GPU 반환 대기"
+for i in $(seq 1 120); do
+  FREE=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits | head -1)
+  APPS=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader | wc -l)
+  if [ "${FREE:-0}" -gt 18000 ] && [ "$APPS" -eq 0 ]; then break; fi
+  # 고아가 된 vLLM 자식은 스스로 죽지 않으므로 직접 정리한다
+  if [ "$i" -gt 3 ] && ! pgrep -f 'dump_sample[s].py' > /dev/null; then
+    for p in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader); do
+      echo "  고아 GPU 프로세스 정리: $p"; kill "$p" 2>/dev/null || true
+    done
+  fi
+  sleep 30
+done
+echo "[$(date +%H:%M)] GPU 여유 $(nvidia-smi --query-gpu=memory.free --format=csv,noheader)"
 
 echo "[$(date +%H:%M)] 1에폭 학습 시작"
 uv run python remote/train_qlora.py --epochs 1 --output-dir outputs/qlora_teacher_ep1 \
