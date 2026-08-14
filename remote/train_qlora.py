@@ -11,15 +11,20 @@
 import json
 import os
 
+# exp53 (H23 교사 증류) 설정.
+# 에폭이 3인 이유: 큐에는 "exp06c의 완만한 설정(1에폭)"이라 적어뒀지만, 그 설정은
+# 12,923개 데이터를 전제한 것이었다. 교사 데이터는 560개뿐이라 유효 배치 16 기준
+# 1에폭 = **35스텝**에 불과해, 같은 "1에폭"이라도 개입의 세기가 전혀 다르다.
+# 3에폭(=105스텝)이 exp06c와 비슷한 강도의 개입에 해당한다.
 CONFIG = dict(
     base_model='Qwen/Qwen2.5-3B-Instruct',  # 대회 규칙: 고정
-    data_path='data/sft_mix.jsonl',
-    output_dir='outputs/qlora_mix',
+    data_path='data/sft_teacher.jsonl',
+    output_dir='outputs/qlora_teacher',
     max_seq_len=2048,
     lora_r=16,
     lora_alpha=32,
-    learning_rate=1e-4,
-    epochs=1,
+    learning_rate=5e-5,
+    epochs=3,
     per_device_batch=4,
     grad_accum=4,
     seed=42,
