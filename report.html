@@ -249,6 +249,8 @@ const EXPERIMENTS = [
     local: 74.5, lb: null, note: 'round0 대비 +0.6%p로 exp32 greedy와 방향 일치하나, 진짜 비교 기준 exp05 SC n8(74.7%) 대비로는 -0.2%p로 판정 기준(+1%p) 미달. H20(Budget Forcing) 최종 기각 — greedy·SC 결합 둘 다 실패', jump: null },
   { exp: 'exp47/48', date: '2026-08-12', method: 'DPO(H15, 선호쌍 1,832개) — 학습 축에서 유일하게 남았던 미탐색 변형. 시드 42/43/44 대응 비교로 판정',
     local: 76.6, lb: null, note: '시드별 차이 +4 / +1 / -7문항, 평균 -0.67문항(-0.14%p) — 부호가 섞여 노이즈 확정, H15 최종 기각으로 학습 축 6전 종료. 부산물로 오래된 "다양성 붕괴" 설명을 직접 측정으로 반박(pass@32 87.8→88.4%, 고유답 5.06→5.12, 1위 득표율 77.8→77.5%)', jump: null },
+  { exp: 'exp51', date: '2026-08-14', method: '스칼라 보상 헤드 + Bradley-Terry 쌍대 손실(H24) — 검증자 실패를 목적함수 오류로 재해석해 "문제 내 순위"를 직접 학습',
+    local: 75.2, lb: null, note: 'holdout 쌍 정확도 0.647(SE 0.031). Best-of-N 실측은 baseline 76.0% 대비 rm_best 70.8%(-25문항) / rm_vote 75.2%(-4) / rm_plus_conf 74.9%(-5)로 전부 이하 → H24 기각. 방법론적 수확: 시뮬레이션이 a=0.65에서 +1.45%p를 예측했으나 실제 -0.83%p로 부호까지 틀림 — 보상 오차를 독립 가우시안으로 둔 가정이 틀렸고, 실제로는 투표와 같은 실수를 한다', jump: null },
   { exp: 'exp54', date: '2026-08-14', method: 'implicit PRM(H25) — 폐기한 DPO 체크포인트를 채점기로 재해석. r=β·log[P_policy/P_ref], 추가 학습 0',
     local: 76.0, lb: null, note: '6개 규칙 전부 기준선(76.0%) 이하 — prm_*_best 69.2%(-6.83%p), prm_sum_vote 74.5%, 최선이 동률(±0). 양수가 없어 시드 확장 불필요, H25 최종 기각. 자기검증 축 5번째 기각으로 판별력이 다섯 방법 모두 ~0.6에 수렴', jump: null },
 ];
@@ -283,6 +285,8 @@ const ALL_RUNS = [
   { name: '제출 다양성 (w48/dt32, LB)', acc: 78.2, verdict: 'noise', note: 'exp38 — LB 0.78219/0.77978, n32w(0.78459) 대비 소폭 하락, 노이즈 범위' },
   { name: 'Budget Forcing + SC n8', acc: 74.5, verdict: 'noise', note: 'exp42 — round0 대비 +0.6%p지만 exp05 SC n8(74.7%) 대비 -0.2%p, H20 최종 기각' },
   { name: 'DPO (선호쌍 1,832개)', acc: 76.6, verdict: 'noise', note: 'exp47 — 시드42 기준 +0.8%p. 단 같은 어댑터 다른 측정에선 75.2%로 1.4%p 어긋남 = 노이즈에 묻힘. 학습 6전 중 유일하게 하락하지 않은 실행' },
+  { name: '전용 보상 헤드 — Best-of-N', acc: 70.8, verdict: 'loss', note: 'exp51 — Bradley-Terry로 "문제 내 순위"를 직접 학습(holdout 쌍 정확도 0.647). 그래도 보상 1위 채택은 -5.18%p. 시뮬레이션은 +1.45%p를 예측했으나 부호까지 틀림 = 보상 오차가 투표 오차와 상관된다' },
+  { name: '전용 보상 헤드 — 보상 가중 투표', acc: 75.2, verdict: 'loss', note: 'exp51 — -4문항. 세 규칙 전부 기준선 이하로 H24 최종 기각' },
   { name: 'implicit PRM — 보상 1위 채택', acc: 69.2, verdict: 'loss', note: 'exp54 — 폐기한 DPO 어댑터를 채점기로 재해석(추가 학습 0). 투표를 버리고 보상 1위만 채택하니 -6.83%p 급락 = 후보 간 순위를 못 매긴다' },
   { name: 'implicit PRM — 보상 가중 투표', acc: 76.0, verdict: 'noise', note: 'exp54 — 6개 규칙 중 최선이 기준선과 동률(±0). 양수가 없어 H25 최종 기각' },
 ];
