@@ -33,6 +33,31 @@ CONFIG = dict(
 RUN_NAME = f"qlora_r{CONFIG['lora_r']}_lr{CONFIG['learning_rate']}_ep{CONFIG['epochs']}"
 
 
+def _apply_overrides():
+    """CONFIG를 명령줄로 덮어쓴다 — 같은 데이터로 에폭만 바꿔 비교할 때 필요.
+
+    파일을 고쳐 커밋하는 방식은 실험 두 개가 같은 커밋을 공유하지 못해, 나중에
+    "그때 무슨 설정이었나"를 되짚기 어렵다. 인자로 받으면 명령줄이 그대로 기록이 된다.
+    """
+    global RUN_NAME
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--data-path')
+    ap.add_argument('--output-dir')
+    ap.add_argument('--epochs', type=int)
+    ap.add_argument('--learning-rate', type=float)
+    ap.add_argument('--lora-r', type=int)
+    args = ap.parse_args()
+    for k, v in (('data_path', args.data_path), ('output_dir', args.output_dir),
+                 ('epochs', args.epochs), ('learning_rate', args.learning_rate),
+                 ('lora_r', args.lora_r)):
+        if v is not None:
+            CONFIG[k] = v
+    if args.lora_r is not None:
+        CONFIG['lora_alpha'] = args.lora_r * 2
+    RUN_NAME = f"qlora_r{CONFIG['lora_r']}_lr{CONFIG['learning_rate']}_ep{CONFIG['epochs']}"
+
+
 def main():
     from unsloth import FastLanguageModel
     from unsloth.chat_templates import get_chat_template
@@ -100,4 +125,5 @@ def main():
 
 
 if __name__ == '__main__':
+    _apply_overrides()
     main()
