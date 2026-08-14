@@ -61,6 +61,8 @@ def main():
     ap.add_argument('--offset', type=int, default=0)
     ap.add_argument('--timeout', type=int, default=600, help='호출당 최대 대기(초)')
     ap.add_argument('--retries', type=int, default=1)
+    ap.add_argument('--give-up-after', type=int, default=4,
+                    help='연속 실패가 이 횟수를 넘으면 워커를 멈춘다 (사용 한도 소진 판정)')
     args = ap.parse_args()
 
     rows = list(csv.DictReader(open(args.src, encoding='utf-8')))[args.offset:]
@@ -86,14 +88,22 @@ def main():
     done = ok = 0
     t0 = time.time()
 
+    # 사용 한도에 걸리면 `claude -p`가 stdout·stderr 둘 다 빈 채로 **즉시** 돌아온다.
+    # 이때 그냥 다음 배치로 넘어가면 워커가 자기 담당 구간을 몇 분 만에 전부 "실패 처리"하고
+    # 끝나버린다(2026-08-14: 16병렬로 31분 만에 한도에 걸린 뒤 10배치를 0.7분에 소진).
+    # 연속 실패가 쌓이면 멈추고, 감시 스크립트가 나중에 다시 띄우게 한다.
+    consec_fail = 0
+
     for b in range(n_batches):
         batch = rows[b * args.batch:(b + 1) * args.batch]
         # 파일명도 문제 ID로 — 배치 크기와 무관하게 충돌하지 않는다
         idx = batch[0]['id']
         out_path = os.path.join(args.out_dir, f'out_{idx}.txt')
         prompt = build_prompt(batch)
+        got = False
         for attempt in range(args.retries + 1):
             try:
+                t_call = time.time()
                 # --max-turns 1: 도구를 쓰지 말고 한 번에 답만 내게 한다
                 p = subprocess.run(
                     ['claude', '-p', prompt, '--max-turns', '1',
@@ -104,10 +114,17 @@ def main():
                     with open(out_path, 'w', encoding='utf-8') as f:
                         f.write(text)
                     ok += 1
+                    got = True
                     break
-                print(f'  [{idx}] ID 헤더 없음 (시도 {attempt+1}) — stderr: {(p.stderr or "")[:120]}')
+                print(f'  [{idx}] ID 헤더 없음 ({time.time()-t_call:.0f}초, 시도 {attempt+1}) — '
+                      f'stderr: {(p.stderr or "")[:120]}', flush=True)
             except subprocess.TimeoutExpired:
-                print(f'  [{idx}] 시간 초과 (시도 {attempt+1})')
+                print(f'  [{idx}] 시간 초과 (시도 {attempt+1})', flush=True)
+        consec_fail = 0 if got else consec_fail + 1
+        if consec_fail > args.give_up_after:
+            print(f'⛔ 연속 {consec_fail}배치 실패 — 사용 한도로 판단하고 워커를 멈춘다. '
+                  f'남은 문제는 다음 실행이 이어받는다(완료 ID 기준 재개).', flush=True)
+            break
         done += 1
         if done % 5 == 0 or done == n_batches:
             el = time.time() - t0
