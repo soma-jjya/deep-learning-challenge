@@ -18,7 +18,13 @@ busy=${busy:-0}
 #   인스턴스를 꺼뜨렸다**(exp51 holdout 채점 중 사고). 새 스크립트를 만들 때마다
 #   목록을 고쳐야 하는 구조 자체가 잘못이므로, remote/ 아래 파이썬 작업 전반과
 #   체인 스크립트를 포괄하는 패턴으로 바꾼다.
-procs=$(pgrep -cf "python +remote/|remote/[a-z_]+\.py|run_.*_chain\.sh|run_paired_seeds\.sh" || true)
+#
+# ⚠️ 2026-08-14 재수정: 같은 함정에 또 빠질 뻔했다. 위 패턴은 `remote/`만 보는데
+#   교사 풀이 생성은 `api/gen_teacher_claude_code.py`라 **4시간째 돌고 있는데도 유휴로
+#   세어졌다**. 인스턴스가 살아남은 건 큐에 미완료 항목이 있어 러너 부활 분기가 카운터를
+#   초기화해준 우연 덕분이었고, 큐가 비는 순간 생성 도중에 꺼졌을 것이다.
+#   디렉토리를 열거하는 대신 **이 저장소의 작업 스크립트 전반**을 잡도록 넓힌다.
+procs=$(pgrep -cf "python +(remote|api)/|(remote|api)/[a-z_]+\.py|run_.*_chain\.sh|run_paired_seeds\.sh|teacher_supervisor\.sh" || true)
 
 if [ "$busy" -gt 10 ] || [ "$procs" -gt 0 ]; then
   echo 0 > $STATE
