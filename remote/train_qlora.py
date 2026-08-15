@@ -28,6 +28,8 @@ CONFIG = dict(
     per_device_batch=4,
     grad_accum=4,
     seed=42,
+    # True = 풀이(assistant) 구간에만 손실. False = 옛 동작(전체 시퀀스) 재현용.
+    assistant_only_loss=True,
 )
 
 RUN_NAME = f"qlora_r{CONFIG['lora_r']}_lr{CONFIG['learning_rate']}_ep{CONFIG['epochs']}"
@@ -47,7 +49,11 @@ def _apply_overrides():
     ap.add_argument('--epochs', type=int)
     ap.add_argument('--learning-rate', type=float)
     ap.add_argument('--lora-r', type=int)
+    ap.add_argument('--full-seq-loss', action='store_true',
+                    help='옛 동작(전체 시퀀스 손실) 재현 — 마스킹 효과를 A/B로 가를 때만')
     args = ap.parse_args()
+    if args.full_seq_loss:
+        CONFIG['assistant_only_loss'] = False
     for k, v in (('data_path', args.data_path), ('output_dir', args.output_dir),
                  ('epochs', args.epochs), ('learning_rate', args.learning_rate),
                  ('lora_r', args.lora_r)):
@@ -82,12 +88,25 @@ def main():
 
     dataset = load_dataset('json', data_files=CONFIG['data_path'], split='train')
 
-    def to_text(ex):
-        return {'text': tokenizer.apply_chat_template(
-            ex['messages'], tokenize=False, add_generation_prompt=False)}
-
-    dataset = dataset.map(to_text)
-    print(f'학습 샘플 {len(dataset)}개, 예시:\n{dataset[0]["text"][:500]}')
+    # ⚠️ 2026-08-15 수정 — SFT 4전(exp06·06c·09b·53c)이 공유하던 결함.
+    # 예전에는 messages를 여기서 통째로 텍스트로 렌더링해 `dataset_text_field='text'`로
+    # 넘겼다. TRL 문서상 그것은 "language modeling 데이터셋"이고, 그 경우
+    # `completion_only_loss`(기본 None)는 **전체 시퀀스에** 손실을 건다.
+    # 즉 시스템 프롬프트와 문제 본문에까지 손실이 걸려, 그래디언트의 상당 부분이
+    # "수학 문제를 만드는 법"과 반복되는 보일러플레이트를 외우는 데 쓰였다.
+    # messages를 그대로 넘기고 assistant_only_loss=True를 켜면 **풀이 부분에만** 걸린다.
+    if CONFIG.get('assistant_only_loss', True):
+        drop = [c for c in dataset.column_names if c != 'messages']
+        if drop:
+            dataset = dataset.remove_columns(drop)   # id 등이 남으면 TRL이 형식을 오인한다
+        print(f'학습 샘플 {len(dataset)}개 — 대화형 데이터셋, 손실은 assistant 구간에만')
+    else:
+        def to_text(ex):
+            return {'text': tokenizer.apply_chat_template(
+                ex['messages'], tokenize=False, add_generation_prompt=False)}
+        dataset = dataset.map(to_text)
+        print(f'학습 샘플 {len(dataset)}개 (전체 시퀀스 손실 — 옛 동작), '
+              f'예시:\n{dataset[0]["text"][:300]}')
 
     trainer = SFTTrainer(
         model=model,
@@ -97,7 +116,8 @@ def main():
             output_dir=CONFIG['output_dir'],
             run_name=RUN_NAME,
             report_to='wandb',                    # 학습 로그 = 검증 제출물 권장 항목
-            dataset_text_field='text',
+            **({'assistant_only_loss': True} if CONFIG.get('assistant_only_loss', True)
+               else {'dataset_text_field': 'text'}),
             max_seq_length=CONFIG['max_seq_len'],
             per_device_train_batch_size=CONFIG['per_device_batch'],
             gradient_accumulation_steps=CONFIG['grad_accum'],
