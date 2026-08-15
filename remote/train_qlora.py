@@ -95,18 +95,15 @@ def main():
     # 즉 시스템 프롬프트와 문제 본문에까지 손실이 걸려, 그래디언트의 상당 부분이
     # "수학 문제를 만드는 법"과 반복되는 보일러플레이트를 외우는 데 쓰였다.
     # messages를 그대로 넘기고 assistant_only_loss=True를 켜면 **풀이 부분에만** 걸린다.
-    if CONFIG.get('assistant_only_loss', True):
-        drop = [c for c in dataset.column_names if c != 'messages']
-        if drop:
-            dataset = dataset.remove_columns(drop)   # id 등이 남으면 TRL이 형식을 오인한다
-        print(f'학습 샘플 {len(dataset)}개 — 대화형 데이터셋, 손실은 assistant 구간에만')
-    else:
-        def to_text(ex):
-            return {'text': tokenizer.apply_chat_template(
-                ex['messages'], tokenize=False, add_generation_prompt=False)}
-        dataset = dataset.map(to_text)
-        print(f'학습 샘플 {len(dataset)}개 (전체 시퀀스 손실 — 옛 동작), '
-              f'예시:\n{dataset[0]["text"][:300]}')
+    # 렌더링 자체는 두 경로가 같다. 차이는 아래 trainer 생성 후 손실을 어디에 거느냐다.
+    # (TRL의 assistant_only_loss는 Unsloth가 감싼 SFTTrainer에서 formatting_func를
+    #  요구하며 실패한다 — Unsloth 전용 train_on_responses_only를 쓴다.)
+    def to_text(ex):
+        return {'text': tokenizer.apply_chat_template(
+            ex['messages'], tokenize=False, add_generation_prompt=False)}
+
+    dataset = dataset.map(to_text)
+    print(f'학습 샘플 {len(dataset)}개, 예시:\n{dataset[0]["text"][:300]}')
 
     trainer = SFTTrainer(
         model=model,
@@ -116,8 +113,7 @@ def main():
             output_dir=CONFIG['output_dir'],
             run_name=RUN_NAME,
             report_to='wandb',                    # 학습 로그 = 검증 제출물 권장 항목
-            **({'assistant_only_loss': True} if CONFIG.get('assistant_only_loss', True)
-               else {'dataset_text_field': 'text'}),
+            dataset_text_field='text',
             max_seq_length=CONFIG['max_seq_len'],
             per_device_train_batch_size=CONFIG['per_device_batch'],
             gradient_accumulation_steps=CONFIG['grad_accum'],
@@ -132,6 +128,25 @@ def main():
             bf16=True,                            # A10G는 bf16 지원 (T4면 fp16으로)
         ),
     )
+    if CONFIG.get('assistant_only_loss', True):
+        # Qwen2.5 채팅 템플릿의 경계 문자열. 이 두 지점을 기준으로 user 구간을 -100으로
+        # 마스킹해 **assistant 응답에만** 손실이 걸리게 한다.
+        from unsloth.chat_templates import train_on_responses_only
+        trainer = train_on_responses_only(
+            trainer,
+            instruction_part='<|im_start|>user' + chr(10),
+            response_part='<|im_start|>assistant' + chr(10),
+        )
+        # 실제로 마스킹됐는지 눈으로 확인한다 — 조용히 안 걸리면 이 실험 자체가 무의미하다
+        _lab = trainer.train_dataset[0]['labels']
+        _ign = sum(1 for t in _lab if t == -100)
+        print(f'✅ 손실 마스킹 확인: 첫 샘플 {len(_lab)}토큰 중 {_ign}개 무시(-100), '
+              f'학습 대상 {len(_lab)-_ign}개 ({(len(_lab)-_ign)/max(1,len(_lab)):.0%})')
+        if _ign == 0:
+            raise SystemExit('⛔ 마스킹이 걸리지 않았다 — 경계 문자열이 템플릿과 다르다')
+    else:
+        print('⚠️ 전체 시퀀스 손실(옛 동작)로 학습한다')
+
     trainer.train(resume_from_checkpoint=any(
         d.startswith('checkpoint-') for d in
         (os.listdir(CONFIG['output_dir']) if os.path.isdir(CONFIG['output_dir']) else [])))
