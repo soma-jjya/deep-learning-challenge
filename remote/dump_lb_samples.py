@@ -34,12 +34,19 @@ def main():
     ap.add_argument('--chunk', type=int, default=100, help='이 단위로 생성·저장 (OOM 방지·재개 지원)')
     ap.add_argument('--lb-csv', default='deep-learning-challenge-2026/deep_chal_math_leaderboard_filtered.csv')
     ap.add_argument('--out', default='results/lb_samples.jsonl')
+    # 8/31 당일용: 처음 보는 test 파일에 2시간 30분을 걸기 전에, 몇 문항으로 경로 전체를
+    # 먼저 통과시켜 본다. 컬럼명·인코딩·문항 수 같은 것이 어긋나면 여기서 즉시 드러난다.
+    ap.add_argument('--limit', type=int, default=None,
+                    help='앞에서 N문항만 (스모크 테스트용 — 실전에서는 지정하지 말 것)')
     args = ap.parse_args()
 
     from vllm import LLM, SamplingParams
 
     lb = pd.read_csv(args.lb_csv)
     lb.columns = lb.columns.str.strip()
+    if args.limit:
+        lb = lb.iloc[:args.limit].reset_index(drop=True)
+        print(f'⚠️ 스모크 테스트 모드 — 앞 {len(lb)}문항만 처리한다 (실전 제출용 아님)')
     print(f'리더보드 {len(lb)}문항 × {args.n}샘플 덤프 시작 (seed={args.seed})')
 
     llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
