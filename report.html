@@ -135,6 +135,56 @@
     </p>
   </div>
 
+  <h2>능력을 올렸는데 점수가 떨어졌다 — 병목이 "고르기"라는 능동적 증거</h2>
+  <div class="card">
+    <p class="sub" style="margin:0 0 12px">
+      위 분해는 모두 <b>정적인 관찰</b>이다. exp53c는 그것을 능동적으로 확인했다 —
+      강한 교사(Claude)가 우리 문제에 대해 쓴 풀이 683개로 학습시킨 결과(시드 42/43/44 평균):
+    </p>
+    <table style="width:100%; border-collapse:collapse; font-size:0.9rem">
+      <tr><th style="text-align:left; padding:6px 8px"></th>
+          <th style="text-align:right; padding:6px 8px">베이스</th>
+          <th style="text-align:right; padding:6px 8px">교사 증류 후</th>
+          <th style="text-align:right; padding:6px 8px">차이</th></tr>
+      <tr><td style="padding:6px 8px"><b>pass@32</b> (정답을 만들어내는 능력)</td>
+          <td style="text-align:right; padding:6px 8px">423.0문항</td>
+          <td style="text-align:right; padding:6px 8px"><b>424.7문항</b></td>
+          <td style="text-align:right; padding:6px 8px; color:#2e7d32"><b>+1.7 ↑</b></td></tr>
+      <tr><td style="padding:6px 8px"><b>실제 채택</b> (최종 점수)</td>
+          <td style="text-align:right; padding:6px 8px">366.3문항</td>
+          <td style="text-align:right; padding:6px 8px">357.7문항</td>
+          <td style="text-align:right; padding:6px 8px; color:#c62828"><b>−8.7 ↓</b></td></tr>
+    </table>
+    <p class="sub" style="margin:12px 0 0; font-size:0.84rem">
+      <b>모델은 더 유능해졌는데 점수는 떨어졌다.</b> 후보 풀에 정답을 더 넣어줬더니
+      선택기가 받아내지 못한 정도가 아니라 오히려 손해를 봤다.
+      생성을 개선하는 노력은 그 개선을 받아낼 선택기가 함께 있어야 의미를 갖는다.
+    </p>
+  </div>
+
+  <h2>자(尺)에도 눈금 오류가 있다 (exp52b)</h2>
+  <div class="card">
+    <p class="sub" style="margin:0 0 10px">
+      강한 교사가 gold와 다른 답을 낸 456건 중 30건을 표본 감사한 결과
+      <b>92.3%</b>가 문제·라벨 결함으로 분류됐다(GOLD_WRONG 73.1% / AMBIGUOUS 19.2%).
+      판정자도 같은 계열 모델이라 믿을 수 없어 <b>세 건을 손으로 검산</b>했다:
+    </p>
+    <ul class="sub" style="margin:0 0 10px; font-size:0.86rem; line-height:1.7">
+      <li>상반 타원 부피: ∬y dA = (2/3)ab² = 50√3 → <b>V=50</b>. gold 1250은 틀렸다</li>
+      <li>자리 배치: 여사건 [x⁶](1+x+x²)⁵ = 45 → <b>2,851,200</b>. gold 3,627,792는 틀렸다</li>
+      <li>원뿔: 원본 AIME(R=3, L=5)는 k=125/387 → 512. 숫자를 6·2로 바꾸자 <b>k가 무리수</b>가 되어
+          "k=m/n(서로소 정수)" 전제가 깨졌다 — 원본을 외운 모델은 바뀐 숫자를 무시하고 512를 내므로
+          <b>채점으로도 걸러지지 않는다</b></li>
+    </ul>
+    <p class="sub" style="margin:0; font-size:0.84rem">
+      ⚠️ 다만 표본이 <b>이중으로 조건화</b>돼 있다(베이스가 32회 실패 <b>그리고</b> 교사도 오답).
+      결함이 농축되는 것은 베이즈이지 편향이 아니며, <b>데이터셋 전체가 그렇다는 뜻은 아니다</b> —
+      같은 방향의 앞선 관측은 exp16의 검증셋 오답 표본 23%다.
+      결론: <b>100%는 애초에 정의되지 않는다.</b> 목표 85%는 도달 범위 밖일 뿐 아니라,
+      그 자를 대는 대상 자체에 정답이 틀린 문항이 섞여 있었다.
+    </p>
+  </div>
+
   <h2>실험 로그 (표)</h2>
   <div class="card scroll">
     <table id="exp-table">
