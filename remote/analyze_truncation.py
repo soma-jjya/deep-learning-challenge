@@ -83,6 +83,31 @@ def main():
     print(f'  오답 중 "잘리지 않은 표에 이미 정답이 있던" 문항 : {trunc_had_gold}/{n_wrong}'
           f' = {trunc_had_gold/max(1,n_wrong):.1%}')
     print('    → 이 몫은 max_tokens를 늘려도 안 풀린다. 선택의 문제다')
+    print()
+
+    # ── 정직한 표적 집합 ──
+    # max_tokens를 늘려서 회수될 **가능성이라도 있는** 문항은 세 조건을 모두 만족해야 한다:
+    #   ① 지금 틀렸고 ② 잘린 표가 있고 ③ 잘리지 않은 표 어디에도 정답이 없다.
+    # ③이 빠지면 "정답은 이미 손에 있었는데 못 골랐다"는 뜻이라 토큰과 무관하다.
+    target = 0
+    tgt_trunc_votes = 0
+    for r in rows:
+        ss = r['samples'][:args.n]
+        gold = r['gold']
+        if weighted_vote(ss) == gold:
+            continue
+        t = [s for s in ss if s.get('trunc')]
+        if not t:
+            continue
+        if gold in {s.get('ans') for s in ss if not s.get('trunc')}:
+            continue
+        target += 1
+        tgt_trunc_votes += len(t)
+    print(f'  ▶ 표적 집합(틀렸고 · 잘림 있고 · 안 잘린 표엔 정답 없음) : {target}문항'
+          f' = 전체의 {target/N:.2%}p')
+    print(f'      이 문항들의 문항당 잘린 표 : {tgt_trunc_votes/max(1,target):.1f}개')
+    print('      → max_tokens 증가로 얻을 수 있는 **절대 상한**. 잘린 풀이가 전부 정답으로')
+    print('        완성된다는 가정이므로 실제 회수는 이보다 훨씬 적다.')
 
 
 if __name__ == '__main__':
