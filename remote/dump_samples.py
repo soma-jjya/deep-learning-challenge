@@ -33,6 +33,11 @@ def main():
                     help='LoRA 어댑터 경로 (없으면 베이스). 학습이 표본 다양성에 준 영향을 '
                          '베이스 덤프와 직접 비교하기 위한 인자')
     ap.add_argument('--seed', type=int, default=42)
+    # H1(1024→2048) 이후 재검토한 적 없는 축. 잘림은 전체 표의 1.7%뿐이지만 **오답 문항에
+    # 12배 몰려 있고**(정답 문항 0.15표 vs 오답 문항 1.80표), "틀렸고·잘림 있고·안 잘린
+    # 표엔 정답이 없는" 표적 집합이 3시드에서 28~30문항(5.8~6.2%p)이다. max_model_len이
+    # 4096이므로 3072까지는 올릴 수 있다.
+    ap.add_argument('--max-tokens', type=int, default=2048)
     args = ap.parse_args()
 
     from vllm import LLM, SamplingParams
@@ -59,7 +64,7 @@ def main():
 
     outs = llm.generate(prompts, SamplingParams(
         n=args.n, temperature=args.temp, top_p=args.top_p,
-        max_tokens=2048, seed=args.seed, logprobs=0), lora_request=lora)
+        max_tokens=args.max_tokens, seed=args.seed, logprobs=0), lora_request=lora)
 
     os.makedirs('results', exist_ok=True)
     with open(args.out, 'w', encoding='utf-8') as f:
