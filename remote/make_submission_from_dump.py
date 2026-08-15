@@ -70,12 +70,31 @@ def main():
     ap.add_argument('--n', type=int, default=None, help='앞에서 n표만 사용 (없으면 전부)')
     ap.add_argument('--tag', required=True)
     ap.add_argument('--lb-csv', default='deep-learning-challenge-2026/deep_chal_math_leaderboard_filtered.csv')
+    ap.add_argument('--allow-partial', action='store_true',
+                    help='덤프가 전 문항을 덮지 않아도 진행 (스모크 테스트 전용)')
     args = ap.parse_args()
 
     rows = {json.loads(l)['id']: json.loads(l)['samples']
             for l in open(args.dump, encoding='utf-8')}
     lb = pd.read_csv(args.lb_csv)
     lb.columns = lb.columns.str.strip()
+
+    # ⚠️ 2026-08-15 추가. 덤프에 없는 문항은 아래에서 조용히 0으로 채워진다. 그래서 덤프가
+    # 중간에 죽은 상태로 이 스크립트를 돌리면 **겉보기엔 정상인 제출 파일**이 나온다 —
+    # 행수도 맞고 결측·중복도 없어서 문서의 검증 절차를 그대로 통과한다.
+    # (스모크 테스트에서 20문항만 덤프했더니 831행 중 811개가 0으로 채워진 채 저장됐다.)
+    # 8/31에 이 파일을 그대로 제출하면 대부분이 오답이 되므로, 기본값은 '거부'로 둔다.
+    missing = [pid for pid in lb['id'] if pid not in rows]
+    if missing:
+        msg = (f'덤프가 {len(missing)}/{len(lb)}문항을 덮지 않는다 '
+               f'(예: {", ".join(map(str, missing[:3]))}). '
+               f'이대로 만들면 그 문항들이 전부 0으로 채워진다.')
+        if not args.allow_partial:
+            raise SystemExit(
+                '⛔ ' + msg + chr(10) +
+                '   덤프를 끝까지 돌리거나(같은 명령 재실행 시 완료분은 건너뜀), '
+                '의도한 것이면 --allow-partial 을 붙일 것.')
+        print('⚠️ ' + msg + ' (--allow-partial 지정됨)')
 
     fn = RULES[args.rule]
     preds = []
