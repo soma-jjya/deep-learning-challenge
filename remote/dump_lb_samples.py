@@ -38,9 +38,14 @@ def main():
     # 먼저 통과시켜 본다. 컬럼명·인코딩·문항 수 같은 것이 어긋나면 여기서 즉시 드러난다.
     ap.add_argument('--limit', type=int, default=None,
                     help='앞에서 N문항만 (스모크 테스트용 — 실전에서는 지정하지 말 것)')
+    # 로컬 3시드가 노이즈여도 리더보드로 판정을 받아야 하는 후보가 있다. 우리 정책이
+    # "로컬은 오답의 23%가 라벨 의심인 흐린 자, 리더보드는 운영진 검수를 거친 깨끗한 자"
+    # 이므로 더 좋은 측정기를 아낄 이유가 없다(exp41은 로컬과 LB가 정반대였다).
+    ap.add_argument('--adapter', default=None, help='LoRA 어댑터 경로 (없으면 베이스)')
     args = ap.parse_args()
 
     from vllm import LLM, SamplingParams
+    from vllm.lora.request import LoRARequest
 
     lb = pd.read_csv(args.lb_csv)
     lb.columns = lb.columns.str.strip()
@@ -50,7 +55,11 @@ def main():
     print(f'리더보드 {len(lb)}문항 × {args.n}샘플 덤프 시작 (seed={args.seed})')
 
     llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
-              gpu_memory_utilization=0.85, max_model_len=4096)
+              gpu_memory_utilization=0.85, max_model_len=4096,
+              enable_lora=args.adapter is not None, max_lora_rank=64)
+    lora = LoRARequest('adapter', 1, args.adapter) if args.adapter else None
+    if lora:
+        print(f'어댑터 적용: {args.adapter}')
     tok = llm.get_tokenizer()
 
     # ── 청크 처리 + 중간 저장 (2026-08-10) ──
@@ -74,7 +83,7 @@ def main():
             [{'role': 'system', 'content': SYSTEM_PROMPT},
              {'role': 'user', 'content': q}],
             tokenize=False, add_generation_prompt=True) for _, q in part]
-        outs = llm.generate(prompts, sp)
+        outs = llm.generate(prompts, sp, lora_request=lora)
         with open(args.out, 'a', encoding='utf-8') as f:
             for (i, _), o in zip(part, outs):
                 samples = []
