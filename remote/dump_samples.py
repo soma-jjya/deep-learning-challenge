@@ -38,6 +38,10 @@ def main():
     # 표엔 정답이 없는" 표적 집합이 3시드에서 28~30문항(5.8~6.2%p)이다. max_model_len이
     # 4096이므로 3072까지는 올릴 수 있다.
     ap.add_argument('--max-tokens', type=int, default=2048)
+    # 확장 검증셋 지원. 483문항의 대응비교 임계가 ±1.49%p인데 우리 성공 기준이 +1.5%p라
+    # 임계선에 걸쳐 판정해왔다(exp65). 문항을 늘리면 임계가 1/√N로 줄어든다.
+    ap.add_argument('--val-ids', default=None,
+                    help='id,answer 컬럼을 가진 CSV. 주면 기본 500표집 대신 이 목록을 쓴다')
     args = ap.parse_args()
 
     from vllm import LLM, SamplingParams
@@ -45,11 +49,16 @@ def main():
 
     df = pd.read_csv('deep-learning-challenge-2026/deep_chal_math_train.csv')
     df.columns = df.columns.str.strip()
-    val = df.sample(500, random_state=123).reset_index(drop=True)
-    bad = 'deep-learning-challenge-2026/train_filtered_ids.csv'
-    if os.path.exists(bad):
-        bad_ids = set(pd.read_csv(bad)['id'])
-        val = val[~val['id'].isin(bad_ids)].reset_index(drop=True)
+    if args.val_ids:
+        want = pd.read_csv(args.val_ids)
+        val = df[df['id'].isin(set(want['id']))].reset_index(drop=True)
+        print(f'확장 검증셋 사용: {args.val_ids} ({len(val)}문항)')
+    else:
+        val = df.sample(500, random_state=123).reset_index(drop=True)
+        bad = 'deep-learning-challenge-2026/train_filtered_ids.csv'
+        if os.path.exists(bad):
+            bad_ids = set(pd.read_csv(bad)['id'])
+            val = val[~val['id'].isin(bad_ids)].reset_index(drop=True)
     print(f'검증 {len(val)}문항 × {args.n}샘플 덤프')
 
     llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
