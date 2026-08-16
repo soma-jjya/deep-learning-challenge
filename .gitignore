@@ -10,3 +10,10 @@ results/lb_samples.jsonl
 results/lb_samples.jsonl.progress
 results/lb_samples_s3x32.jsonl
 results/lb_samples_s3x32v.jsonl
+
+# 대용량 표본 덤프 — 서버에만 보관한다. 재생성 가능하고 GitHub 권장 상한(50MB)을 넘는다.
+# (2026-08-16: val_tok_s42.jsonl 51.5MB가 실수로 올라가 경고를 받았다)
+results/val_tok_*.jsonl
+results/lb_samples*.jsonl
+results/rm_gen_*.jsonl
+results/val_large_*.jsonl
