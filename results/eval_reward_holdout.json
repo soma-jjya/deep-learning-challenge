@@ -1,0 +1,7 @@
+{
+  "rm": "outputs/reward_head/rm_BACKUP",
+  "n_pairs": 238,
+  "pair_acc": 0.6470588235294118,
+  "stderr": 0.030976658495093026,
+  "mean_margin": 0.532798190076812
+}
