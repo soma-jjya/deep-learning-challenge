@@ -1,0 +1,18 @@
+{
+  "seed": 42,
+  "n": 32,
+  "rm": "outputs/reward_head/rm_r8_lr1e-05",
+  "total": 483,
+  "correct": {
+    "baseline": 367,
+    "rm_best": 342,
+    "rm_vote": 363,
+    "rm_plus_conf": 362
+  },
+  "delta": {
+    "baseline": 0,
+    "rm_best": -25,
+    "rm_vote": -4,
+    "rm_plus_conf": -5
+  }
+}

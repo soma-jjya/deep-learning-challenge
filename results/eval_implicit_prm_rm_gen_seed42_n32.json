@@ -1,0 +1,21 @@
+{
+  "dpo": "outputs/dpo/dpo_r8_b0.3_lr5e-06_final",
+  "gen": "results/rm_gen_seed42_n32.jsonl",
+  "total": 483,
+  "correct": {
+    "baseline": 367,
+    "prm_sum_best": 334,
+    "prm_mean_best": 334,
+    "prm_sum_vote": 360,
+    "prm_mean_vote": 367,
+    "prm_mean_plus_conf": 367
+  },
+  "delta": {
+    "baseline": 0,
+    "prm_sum_best": -33,
+    "prm_mean_best": -33,
+    "prm_sum_vote": -7,
+    "prm_mean_vote": 0,
+    "prm_mean_plus_conf": 0
+  }
+}
