@@ -3,6 +3,13 @@
 # GPU가 놀고 실험 프로세스도 없는 상태가 30분 이어지면 인스턴스를 stop한다.
 # 예외: ~/KEEP_ALIVE 파일이 있으면 절대 끄지 않는다 (수동 작업 시: touch ~/KEEP_ALIVE)
 STATE=/tmp/idle_count
+# ⚠️ 2026-08-17 수정: /tmp가 부팅 시 비워지지 않는 환경이라 유휴 카운터가 재부팅을 넘어
+# 살아남았다. 그 결과 **부팅 직후 첫 틱에서 곧바로 shutdown이 걸려** sshd가 올라오기도
+# 전에 인스턴스가 꺼졌고, "running인데 22번이 안 열린다"는 증상으로 반나절을 태웠다.
+# 부팅 시각보다 카운터 파일이 오래됐으면 무시한다.
+if [ -f "$STATE" ] && [ "$(stat -c %Y "$STATE" 2>/dev/null || echo 0)" -lt "$(date -d "$(uptime -s)" +%s 2>/dev/null || echo 0)" ]; then
+  rm -f "$STATE"
+fi
 source /home/ubuntu/.ajudl_env 2>/dev/null || true   # NTFY_TOPIC 로드 (cron에는 env가 없음)
 
 if [ -f /home/ubuntu/KEEP_ALIVE ]; then echo 0 > $STATE; exit 0; fi
