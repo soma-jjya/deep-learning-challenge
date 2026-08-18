@@ -75,6 +75,17 @@
   .refs .why { color: var(--text-secondary); font-size: 0.84rem; }
   .check { list-style: none; padding: 0; font-size: 0.9rem; }
   .check li { padding: 3px 0; }
+  table.heat { width: auto; font-size: 0.78rem; border-collapse: collapse; }
+  table.heat th { color: var(--text-secondary); font-weight: 600; font-size: 0.74rem; padding: 5px 7px; border: none; white-space: nowrap; }
+  table.heat td { padding: 5px 7px; border: 1px solid var(--border); text-align: center; font-variant-numeric: tabular-nums; }
+  table.heat td.diag { background: var(--grid); color: var(--muted); }
+  .keybar { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-secondary); margin-top: 10px; flex-wrap: wrap; }
+  .keybar .ramp { width: 130px; height: 10px; border-radius: 3px; border: 1px solid var(--border);
+    background: linear-gradient(90deg, rgba(208,59,59,0.06), rgba(208,59,59,0.68)); }
+  .minor { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 0; }
+  .minor .b { flex: 1 1 90px; background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .minor .b .n { font-size: 1.25rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .minor .b .c { font-size: 0.72rem; color: var(--muted); }
   .status-badge { font-size: 0.75rem; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--text-secondary); margin-left: 6px; }
 </style>
 </head>
@@ -182,6 +193,65 @@
       같은 방향의 앞선 관측은 exp16의 검증셋 오답 표본 23%다.
       결론: <b>100%는 애초에 정의되지 않는다.</b> 목표 85%는 도달 범위 밖일 뿐 아니라,
       그 자를 대는 대상 자체에 정답이 틀린 문항이 섞여 있었다.
+    </p>
+  </div>
+
+
+  <h2>왜 헤드룸이 있는데 투표로 못 꺼내나 — 오답이 계열을 가로질러 공유된다 (exp76)</h2>
+  <div class="card">
+    <p class="sub" style="margin:0 0 12px">
+      35개 시스템 합집합 오라클은 <b>400/483 (82.8%)</b>로 최고 단일 시스템(370)을 크게 넘고,
+      이종 계열 상보성(<b>+14</b>)은 동일 계열 시드 노이즈 바닥(<b>+4</b>)의 3.5배다(exp73).
+      그런데 집계 규칙 63종 &middot; 시스템 결합 5종 &middot; 계열 결합 6종이 <b>전부 음수</b>였다.
+      35개 덤프를 11개 계열로 접고 <b>두 계열이 동시에 틀릴 때 같은 오답을 낼 확률</b>을 재자
+      이유가 드러났다.
+    </p>
+    <div class="scroll">
+<table class="heat"><thead><tr><th></th><th>base</th><th>dpo</th><th>teacher</th><th>rftmask</th><th>masked</th><th>mt3072</th><th>marginal</th><th>prompt</th><th>temp</th><th>rank</th><th>rfs3</th></tr></thead><tbody>
+<tr><th>base</th><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.50)">0.83</td><td style="background:rgba(208,59,59,0.37)">0.75</td><td style="background:rgba(208,59,59,0.35)">0.74</td><td style="background:rgba(208,59,59,0.19)">0.63</td><td style="background:rgba(208,59,59,0.52)">0.85</td><td style="background:rgba(208,59,59,0.32)">0.72</td><td style="background:rgba(208,59,59,0.51)">0.84</td><td style="background:rgba(208,59,59,0.48)">0.82</td><td style="background:rgba(208,59,59,0.34)">0.73</td><td style="background:rgba(208,59,59,0.22)">0.65</td></tr>
+<tr><th>dpo</th><td style="background:rgba(208,59,59,0.50)">0.83</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.42)">0.78</td><td style="background:rgba(208,59,59,0.36)">0.74</td><td style="background:rgba(208,59,59,0.20)">0.64</td><td style="background:rgba(208,59,59,0.49)">0.83</td><td style="background:rgba(208,59,59,0.33)">0.72</td><td style="background:rgba(208,59,59,0.62)">0.91</td><td style="background:rgba(208,59,59,0.48)">0.82</td><td style="background:rgba(208,59,59,0.34)">0.73</td><td style="background:rgba(208,59,59,0.29)">0.70</td></tr>
+<tr><th>teacher</th><td style="background:rgba(208,59,59,0.37)">0.75</td><td style="background:rgba(208,59,59,0.42)">0.78</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.35)">0.74</td><td style="background:rgba(208,59,59,0.29)">0.70</td><td style="background:rgba(208,59,59,0.38)">0.76</td><td style="background:rgba(208,59,59,0.35)">0.74</td><td style="background:rgba(208,59,59,0.46)">0.81</td><td style="background:rgba(208,59,59,0.44)">0.79</td><td style="background:rgba(208,59,59,0.28)">0.69</td><td style="background:rgba(208,59,59,0.31)">0.71</td></tr>
+<tr><th>rftmask</th><td style="background:rgba(208,59,59,0.35)">0.74</td><td style="background:rgba(208,59,59,0.36)">0.74</td><td style="background:rgba(208,59,59,0.35)">0.74</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.27)">0.69</td><td style="background:rgba(208,59,59,0.38)">0.76</td><td style="background:rgba(208,59,59,0.33)">0.73</td><td style="background:rgba(208,59,59,0.37)">0.75</td><td style="background:rgba(208,59,59,0.38)">0.76</td><td style="background:rgba(208,59,59,0.30)">0.71</td><td style="background:rgba(208,59,59,0.27)">0.69</td></tr>
+<tr><th>masked</th><td style="background:rgba(208,59,59,0.19)">0.63</td><td style="background:rgba(208,59,59,0.20)">0.64</td><td style="background:rgba(208,59,59,0.29)">0.70</td><td style="background:rgba(208,59,59,0.27)">0.69</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.20)">0.64</td><td style="background:rgba(208,59,59,0.20)">0.64</td><td style="background:rgba(208,59,59,0.16)">0.62</td><td style="background:rgba(208,59,59,0.26)">0.68</td><td style="background:rgba(208,59,59,0.14)">0.60</td><td style="background:rgba(208,59,59,0.15)">0.61</td></tr>
+<tr><th>mt3072</th><td style="background:rgba(208,59,59,0.52)">0.85</td><td style="background:rgba(208,59,59,0.49)">0.83</td><td style="background:rgba(208,59,59,0.38)">0.76</td><td style="background:rgba(208,59,59,0.38)">0.76</td><td style="background:rgba(208,59,59,0.20)">0.64</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.39)">0.76</td><td style="background:rgba(208,59,59,0.54)">0.86</td><td style="background:rgba(208,59,59,0.52)">0.85</td><td style="background:rgba(208,59,59,0.31)">0.71</td><td style="background:rgba(208,59,59,0.24)">0.67</td></tr>
+<tr><th>marginal</th><td style="background:rgba(208,59,59,0.32)">0.72</td><td style="background:rgba(208,59,59,0.33)">0.72</td><td style="background:rgba(208,59,59,0.35)">0.74</td><td style="background:rgba(208,59,59,0.33)">0.73</td><td style="background:rgba(208,59,59,0.20)">0.64</td><td style="background:rgba(208,59,59,0.39)">0.76</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.38)">0.76</td><td style="background:rgba(208,59,59,0.41)">0.78</td><td style="background:rgba(208,59,59,0.23)">0.66</td><td style="background:rgba(208,59,59,0.25)">0.67</td></tr>
+<tr><th>prompt</th><td style="background:rgba(208,59,59,0.51)">0.84</td><td style="background:rgba(208,59,59,0.62)">0.91</td><td style="background:rgba(208,59,59,0.46)">0.81</td><td style="background:rgba(208,59,59,0.37)">0.75</td><td style="background:rgba(208,59,59,0.16)">0.62</td><td style="background:rgba(208,59,59,0.54)">0.86</td><td style="background:rgba(208,59,59,0.38)">0.76</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.55)">0.87</td><td style="background:rgba(208,59,59,0.37)">0.75</td><td style="background:rgba(208,59,59,0.33)">0.72</td></tr>
+<tr><th>temp</th><td style="background:rgba(208,59,59,0.48)">0.82</td><td style="background:rgba(208,59,59,0.48)">0.82</td><td style="background:rgba(208,59,59,0.44)">0.79</td><td style="background:rgba(208,59,59,0.38)">0.76</td><td style="background:rgba(208,59,59,0.26)">0.68</td><td style="background:rgba(208,59,59,0.52)">0.85</td><td style="background:rgba(208,59,59,0.41)">0.78</td><td style="background:rgba(208,59,59,0.55)">0.87</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.29)">0.70</td><td style="background:rgba(208,59,59,0.33)">0.73</td></tr>
+<tr><th>rank</th><td style="background:rgba(208,59,59,0.34)">0.73</td><td style="background:rgba(208,59,59,0.34)">0.73</td><td style="background:rgba(208,59,59,0.28)">0.69</td><td style="background:rgba(208,59,59,0.30)">0.71</td><td style="background:rgba(208,59,59,0.14)">0.60</td><td style="background:rgba(208,59,59,0.31)">0.71</td><td style="background:rgba(208,59,59,0.23)">0.66</td><td style="background:rgba(208,59,59,0.37)">0.75</td><td style="background:rgba(208,59,59,0.29)">0.70</td><td class="diag">&middot;</td><td style="background:rgba(208,59,59,0.17)">0.62</td></tr>
+<tr><th>rfs3</th><td style="background:rgba(208,59,59,0.22)">0.65</td><td style="background:rgba(208,59,59,0.29)">0.70</td><td style="background:rgba(208,59,59,0.31)">0.71</td><td style="background:rgba(208,59,59,0.27)">0.69</td><td style="background:rgba(208,59,59,0.15)">0.61</td><td style="background:rgba(208,59,59,0.24)">0.67</td><td style="background:rgba(208,59,59,0.25)">0.67</td><td style="background:rgba(208,59,59,0.33)">0.72</td><td style="background:rgba(208,59,59,0.33)">0.73</td><td style="background:rgba(208,59,59,0.17)">0.62</td><td class="diag">&middot;</td></tr>
+</tbody></table>
+    </div>
+    <div class="keybar"><span>0.55</span><span class="ramp"></span><span>0.95</span>
+      <span>두 계열이 동시에 오답일 때 <b>같은 오답</b>을 낸 비율</span></div>
+    <p class="sub" style="margin:14px 0 0; font-size:0.86rem">
+      dpo&harr;prompt <b>0.91</b>, temp&harr;prompt 0.87, base&harr;mt3072 0.85, base&harr;prompt 0.84 —
+      <b>가장 낮은 쌍조차 masked&harr;rank 0.60</b>이다.
+      학습 데이터가 다르고(교사 풀이 vs RFT 풀이), 프롬프트가 다르고, 온도가 달라도
+      틀릴 때는 <b>같은 곳으로 틀린다.</b> 앙상블 이론의 전제인 <b>오류 비상관이 성립하지 않는다.</b>
+    </p>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <p class="sub" style="margin:0 0 6px">
+      그 결과 <b>회수 가능 구간에서 정답 편은 언제나 소수파</b>다.
+      베이스 계열이 틀렸는데 다른 계열 중 맞힌 곳이 있는 문항 16개를 분해했다.
+    </p>
+    <div class="minor">
+      <div class="b"><div class="n">2.31</div><div class="c">정답 계열 수 (11계열 중)</div></div>
+      <div class="b"><div class="n">6.69</div><div class="c">같은 오답 공유 계열 수</div></div>
+      <div class="b"><div class="n">2.9&times;</div><div class="c">오답 편 &divide; 정답 편</div></div>
+      <div class="b"><div class="n" style="color:var(--bad)">0</div><div class="c">과반이 정답인 문항</div></div>
+    </div>
+    <p class="sub" style="margin:14px 0 0; font-size:0.86rem">
+      16문항 중 <b>8문항은 정답을 낸 계열이 단 하나</b>이고, 과반(6계열 이상)에 도달하는 문항은
+      <b>0개(0.0%)</b>다. 즉 exp73의 합집합 +14는 <b>oracle 정보</b>이며,
+      <b>어떤 가중치를 쓰든 표를 세는 방식으로는 원리적으로 꺼낼 수 없다.</b>
+      계열 단위로 접고 상관으로 중복을 제거해도 결과는 같았다(6종 전부 &minus;3 ~ &minus;4문항, 5-fold CV).
+    </p>
+    <p class="sub" style="margin:10px 0 0; font-size:0.84rem">
+      이것이 <b>세 층위(후보 &middot; top1/top2 &middot; 시스템)에서 헤드룸이 전부 확인되는데 배포 이득은
+      전부 0 이하인 현상의 공통 기제</b>다. 남은 길은 표를 세는 것이 아니라
+      <b>소수 정답을 식별하는 판별기</b>인데, 그 판별력은 일곱 신호에서 0.59~0.66 벽에 걸려 있다.
     </p>
   </div>
 
