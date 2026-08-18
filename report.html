@@ -92,12 +92,13 @@
 <body>
 <main>
   <h1>아주 딥러닝 챌린지 2026 — 실험 보고서</h1>
-  <p class="sub">Qwen2.5-3B-Instruct 고정 베이스로 수학 정수 답 추론 · 목표 <b>로컬 85%</b> · 세부 기록은 <code>EXPERIMENTS.md</code></p>
+  <p class="sub">Qwen2.5-3B-Instruct 고정 베이스로 수학 정수 답 추론 · <b>사전 설정 목표 로컬 85%</b>
+  (exp52b의 라벨 감사 이후 <b>이 자로는 도달 불가</b>로 판단 — 아래 참조) · 세부 기록은 <code>EXPERIMENTS.md</code></p>
 
   <div class="tiles">
     <div class="tile"><div class="label">리더보드 (최신)</div><div class="value" id="tile-lb">–</div><div class="hint" id="tile-lb-hint"></div></div>
     <div class="tile"><div class="label">로컬 검증 (최신)</div><div class="value" id="tile-local">–</div><div class="hint" id="tile-local-hint"></div></div>
-    <div class="tile"><div class="label">목표까지</div><div class="value" id="tile-gap">–</div><div class="hint">로컬 85% 기준</div></div>
+    <div class="tile"><div class="label">목표까지</div><div class="value" id="tile-gap">–</div><div class="hint">사전 설정 목표 85% 기준 (exp52b 이후 도달 불가 판단)</div></div>
   </div>
 
   <h2>정확도 추이</h2>
@@ -119,12 +120,16 @@
       <span><span class="key" style="background:var(--good)"></span>✓ 채택 (기준선 대비 개선)</span>
       <span><span class="key" style="background:var(--muted)"></span>~ 노이즈 (±1%p)</span>
       <span><span class="key" style="background:var(--bad)"></span>✗ 하락</span>
-      <span><span class="key" style="background:var(--baseline); height:1px"></span>pass@6 상한 79.9%</span>
+      <span><span class="key" style="background:var(--baseline); height:1px"></span>pass@6 오라클 80.5%</span>
     </div>
     <div class="chart-wrap"><svg id="chart2" width="820" height="470" role="img" aria-label="실험별 로컬 정확도 가로 막대 그래프"></svg></div>
     <p class="sub" style="margin:10px 0 0; font-size:0.84rem">
-      모든 수치는 동일한 검증 483문항 기준. <b>pass@6 = 79.9%</b>는 "6번 풀면 정답이 한 번은 나오는" 비율로,
-      집계 방식만으로 회수 가능한 이론적 상한 — 실제 최고치(75.8%)와의 4.1%p 갭이 검증자·가중투표가 노렸으나 열지 못한 구간이다.
+      모든 수치는 동일한 검증 483문항 기준이며, 별도 표기가 없으면 <b>SC(n&ge;8) 기준</b>이다
+      (Budget Forcing 항목만 greedy 기준이라 다른 항목과 직접 비교할 수 없다).
+      기준선 <b>pass@6 = 80.5%</b>(실측 389/483)는 "6번 풀면 정답이 한 번은 나오는" 비율,
+      즉 <b>n=6 후보 풀에서의 오라클</b>이다 &mdash; 이론적 상한이 아니다.
+      우리가 실제로 쓰는 n=32에서의 오라클은 <b>pass@32 = 87.8%</b>이고, 이 선은
+      초기 n=8 계열 실험들과 눈높이를 맞추기 위한 참조선이다.
     </p>
   </div>
 
@@ -136,13 +141,24 @@
     </p>
     <div id="ceiling-bars"></div>
     <p class="sub" style="margin:12px 0 0; font-size:0.84rem">
-      <b>2등(LB 0.79542)에 필요한 +1.5%p는 "상위 2후보 헤드룸"(+4.14%p)의 35%만 건지면 달성된다.</b>
-      즉 필요한 것은 완전한 신탁이 아니라 <b>1·2위를 가릴 줄 아는 심판 하나</b>였다.
-      그러나 <b>서로 다른 다섯 갈래가 전부 판별력 ~0.6에 수렴했다</b>:
-      절대 채점(검증자 +0.5%p) · 상대 비교(쌍대 토너먼트 +0.21%p) · 암묵적 보상 학습(DPO 보상정확도 0.60)
-      · 전용 보상 헤드(holdout 쌍 정확도 0.647) · implicit PRM(6규칙 전부 0 이하, 최악 −6.83%p).
-      구현을 다섯 번 바꿔도 같은 값이 나온다는 것은 방법의 문제가 아니라는 뜻이다 —
-      같은 3B 모델은 자기 풀이의 정오를 표현 안에 담고 있지 않다.
+      ⚠️ <b>이 막대들은 전부 오라클(사후에 정답을 알고 고른 값)이지 배포 가능한 이득이 아니다.</b>
+      exp55c에서 상위 2후보 구간에 메타 선택기를 붙이고 임계값을 nested CV로 정직하게 고르자
+      배포 조건 순이득은 <b>−1.38문항</b>이었다. 헤드룸의 존재와 회수 가능성은 별개다.
+      <br><br>
+      필요한 것은 완전한 신탁이 아니라 <b>1·2위를 가릴 줄 아는 심판 하나</b>다.
+      그러나 <b>목적함수·학습여부·비교방식이 모두 다른 일곱 갈래가 판별력 0.59~0.66에 수렴했다</b>:
+      절대 채점(검증자) · 상대 비교(쌍대 토너먼트) · 암묵적 보상 학습(DPO 보상정확도 0.60)
+      · 전용 보상 헤드(holdout 쌍 정확도 0.647) · implicit PRM · 토큰단위 확신도(AUC 0.610)
+      · 투표통계 메타 선택기(OOF AUC 0.660).
+      구현을 일곱 번 바꿔도 같은 대역이 나온다는 것은 방법의 문제가 아니라는 뜻이다 —
+      같은 3B 모델은 자기 풀이의 정오를 표현 안에 충분히 담고 있지 않다.
+      <br><br>
+      ⚠️ <b>단위 주의</b>: 위 <b>0.59~0.66은 판별 성능(AUC/쌍 정확도)</b>이고
+      <b>%p는 정확도 변화량</b>으로 서로 다른 축이다. 또 <b>로컬 %p와 리더보드 %p도 같은 자가 아니다</b> —
+      2등과의 격차는 <b>리더보드에서 1.083%p</b>(0.79542 vs 0.78459)인데,
+      exp71에서 실측한 <b>리더보드 재실행 변동이 0.72%p</b>이므로 이 격차는 노이즈 폭의 약 1.5배에 불과하다.
+      과거 이 자리에 적혀 있던 &ldquo;필요한 +1.5%p&rdquo;와 &ldquo;검증자 +0.5%p&rdquo;는
+      각각 <b>단위 혼용</b>과 <b>기준선 오류</b>였다(아래 감사 표 참조).
     </p>
   </div>
 
@@ -203,8 +219,10 @@
       35개 시스템 합집합 오라클은 <b>400/483 (82.8%)</b>로 최고 단일 시스템(370)을 크게 넘고,
       이종 계열 상보성(<b>+14</b>)은 동일 계열 시드 노이즈 바닥(<b>+4</b>)의 3.5배다(exp73).
       그런데 집계 규칙 63종 &middot; 시스템 결합 5종 &middot; 계열 결합 6종이 <b>전부 음수</b>였다.
-      35개 덤프를 11개 계열로 접고 <b>두 계열이 동시에 틀릴 때 같은 오답을 낼 확률</b>을 재자
-      이유가 드러났다.
+      35개 덤프를 11개 계열로 접고 <b>오답 일치율</b>을 재자 이유가 드러났다.
+      여기서 <b>오답 일치율이란 상관계수가 아니라</b>
+      &ldquo;<b>두 계열이 모두 오답인 조건에서 동일한 최종 오답을 낸 비율</b>&rdquo;이라는
+      조건부 비율이다(분모 = 두 계열이 함께 틀린 문항 수).
     </p>
     <div class="scroll">
 <table class="heat"><thead><tr><th></th><th>base</th><th>dpo</th><th>teacher</th><th>rftmask</th><th>masked</th><th>mt3072</th><th>marginal</th><th>prompt</th><th>temp</th><th>rank</th><th>rfs3</th></tr></thead><tbody>
@@ -222,12 +240,15 @@
 </tbody></table>
     </div>
     <div class="keybar"><span>0.55</span><span class="ramp"></span><span>0.95</span>
-      <span>두 계열이 동시에 오답일 때 <b>같은 오답</b>을 낸 비율</span></div>
+      <span><b>오답 일치율</b> — 두 계열이 모두 오답인 조건에서 동일한 최종 오답을 낸 비율
+      (상관계수가 아님)</span></div>
     <p class="sub" style="margin:14px 0 0; font-size:0.86rem">
       dpo&harr;prompt <b>0.91</b>, temp&harr;prompt 0.87, base&harr;mt3072 0.85, base&harr;prompt 0.84 —
       <b>가장 낮은 쌍조차 masked&harr;rank 0.60</b>이다.
       학습 데이터가 다르고(교사 풀이 vs RFT 풀이), 프롬프트가 다르고, 온도가 달라도
-      틀릴 때는 <b>같은 곳으로 틀린다.</b> 앙상블 이론의 전제인 <b>오류 비상관이 성립하지 않는다.</b>
+      틀릴 때는 <b>같은 곳으로 틀린다.</b>
+      앙상블 이득은 일반적으로 <b>오류의 다양성&middot;비상관성이 클수록 커지는데</b>,
+      우리 계열들은 실패할 때 <b>동일한 오답으로 강하게 수렴했다.</b>
     </p>
   </div>
 
@@ -244,14 +265,26 @@
     </div>
     <p class="sub" style="margin:14px 0 0; font-size:0.86rem">
       16문항 중 <b>8문항은 정답을 낸 계열이 단 하나</b>이고, 과반(6계열 이상)에 도달하는 문항은
-      <b>0개(0.0%)</b>다. 즉 exp73의 합집합 +14는 <b>oracle 정보</b>이며,
-      <b>어떤 가중치를 쓰든 표를 세는 방식으로는 원리적으로 꺼낼 수 없다.</b>
+      <b>0개(0.0%)</b>다. 즉 exp73의 합집합 +14는 <b>oracle 정보</b>이고,
+      <b>지금까지 시험한 정적 vote/weight 기반 집계에서는 회수되지 않았다.</b>
+      정답을 낸 계열이 항상 소수파라는 구조 때문에 <b>이런 방식은 구조적으로 매우 불리하다</b> —
+      다만 이것이 <b>모든 가능한 가중 방식이 수학적으로 불가능하다는 뜻은 아니다.</b>
       계열 단위로 접고 상관으로 중복을 제거해도 결과는 같았다(6종 전부 &minus;3 ~ &minus;4문항, 5-fold CV).
     </p>
     <p class="sub" style="margin:10px 0 0; font-size:0.84rem">
       이것이 <b>세 층위(후보 &middot; top1/top2 &middot; 시스템)에서 헤드룸이 전부 확인되는데 배포 이득은
       전부 0 이하인 현상의 공통 기제</b>다. 남은 길은 표를 세는 것이 아니라
       <b>소수 정답을 식별하는 판별기</b>인데, 그 판별력은 일곱 신호에서 0.59~0.66 벽에 걸려 있다.
+    </p>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <p class="sub" style="margin:0; font-size:0.84rem">
+      ⚠️ <b>기준선 수치가 절마다 다르게 보이는 이유</b>: 같은 "가중 SC n=32"인데도
+      <b>75.8%(366/483, exp25·26)</b> · <b>76.0%(367/483, exp51·54의 대조군)</b> ·
+      <b>76.4%(369/483, exp31b·44의 trim 계열 대조군)</b>이 함께 등장한다.
+      vLLM 연속배칭 비결정성과 시드 차이로 <b>±1%p 안에서 흔들리는 것</b>이며 서로 다른 스택이 아니다.
+      실험 간 비교는 반드시 <b>같은 실행 안의 대조군</b>과 해야 한다(exp58 이후 강제한 설계).
     </p>
   </div>
 
@@ -289,6 +322,64 @@
     </table>
   </div>
 
+  <h2>정정 이력 — 우리가 우리 결론을 뒤집은 기록</h2>
+  <div class="card scroll">
+    <p class="sub" style="margin:0 0 10px; font-size:0.85rem">
+      단독 진행이라 외부 감사가 없다. 그래서 <b>자기 정정을 결과와 같은 급으로 기록</b>한다.
+      아래는 보고서에 실렸다가 후속 실험으로 반박되어 고친 주장들이다.
+    </p>
+    <table>
+      <thead><tr><th>고친 주장</th><th>무엇이 틀렸나</th><th>근거 실험</th></tr></thead>
+      <tbody>
+        <tr><td>검증자 어댑터 <b>+0.5%p</b></td>
+            <td>비교 기준선이 <b>다수결(74.9%)</b>이었다. 우리 생산 스택인 <b>가중투표</b>와 비교하면
+                exp25(n=32)에서 366/483으로 <b>동일 — 실제 이득 0문항</b></td>
+            <td>설계공간 감사 (exp25 재검토)</td></tr>
+        <tr><td>상위 2후보 헤드룸 <b>+4.14%p</b></td>
+            <td><b>다수결 순위</b>로 계산한 오라클(79.9%)에서 <b>가중투표</b> 정확도(75.8%)를 뺀
+                혼합 계산이었다. 같은 순위 기준으로 다시 재면 <b>+4.55%p</b>(3시드 평균 +4.00%p)</td>
+            <td>재실측 (시드 42/43/44)</td></tr>
+        <tr><td><b>pass@6 = 79.9%</b></td>
+            <td>실측은 <b>80.5%</b>(389/483). 상위 2후보 오라클(79.9%)과 <b>같은 값이 두 의미로</b> 쓰였다</td>
+            <td>재실측</td></tr>
+        <tr><td>2등까지 <b>+1.5%p</b> 필요</td>
+            <td><b>로컬 %p와 리더보드 %p를 섞었다.</b> 실제 격차는 LB <b>1.083%p</b>이고,
+                exp71이 실측한 <b>LB 재실행 변동 0.72%p</b>의 약 1.5배에 불과하다</td>
+            <td>exp71</td></tr>
+        <tr><td>LB 재실행 변동 <b>0.48%p</b></td>
+            <td>단일 쌍 관측이라 과소평가였다. 동일 설정 다른 시드로 재제출하니 <b>0.722%p</b> —
+                제출 15건 중 0.777~0.788은 <b>상호 구분 불가</b></td>
+            <td>exp71 (exp34b 갱신)</td></tr>
+        <tr><td>교사 증류 LB <b>0.78820</b>이 신기록</td>
+            <td>같은 설정 seed43은 0.78098. <b>두 시드 평균 0.78459 = 기존 스택과 동일</b>.
+                0.78820은 운 좋은 쪽 값이었다</td>
+            <td>exp71</td></tr>
+        <tr><td>교사 증류 손실의 대부분이 <b>방법 탓</b></td>
+            <td>3에폭이라는 <b>에폭 선택</b>이 손실의 3분의 2였다(−28 → −9문항).
+                작은 데이터에서 스텝을 늘리는 것은 개입 강화가 아니라 암기다</td>
+            <td>exp53b</td></tr>
+        <tr><td>학습 7전 전패는 <b>마스킹 버그 탓</b>일 수 있다</td>
+            <td>가장 그럴듯한 반론이었고 실제로 결함을 찾았다(교사 8.4% / RFT 19.4%).
+                고쳐서 3시드 재실행했으나 결과는 바뀌지 않았다(−8.67 / −6.67문항)</td>
+            <td>exp59 · exp60</td></tr>
+        <tr><td>&ldquo;다양성 붕괴&rdquo;가 SFT 실패의 원인</td>
+            <td>DPO 어댑터로 직접 재보니 pass@32 87.8→88.4%, 고유답 5.06→5.12로
+                <b>다양성은 줄지 않았다</b></td>
+            <td>exp47/48</td></tr>
+        <tr><td>메타 선택기 <b>+1.8문항</b></td>
+            <td>임계값 <b>사후 최적화</b>의 산물이었다. nested CV로 안쪽에서만 고르니 <b>−1.38문항</b></td>
+            <td>exp55c</td></tr>
+        <tr><td>합집합 헤드룸을 투표로 <b>원리적으로 못 꺼낸다</b></td>
+            <td>증명한 것은 <b>지금까지 시험한 정적 vote/weight 집계에서 회수되지 않았고
+                구조적으로 매우 불리하다</b>까지다. 모든 가중 방식의 불가능성은 아니다</td>
+            <td>exp76 (표현 정정)</td></tr>
+        <tr><td>판정 임계 <b>&plusmn;1.49%p</b>를 &ldquo;판별력&rdquo;이라 부름</td>
+            <td>그것은 <b>사후 임계값</b>이지 검정력이 아니다. n=483에서 <b>+2%p 효과의 McNemar 검정력은 0.3 미만</b></td>
+            <td>검정력 재계산</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <h2>참고 자료 (auto-research)</h2>
   <div class="card">
     <ul class="refs">
@@ -317,7 +408,9 @@
     </ul>
   </div>
 
-  <p class="sub" style="margin-top:32px">마지막 갱신: 2026-08-10 (exp28까지 반영) · 발표용 서사는 <code>docs/presentation.md</code>, 원본 기록은 <code>experiments/log.csv</code></p>
+  <p class="sub" style="margin-top:32px">마지막 갱신: 2026-08-17 · 아래 실험 표는 <b>exp54까지</b>의 선별 목록이고,
+  exp55~exp76은 본문 서술과 <code>EXPERIMENTS.md</code>&middot;<code>experiments/log.csv</code>에 있다 ·
+  발표용 서사는 <code>docs/presentation.md</code></p>
 </main>
 
 <div id="tooltip"></div>
@@ -342,17 +435,17 @@ const EXPERIMENTS = [
     local: 74.5, lb: null, note: 'SFT와 달리 성능을 지키는 데는 성공(KL 제약 작동), 올리지는 못함 → 학습 트랙 동결. exp11: n16+가중투표도 노이즈 범위(74.3~74.7%) — 추론 미세 이득은 ±1%p 측정 한계 확인', jump: null },
   { exp: 'exp24', date: '2026-08-07', method: 'GRPO 스케일업 (1500스텝) — 실패: SC 73.1%, 보상 곡선 상승 없음',
     local: 73.1, lb: null, note: '학습 계열 최종 5전 전패 (SFT×3, GRPO×2). 총력전 4장(정책앙상블·few-shot·정화·적응예산)과 검증자 v1/v2도 전부 기준 미달 — 상세는 EXPERIMENTS.md', jump: null },
-  { exp: 'exp25', date: '2026-08-07', method: '최고 로컬 스택 확정: 확신도/검증자 가중 × n=32 = 75.8% (두 방법 독립 일치)',
-    local: 75.8, lb: null, note: '성공 기준(76.3%)엔 미달이나 n8 스택(74.7%) 대비 +1.1%p — exp26에서 이 스택으로 제출 파일 생성', jump: null },
+  { exp: 'exp25', date: '2026-08-07', method: '최고 로컬 스택 확정: 확신도 가중 × n=32 = 75.8% (366/483)',
+    local: 75.8, lb: null, note: '성공 기준(76.3%)엔 미달이나 n8 스택(74.7%) 대비 +1.1%p — exp26에서 이 스택으로 제출 파일 생성. ⚠️ 정정: 당시 "확신도 가중과 검증자 가중이 독립적으로 일치"라 적었으나, 검증자 가중도 366/483으로 같은 값이었다는 것은 곧 검증자가 결과를 바꾸지 않았다는 뜻이다 — 독립 확증이 아니다', jump: null },
   { exp: 'exp26', date: '2026-08-08', method: '가중 SC n=32 스택 리더보드 제출 — 0.78459 (+0.0144)',
     local: 75.8, lb: 78.459, note: '로컬 75.8% → LB 0.785, 오프셋(+2.7%p) 재확인. 15팀 중 순위 상승, 2등(0.79542)과 갭 0.011 = 9문제',
     jump: '확신도 가중 투표 × n=32 — 26개 실험이 좁혀낸 최종 추론 스택의 실측 확인' },
   { exp: 'exp28', date: '2026-08-09', method: '온도 차원 탐색 종료 — 단일(0.4/1.0)·혼합(24표) 모두 t=0.7 기준 미달',
     local: 74.9, lb: null, note: '온도 0.4: 74.1% / 1.0: 75.4% / 혼합 24표: 74.9% — 전부 기준(75.6%) 이하. 덤으로 풀이 잘림 1.5~2.2% 확인(토큰 한도로 얻을 점수 없음). 마지막 미검증 차원 소진', jump: null },
   { exp: 'exp29-1', date: '2026-08-10', method: 'LB 판별 후보①: n=64 가중 (표본 32→64 확대)',
-    local: null, lb: 77.978, note: '기존(n32w 78.459) 대비 -0.481 — 표본 확대 무의미함을 깨끗한 LB로 재확인 (H11 정체 재확인)', jump: null },
+    local: null, lb: 77.978, note: '⚠️ 정정: 기존(n32w 78.459) 대비 -0.481%p인데, exp71이 실측한 LB 재실행 변동이 0.722%p다. 따라서 이 차이는 노이즈와 구분되지 않는다 — 당시 적었던 "표본 확대 무의미함을 LB로 재확인"은 근거가 약하다. 로컬 증거(n=64가 n=32를 못 넘음)는 그대로 유효', jump: null },
   { exp: 'exp29-2', date: '2026-08-10', method: 'LB 판별 후보②: n=32 단순 다수결 (가중 제거)',
-    local: null, lb: 77.737, note: '기존(n32w 78.459) 대비 -0.722 — 가중 제거 시 LB에서도 하락 (H16 가중 투표 유효성 재확인). 최종 스택은 여전히 n32w(가중 SC n=32)', jump: null },
+    local: null, lb: 77.737, note: '⚠️ 정정: 기존 대비 -0.722%p인데 이 값은 exp71이 잰 동일설정 재실행 변동(0.722%p)과 정확히 같은 크기다. "가중 제거 시 LB에서도 하락"이라는 결론은 이 한 쌍으로는 지지되지 않는다. 최종 스택을 n32w로 유지하는 근거는 LB가 아니라 로컬 대응비교다', jump: null },
   { exp: 'exp30', date: '2026-08-10', method: '최종 test 실전 리허설 — 확정 스택으로 831문항 완주, 시간·자원 실측 (성능 실험 아님)',
     local: null, lb: null, note: '4.44초/문항 → 2,000문항 환산 약 2시간28분. GPU 최대 95.1%, CPU RSS 5.07GiB. 핵심 발견: make_submission.py는 체크포인트 없어 중단 시 재개 불가 — 8/31 당일은 dump_lb_samples.py(재개 가능)+make_submission_from_dump.py 조합 권장', jump: null },
   { exp: 'exp31b', date: '2026-08-10', method: '집계 전략 12종 스윕 (GPU 불필요) — n=32에서 trim_lowconf25%가 majority 대비 +5문제(76.4%)로 로컬 최고',
@@ -375,6 +468,12 @@ const EXPERIMENTS = [
     local: 74.0, lb: null, note: '3에폭은 -6.21%p로 크게 하락했으나 그 3분의 2가 에폭 선택 탓이었음을 1에폭 대조군이 밝힘(-28→-9문항). 전량 683개×1에폭×시드3개 최종 판정 -9/-7/-10문항, 평균 -1.79%p로 기준 미달 → H23 기각, 학습 축 7전 종료. **결정적 발견: pass@32는 평균 +1.7문항 올랐다** — 교사 증류는 실제로 모델을 더 유능하게 만들었는데도 최종 점수는 -8.67문항 떨어졌다. 선택기가 개선을 흡수하지 못한다는 능동적 증거', jump: null },
   { exp: 'exp54', date: '2026-08-14', method: 'implicit PRM(H25) — 폐기한 DPO 체크포인트를 채점기로 재해석. r=β·log[P_policy/P_ref], 추가 학습 0',
     local: 76.0, lb: null, note: '6개 규칙 전부 기준선(76.0%) 이하 — prm_*_best 69.2%(-6.83%p), prm_sum_vote 74.5%, 최선이 동률(±0). 양수가 없어 시드 확장 불필요, H25 최종 기각. 자기검증 축 5번째 기각으로 판별력이 다섯 방법 모두 ~0.6에 수렴', jump: null },
+  { exp: 'exp70', date: '2026-08-16', method: '로컬에서 진 후보를 리더보드로 직접 판정 — 교사 증류 어댑터 831문항 제출',
+    local: null, lb: 78.820, note: '이 실험의 로컬값(74.0%)은 교사 어댑터의 것이지 우리 스택의 값이 아니라 차트에서 제외했다. 로컬 −8.67문항이던 교사 증류가 LB 0.78820으로 기존 최고(0.78459)를 넘음. 당시 해석: 로컬 gold에 오류가 있어(exp52b) 로컬이 흐린 자다', jump: null },
+  { exp: 'exp71', date: '2026-08-17', method: '같은 설정·다른 시드로 재제출해 리더보드 재실행 변동을 실측 (교사 어댑터 seed43)',
+    local: null, lb: 78.098, note: '⚠️ 보고서 전체의 해석 기준을 바꾼 실험. 교사 seed42 0.78820 vs seed43 0.78098 = 동일 설정에서 0.722%p 변동, 평균 0.78459로 기존 스택과 동일. 0.78820은 운 좋은 쪽 값이었다. 기존 exp34b의 0.48%p는 단일 쌍 과소평가 — 제출 15건 중 0.777~0.788은 상호 구분 불가', jump: null },
+  { exp: 'exp73/75/76', date: '2026-08-17', method: '시스템 합집합 오라클 → 유형기반 라우터 → 계열 상관 앙상블 (전부 GPU 0)',
+    local: null, lb: null, note: '35시스템 합집합 400/483(82.8%), 이종 계열 상보성 +14 vs 시드 노이즈 바닥 +4. 그러나 유형별 전문화 증거 없음(65칸 순열검정 p=0.10~0.80, 홀드아웃 −0.33~−0.83문항)이고 계열 결합 6종도 −3~−4. 기제: 오답 일치율 0.60~0.91', jump: null },
 ];
 const TARGET = 85;
 
@@ -387,7 +486,7 @@ const ALL_RUNS = [
   { name: 'SC n=32 가중', acc: 75.8, verdict: 'win', note: '최종 채택 스택' },
   { name: 'SC n=64 가중', acc: 75.4, verdict: 'noise', note: '표 2배에도 이득 없음' },
   { name: '확신도 가중 (n8)', acc: 74.5, verdict: 'noise', note: 'n16에선 부호 반전' },
-  { name: '검증자 v1 Best-of-N', acc: 75.4, verdict: 'noise', note: '자체 채점 어댑터' },
+  { name: '검증자 v1 Best-of-N', acc: 75.4, verdict: 'noise', note: '자체 채점 어댑터. ⚠️ 흔히 인용된 +0.5%p는 다수결(74.9%) 대비이며, 우리 생산 스택인 가중투표와 비교하면 exp25(n=32)에서 366/483으로 동일 — 실제 이득 0문항' },
   { name: '검증자 v2 (근거생성)', acc: 73.7, verdict: 'loss', note: 'v1보다 하락' },
   { name: '적응형 예산', acc: 75.2, verdict: 'noise', note: '어려운 문제에 표 집중' },
   { name: '프롬프트 앙상블', acc: 74.3, verdict: 'noise', note: '4종 프롬프트 혼합' },
@@ -404,7 +503,6 @@ const ALL_RUNS = [
   { name: 'trim_lowconf 정밀탐색 27종', acc: 76.4, verdict: 'noise', note: 'exp44 — exp31b 상한과 동률, 갱신 없음' },
   { name: '쌍대 비교 토너먼트 (버그 상태)', acc: 75.8, verdict: 'noise', note: 'exp37 — logprobs=0 누락 버그로 판정 0/65건 호출, 무효' },
   { name: '쌍대 비교 토너먼트 (수정 후)', acc: 76.0, verdict: 'noise', note: 'exp37b — 57/65문항 실제 판정, +1문항(+0.21%p). 완벽한 심판이라도 상한 +1.86%p' },
-  { name: '제출 다양성 (w48/dt32, LB)', acc: 78.2, verdict: 'noise', note: 'exp38 — LB 0.78219/0.77978, n32w(0.78459) 대비 소폭 하락, 노이즈 범위' },
   { name: 'Budget Forcing + SC n8', acc: 74.5, verdict: 'noise', note: 'exp42 — round0 대비 +0.6%p지만 exp05 SC n8(74.7%) 대비 -0.2%p, H20 최종 기각' },
   { name: 'DPO (선호쌍 1,832개)', acc: 76.6, verdict: 'noise', note: 'exp47 — 시드42 기준 +0.8%p. 단 같은 어댑터 다른 측정에선 75.2%로 1.4%p 어긋남 = 노이즈에 묻힘. 학습 6전 중 유일하게 하락하지 않은 실행' },
   { name: '교사 증류 3에폭 (exp53)', acc: 69.4, verdict: 'loss', note: '2시드 평균 -6.21%p. 손상의 3분의 2가 에폭 선택 탓 — 작은 데이터(560개)에서 스텝을 늘리는 것은 같은 개입의 반복이 아니라 같은 예시를 외우는 것' },
@@ -416,12 +514,12 @@ const ALL_RUNS = [
 ];
 // 순위별 선택 여지 분해 (n=32, exp37b 후속 분석) — "12%p 중 실제로 손에 닿는 몫"
 const SELECTION_CEILING = [
-  { name: '현재 스택 (가중 투표)', acc: 75.8, note: '실제 채택' },
-  { name: '상위 2후보 중 완벽 선택', acc: 79.9, note: '+4.14%p — 2등에 필요한 몫은 이 헤드룸의 35%' },
-  { name: '상위 3후보 중 완벽 선택', acc: 83.0, note: '+7.25%p' },
-  { name: 'pass@32 (완전한 신탁)', acc: 87.8, note: '+12.01%p — 이론적 상한' },
+  { name: '현재 스택 (가중 투표)', acc: 75.8, note: '실제 채택 366/483 (시드42)' },
+  { name: '상위 2후보 중 완벽 선택', acc: 80.3, note: '+4.55%p 오라클 — 배포 이득 아님 (3시드 평균 +4.00%p)' },
+  { name: '상위 3후보 중 완벽 선택', acc: 82.6, note: '+6.83%p 오라클 (3시드 평균 +6.00%p)' },
+  { name: 'pass@32 (후보 풀 오라클)', acc: 87.8, note: '+12.01%p — 이 후보 풀에서의 오라클' },
 ];
-const PASS_AT_6 = 79.9;
+const PASS_AT_6 = 80.5;
 
 // ── 상단 타일 ──
 const last = EXPERIMENTS[EXPERIMENTS.length - 1];
