@@ -1,5 +1,13 @@
 """리더보드 제출 파일 생성 — vLLM, SC 다수결. AWS 서버에서 실행.
 
+⛔ 8/31 최종 제출에는 쓰지 말 것 (exp30 리허설에서 확인된 최대 운영 리스크).
+   이 스크립트는 **체크포인트가 없어 중단되면 처음부터** 다시 돌려야 한다(최대 2.5시간 손실).
+   최종전에는 반드시 2단계 경로를 쓴다:
+       remote/dump_lb_samples.py         (100문항마다 저장 · 재개 가능)
+       remote/make_submission_from_dump.py
+       remote/validate_submission.py     (제출 직전 전수 검증)
+   절차 전체는 docs/final-pipeline.md.
+
 사용:
     uv run python remote/make_submission.py --adapter outputs/qlora/xxx_final --n 8 --tag exp06
 → results/submission_<tag>.csv (id,answer — 소문자 id, 정수만)
@@ -9,7 +17,6 @@ import os
 import sys
 from collections import Counter
 
-import pandas as pd
 
 sys.path.insert(0, os.path.dirname(__file__))
 from answer_extract import BS, extract_answer
@@ -42,6 +49,8 @@ def weighted_vote(answer_conf_pairs):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--i-know-no-checkpoint', action='store_true',
+                    help='체크포인트가 없다는 것을 알고도 이 경로로 진행 (최종전 금지)')
     ap.add_argument('--adapter', default=None)
     ap.add_argument('--n', type=int, default=8)
     ap.add_argument('--temp', type=float, default=0.7, help='샘플링 온도')
@@ -51,6 +60,12 @@ def main():
     ap.add_argument('--tag', required=True, help='결과 파일 이름표 (예: exp06)')
     ap.add_argument('--lb-csv', default='deep-learning-challenge-2026/deep_chal_math_leaderboard_filtered.csv')
     args = ap.parse_args()
+    if not args.i_know_no_checkpoint:
+        raise SystemExit(
+            '⛔ 이 스크립트는 중단 시 재개가 불가능하다 (체크포인트 없음).' + chr(10) +
+            '   최종 제출·장시간 실행에는 remote/dump_lb_samples.py 경로를 쓸 것.' + chr(10) +
+            '   짧은 실험이라 정말 이걸 써야 하면 --i-know-no-checkpoint 를 붙일 것.')
+    import pandas as pd      # 가드를 통과한 뒤에 무겁게 로드한다
 
     from vllm import LLM, SamplingParams
     from vllm.lora.request import LoRARequest

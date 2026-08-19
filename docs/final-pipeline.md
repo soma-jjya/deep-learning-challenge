@@ -47,7 +47,14 @@ nohup uv run python remote/dump_lb_samples.py \
 ```
 
 - 진행 확인: `tail -f dump_final.log` → "진행 N/<전체>문항"
-- **중단됐다면 같은 명령을 그대로 재실행** (완료분은 건너뜀). 재실행 전 `.progress`의 done 개수와 jsonl 줄 수 일치 확인
+- **중단됐다면 같은 명령을 그대로 재실행** (완료분은 건너뜀).
+- **(2026-08-19 추가) 파라미터가 다르면 스크립트가 재개를 거부한다.** `.progress`에 `--n/--seed/
+  --temp/--top-p/--max-tokens/--adapter/test파일명`의 지문이 저장되고, 재실행 시 대조한다.
+  이전에는 명령을 다시 타이핑하다 한 글자만 달라져도 **앞뒤 설정이 다른 덤프가 조용히 만들어졌다.**
+- 시간이 부족해 `--n 32 → 16`으로 낮추는 것은 **정당한 예외**다. 이때만 `--force-resume`을 붙인다
+  (앞부분에 표본이 더 많을 뿐이고, 2단계에서 `--n 16`으로 자르면 전 문항이 같아진다).
+- 청크 도중에 죽어 `.progress`와 jsonl이 어긋나도 **스크립트가 jsonl을 읽어 자동 보정**한다
+  (같은 문항이 두 번 기록되지 않는다).
 
 ### 2단계 — 제출 파일 생성 (수 초, GPU 불필요)
 
@@ -57,7 +64,24 @@ uv run python remote/make_submission_from_dump.py \
   --lb-csv deep-learning-challenge-2026/<최종test파일>.csv --tag final
 ```
 
-### 3단계 — 제출 전 검증 (필수)
+### 3단계 — 제출 전 검증 (필수) — **이제 코드로 한다**
+
+```bash
+uv run python remote/validate_submission.py   --sub results/submission_final.csv   --test deep-learning-challenge-2026/<최종test파일>.csv   --dump results/final_samples.jsonl --n 32
+```
+
+**종료 코드 0이 아니면 절대 제출하지 않는다.** 이 검증기는 아래를 전부 자동으로 본다 —
+헤더가 소문자 `id,answer`인지 / 행 수와 **id 집합이 test와 정확히 일치**하는지 / 중복·결측 /
+answer가 전부 **int64 범위 안의 정수**인지 / 0인 답 비율 / 덤프 커버리지·문항당 표본 수 /
+추출 실패율·잘림 비율.
+
+임계값은 추측이 아니라 우리 제출 25건 실측으로 잡았다 — **정상 24건의 0 비율은 2.05~3.25%**,
+**2026-08-15 사고 파일은 97.71%**였다. 실제 0.78459 제출 파일로 통과를, 사고 파일로 차단을
+각각 확인했고, 병리 입력 17종에 대한 dry-run(`remote/dryrun_submission_path.py`)도 통과한다.
+
+아래는 검증기가 보는 것을 사람이 이해하기 위한 설명이며, **손으로 다시 확인할 필요는 없다.**
+
+#### (참고) 검증 항목의 배경
 
 - **덤프 커버리지 확인이 먼저다.** `make_submission_from_dump.py`는 덤프에 없는 문항을 **조용히 0으로**
   채운다. 2026-08-15 스모크 테스트에서 20문항만 덤프했더니 **831행 중 811개가 0인 파일**이 나왔고,
@@ -116,6 +140,7 @@ python -c "import csv; print('문항 수:', sum(1 for _ in csv.DictReader(open('
 
 ## 사전 점검 (전날)
 
+- [ ] **`uv run python remote/dryrun_submission_path.py` 실행 → 17/17 통과 확인** (GPU·vLLM 불필요, 수 초)
 - [ ] `powershell -File aws\start.ps1`로 인스턴스 기동 → **SSH 안 되면 `aws\ensure-ssh.ps1` 먼저** (IP 로테이션) → GPU 인식 확인 (`nvidia-smi`)
 - [ ] `git pull`로 최신 스크립트 확보
 - [ ] 최종 test CSV를 `deep-learning-challenge-2026/`에 배치, 컬럼명(`id`,`question`) 확인
@@ -129,7 +154,7 @@ python -c "import csv; print('문항 수:', sum(1 for _ in csv.DictReader(open('
 - [ ] 계산된 착수 시각에 시작 — 여유가 없으면 `--n 16`으로 즉시 전환(0.2%p 손실, 시간 절반)
 - [ ] 1단계 명령 실행 후 `dump_final.log`에서 "진행 N/<전체>문항" 로그가 정상적으로 늘어나는지 5분 내 확인
 - [ ] 표본 생성 완료(전체/전체) 후 2단계 실행, `results/submission_final.csv` 생성 확인
-- [ ] 3단계 검증 항목(행수·컬럼·정수·결측/중복) 전부 통과 확인
+- [ ] **`remote/validate_submission.py` 실행 → 종료 코드 0 확인** (실패면 제출 금지)
 - [ ] **제출 전 사용자에게 파일 경로·검증 결과 보고하고 명시적 확인 받기** — 자동 제출 절대 금지
 - [ ] 제출 후 `kaggle competitions submissions -c deep-learning-challenge-2026`로 접수 확인
 - [ ] 여유 시간이 남으면(마감 2시간 이상 전) 동일 스택으로 재제출은 하지 않음 — exp34b로 노이즈만 추가될 뿐 개선 근거 없음. 대신 제출 이력·최종 점수를 EXPERIMENTS.md에 기록
@@ -142,4 +167,7 @@ python -c "import csv; print('문항 수:', sum(1 for _ in csv.DictReader(open('
 | 러너/서버 무응답 | AWS API로 재부팅 (SSH 불가해도 가능) → systemd가 러너 자동 기동 |
 | **SSH 접속 timeout** | **먼저 `powershell -File aws\ensure-ssh.ps1`을 실행할 것.** 2026-08-11에 원인이 규명됐다 — 네트워크 차단이 아니라 **ISP의 공인 IP 로테이션**으로 보안그룹 허용에서 이탈하는 것이었다(한 세션 안에서 211.235.66.89 → 58.231.140.230으로 변경). 이 스크립트가 현재 IP를 멱등 재등록한다. 그래도 안 되면 AWS API·ntfy는 별개로 동작하므로 재부팅 경로로 우회 |
 | GPU 메모리 부족 | `--chunk 50`으로 청크 축소 (리허설 최대 95% 사용, 여유 적음) |
-| 시간 부족 | `--n 16`으로 축소 (로컬 75.6% — n32와 0.2%p 차이, 노이즈 안쪽). 망설이지 말 것 — 미제출이 유일한 실패다 |
+| 시간 부족 | `--n 16`으로 축소 (로컬 75.6% — n32와 0.2%p 차이, 노이즈 안쪽). 망설이지 말 것 — 미제출이 유일한 실패다. **재개 중 낮추는 경우 `--force-resume` 필요** |
+| 재개가 거부됨 | 파라미터 지문 불일치다. 에러가 **어느 값이 달라졌는지 그대로 출력**하므로 그것부터 볼 것. 의도한 변경이면 `--force-resume`, 아니면 원래 값으로 재실행 |
+| 제출 검증 실패 | 종료 코드가 0이 아니면 **제출하지 말 것.** 메시지가 원인을 지목한다 — 0이 많으면 덤프 누락, int64 초과면 잘린 풀이에서 나온 거대 정수 |
+| 거대한 정수 답 | 2단계가 자동으로 **범위 안 후보로 재집계**하고 그 문항을 로그에 남긴다. 조치 불필요 |
