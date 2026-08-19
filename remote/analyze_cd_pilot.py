@@ -45,8 +45,10 @@ def shares(ss, gold):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--dump', default='results/cd_pilot.jsonl')
-    ap.add_argument('--strata', default='experiments/exp80a_strata.json')
+    ap.add_argument('--strata', default='experiments/exp80a_strata60.json')
     ap.add_argument('--val', default='results/val_samples.jsonl')
+    ap.add_argument('--lams', type=float, nargs='+', default=None,
+                    help='이 λ들만 비교 (부분 실행 중 완료된 것만 보고 싶을 때)')
     args = ap.parse_args()
 
     gold = {}
@@ -68,6 +70,8 @@ def main():
             continue
         data[d['lam']][d['id']] = d['samples']
 
+    if args.lams:
+        data = {k: v for k, v in data.items() if k in set(args.lams)}
     lams = sorted(data)
     if not lams:
         print('결과 없음')
