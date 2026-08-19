@@ -21,3 +21,4 @@ results/cd_pilot*.jsonl
 results/mti_pilot*.jsonl
 results/reh_samples*
 results/ppv_texts*.jsonl
+results/ppv_emb*.npz
