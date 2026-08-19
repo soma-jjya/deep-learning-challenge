@@ -17,3 +17,6 @@ results/val_tok_*.jsonl
 results/lb_samples*.jsonl
 results/rm_gen_*.jsonl
 results/val_large_*.jsonl
+results/cd_pilot*.jsonl
+results/mti_pilot*.jsonl
+results/reh_samples*
