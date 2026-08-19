@@ -194,38 +194,51 @@ def main():
         return res
 
     os.makedirs('results', exist_ok=True)
-    total = len(todo_q) * len(args.lam)
-    done_n = 0
-    stopped = False
+    # ⚠️ 문항 하나씩 돌리면 배치가 n(=8)에 묶여 GPU가 논다 — 스모크에서 3문항 3.1분이었다.
+    #    **여러 문항의 표본을 한 배치로 묶는다**(좌측 패딩이라 프롬프트 길이가 달라도 된다).
+    #    같은 λ 안에서만 묶는다 — λ가 다르면 점수 계산이 달라지기 때문이다.
+    work = []
+    for lam in args.lam:
+        for pid, q in todo_q:
+            if (pid, lam) in done:
+                continue
+            pr = build_prompt(tok, q)
+            work.extend([(pid, lam, pr)] * args.n)
+    # λ별로 인접하게 정렬(안정 정렬이라 문항 순서는 유지된다)
+    work.sort(key=lambda x: args.lam.index(x[1]))
+    total_seq = len(work)
+    print('생성할 시퀀스 %d개 (배치 %d) — 이미 완료된 것은 제외됨' % (total_seq, args.batch))
+
+    acc = {}
+    n_done_seq = 0
     with open(args.out, 'a', encoding='utf-8') as fo:
-        for lam in args.lam:
-            for pid, q in todo_q:
-                if (pid, lam) in done:
-                    done_n += 1
-                    continue
-                if (time.time() - t0) / 60.0 > args.time_budget_min:
-                    print('⏹ 시간 예산 %.0f분 초과 — 남은 작업을 중단한다 (부분 결과 보존)'
-                          % args.time_budget_min)
-                    stopped = True
-                    break
-                prompts = [build_prompt(tok, q)] * args.n
-                samples = []
-                for s in range(0, args.n, args.batch):
-                    for txt, lp, tr, nt in generate(prompts[s:s + args.batch], lam):
-                        samples.append({'ans': extract_answer(txt), 'logp': lp,
-                                        'trunc': tr, 'len': nt})
-                fo.write(json.dumps({'id': pid, 'lam': lam, 'samples': samples},
-                                    ensure_ascii=False) + chr(10))
-                fo.flush()
-                done_n += 1
-                if done_n % 5 == 0:
-                    el = (time.time() - t0) / 60.0
-                    print('  진행 %d/%d · 경과 %.1f분 · 예상 총 %.1f분'
-                          % (done_n, total, el, el / max(1, done_n) * total), flush=True)
-            if stopped:
+        for s in range(0, len(work), args.batch):
+            if (time.time() - t0) / 60.0 > args.time_budget_min:
+                print('⏹ 시간 예산 %.0f분 초과 — 남은 작업을 중단한다 (부분 결과 보존)'
+                      % args.time_budget_min, flush=True)
                 break
-    print('저장: %s (%d/%d건, 경과 %.1f분)'
-          % (args.out, done_n, total, (time.time() - t0) / 60.0))
+            chunk = work[s:s + args.batch]
+            # 한 배치 안에 λ가 섞이면 안 된다
+            lam = chunk[0][1]
+            chunk = [c for c in chunk if c[1] == lam]
+            for (pid, _, _), (txt, lp, tr, nt) in zip(chunk, generate([c[2] for c in chunk], lam)):
+                acc.setdefault((pid, lam), []).append(
+                    {'ans': extract_answer(txt), 'logp': lp, 'trunc': tr, 'len': nt})
+            n_done_seq += len(chunk)
+            # n개가 모인 문항은 즉시 기록 (중간에 죽어도 보존)
+            for key in [k for k, v in acc.items() if len(v) >= args.n]:
+                fo.write(json.dumps({'id': key[0], 'lam': key[1], 'samples': acc.pop(key)},
+                                    ensure_ascii=False) + chr(10))
+            fo.flush()
+            el = (time.time() - t0) / 60.0
+            print('  시퀀스 %d/%d · 경과 %.1f분 · 예상 총 %.1f분'
+                  % (n_done_seq, total_seq, el, el / max(1, n_done_seq) * total_seq), flush=True)
+        # 남은 조각도 버리지 않는다
+        for key, v in acc.items():
+            fo.write(json.dumps({'id': key[0], 'lam': key[1], 'samples': v,
+                                 'partial': True}, ensure_ascii=False) + chr(10))
+    print('저장: %s (시퀀스 %d/%d, 경과 %.1f분)'
+          % (args.out, n_done_seq, total_seq, (time.time() - t0) / 60.0))
 
 
 if __name__ == '__main__':
