@@ -2366,3 +2366,18 @@ G2(+1>0)는 형식상 통과지만 게이트는 **G1 AND G2**였다. 논문들�
 - 산출: `remote/gen_ppv_texts.py`, `remote/analyze_ppv_geometry.py`,
   `remote/ppv_delegation_test.py`, `results/ppv_texts.jsonl`(로컬 보존, 논문용),
   `results/ppv_emb.npz`
+
+---
+
+# 모델 탐색 동결 선언 (2026-08-19)
+
+> **Model exploration frozen as of 2026-08-19.**
+> 새로운 아이디어가 없어서 중단하는 것이 아니라, 사전등록된 여러 독립 축에서 추가 실험의
+> 기대효용이 최종 제출 안정성보다 낮아졌기 때문에 중단한다.
+
+탐색한 축: generation·SC scaling·SFT/RFT·GRPO·DPO·verifier/reward model·top2 selector·
+system router·family ensemble·confidence dynamics·FFS·prefix confidence·contrastive decoding·
+MTI·EDAS·reasoning geometry — 각 축은 단순 실패가 아니라 **기제 규명**과 함께 닫혔다.
+
+이 커밋이 **release candidate**다. 8/31 전까지 코드 변경 금지. 당일 절차는
+`docs/final-pipeline.md`만 따른다. 최종 제출은 사용자 확인 후에만.
