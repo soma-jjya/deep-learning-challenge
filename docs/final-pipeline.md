@@ -140,6 +140,10 @@ python -c "import csv; print('문항 수:', sum(1 for _ in csv.DictReader(open('
 
 ## 사전 점검 (전날)
 
+- [ ] **최종일 배포·제출 경로 확인 (디스코드/대회 페이지)** — ① test 파일이 어디에 올라오는지
+  ② 제출이 기존 Kaggle 대회 페이지 그대로인지 별도 창구인지 ③ 당일 제출 한도가 평소(5회)와
+  같은지 ④ Kaggle식 "최종 제출 선택"이 필요한지. **런북은 '같은 대회에 제출'을 가정하고
+  있으므로 이 가정이 깨지면 여기서 먼저 드러나야 한다.**
 - [ ] **`uv run python remote/dryrun_submission_path.py` 실행 → 17/17 통과 확인** (GPU·vLLM 불필요, 수 초)
 - [ ] `powershell -File aws\start.ps1`로 인스턴스 기동 → **SSH 안 되면 `aws\ensure-ssh.ps1` 먼저** (IP 로테이션) → GPU 인식 확인 (`nvidia-smi`)
 - [ ] `git pull`로 최신 스크립트 확보
@@ -168,6 +172,7 @@ python -c "import csv; print('문항 수:', sum(1 for _ in csv.DictReader(open('
 | 상황 | 대응 |
 |---|---|
 | 생성 프로세스 사망 | 같은 명령 재실행 → 완료분 건너뛰고 재개 |
+| **인스턴스 시작 실패 (용량 부족)** | ① 몇 분 간격 재시도 ② 안 되면 다른 가용영역에 `aws\launch.ps1`로 새 인스턴스 + `bootstrap.sh` 재구축 (모델 캐시 재다운로드 ~10분, git clone 포함 ~20분) ③ 최후: Kaggle T4×2 노트북 — 속도 2~3배 느리므로 이 경로 확정 즉시 착수하고 `--n 16` |
 | 러너/서버 무응답 | AWS API로 재부팅 (SSH 불가해도 가능) → systemd가 러너 자동 기동 |
 | **SSH 접속 timeout** | **먼저 `powershell -File aws\ensure-ssh.ps1`을 실행할 것.** 2026-08-11에 원인이 규명됐다 — 네트워크 차단이 아니라 **ISP의 공인 IP 로테이션**으로 보안그룹 허용에서 이탈하는 것이었다(한 세션 안에서 211.235.66.89 → 58.231.140.230으로 변경). 이 스크립트가 현재 IP를 멱등 재등록한다. 그래도 안 되면 AWS API·ntfy는 별개로 동작하므로 재부팅 경로로 우회 |
 | GPU 메모리 부족 | `--chunk 50`으로 청크 축소 (리허설 최대 95% 사용, 여유 적음) |
