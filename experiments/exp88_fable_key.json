@@ -1,0 +1,821 @@
+{
+ "train-000854": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 3680,
+  "ours": 3600,
+  "truth": 3680,
+  "note": "E[s^2]=Var+E^2=80+3600"
+ },
+ "train-009014": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 12,
+  "ours": 13,
+  "truth": 12,
+  "note": ""
+ },
+ "train-014422": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 28800,
+  "ours": 30000,
+  "truth": 28800,
+  "note": ""
+ },
+ "train-014215": {
+  "verdict": "UNSURE",
+  "gold": 21586,
+  "ours": 24209,
+  "truth": 21586,
+  "note": "퀴즈형 문제, 수학적 판정 불가"
+ },
+ "train-009924": {
+  "verdict": "BROKEN",
+  "gold": 4,
+  "ours": 2,
+  "truth": null,
+  "note": "deg f(g)=3d=4 정수해 없음 — 숫자 변형이 문제를 깨뜨림"
+ },
+ "train-014105": {
+  "verdict": "BROKEN",
+  "gold": 4,
+  "ours": 2,
+  "truth": null,
+  "note": "cos-sin 변형은 해 없음 (원본 sin+cos, 답6)"
+ },
+ "train-007093": {
+  "verdict": "BOTH_WRONG",
+  "gold": 33,
+  "ours": 11,
+  "truth": 10,
+  "note": "주기27 계산: k=13,26,27 mod 27 -> 10개. gold 33(아마 3배수 버전), 우리 11"
+ },
+ "train-013513": {
+  "verdict": "BROKEN",
+  "gold": 321,
+  "ours": 1,
+  "truth": null,
+  "note": "100은 짝수, 3의 거듭제곱은 홀수 — +2로 도달 불가, 무한 재귀"
+ },
+ "train-000390": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 49,
+  "ours": 52,
+  "truth": 49,
+  "note": "AG*AD=AE*AC -> BC^2=2401"
+ },
+ "train-013511": {
+  "verdict": "BROKEN",
+  "gold": 4,
+  "ours": 3,
+  "truth": null,
+  "note": "TNYWR 릴레이 입력 t가 문제에 없음"
+ },
+ "train-010825": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 409,
+  "ours": 435,
+  "truth": 409,
+  "note": ""
+ },
+ "train-009215": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 3,
+  "ours": 4,
+  "truth": 3,
+  "note": ""
+ },
+ "train-013382": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 18,
+  "ours": 16,
+  "truth": 18,
+  "note": "n=2(8), n=16(36) -> 합18"
+ },
+ "train-002670": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 20503,
+  "ours": 203,
+  "truth": 20503,
+  "note": ""
+ },
+ "train-005631": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 76,
+  "ours": 196,
+  "truth": 196,
+  "note": "(x-5)^2+(y+3)^2=49, r=7, 정사각형 넓이 14^2=196. gold 76 오류"
+ },
+ "train-010673": {
+  "verdict": "AMBIG",
+  "gold": 6,
+  "ours": 3,
+  "truth": null,
+  "note": "다부문항을 정수 하나로 평탄화, 질문 절단"
+ },
+ "train-003733": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 77500,
+  "ours": 171,
+  "truth": 77500,
+  "note": ""
+ },
+ "train-001588": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 9,
+  "ours": 6,
+  "truth": 9,
+  "note": ""
+ },
+ "train-004424": {
+  "verdict": "AMBIG",
+  "gold": 2210,
+  "ours": 2125,
+  "truth": null,
+  "note": "25 times more: x25(2125) vs x26(2210) 언어 중의성"
+ },
+ "train-013850": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 10,
+  "ours": 8,
+  "truth": 10,
+  "note": ""
+ },
+ "train-008250": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 14,
+  "ours": 15,
+  "truth": 14,
+  "note": ""
+ },
+ "train-012248": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 43,
+  "ours": 49,
+  "truth": 43,
+  "note": ""
+ },
+ "train-000738": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 512,
+  "ours": 1,
+  "truth": 512,
+  "note": ""
+ },
+ "train-012548": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 24,
+  "ours": 72,
+  "truth": 24,
+  "note": ""
+ },
+ "train-016375": {
+  "verdict": "BOTH_WRONG",
+  "gold": 16,
+  "ours": 21,
+  "truth": 13,
+  "note": "고도12, area=12λ-(12/25)λ^2 -> γ=12/1, p+q=13. gold 16, 우리 21"
+ },
+ "train-001333": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 148,
+  "ours": 151,
+  "truth": 148,
+  "note": ""
+ },
+ "train-009443": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 6,
+  "ours": 4,
+  "truth": 6,
+  "note": ""
+ },
+ "train-003272": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 20,
+  "ours": 15,
+  "truth": 20,
+  "note": ""
+ },
+ "train-003801": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 49,
+  "ours": 16,
+  "truth": 49,
+  "note": ""
+ },
+ "train-004616": {
+  "verdict": "AMBIG",
+  "gold": 30000,
+  "ours": 25000,
+  "truth": null,
+  "note": "spent의 범위: 지출총액 30000 vs 순지출 25000"
+ },
+ "train-010120": {
+  "verdict": "BROKEN",
+  "gold": 3,
+  "ours": 2,
+  "truth": null,
+  "note": "a=2,b=-6이면 고유값 무리수 — 변형 붕괴 + 복수답 평탄화"
+ },
+ "train-015063": {
+  "verdict": "UNSURE",
+  "gold": 59,
+  "ours": 5,
+  "truth": 59,
+  "note": "문제 텍스트 절단으로 판정 불가"
+ },
+ "train-010238": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 48,
+  "ours": 1,
+  "truth": 48,
+  "note": ""
+ },
+ "train-008514": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 66,
+  "ours": 64,
+  "truth": 64,
+  "note": "24x2+4x4=64. gold 66 불가능(GSM8K 라벨 오류로 알려진 유형)"
+ },
+ "train-012495": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 76,
+  "ours": 148,
+  "truth": 76,
+  "note": "a=30,b=32,c=-6"
+ },
+ "train-016981": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 126,
+  "ours": 252,
+  "truth": 126,
+  "note": ""
+ },
+ "train-007963": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 20,
+  "ours": 25,
+  "truth": 25,
+  "note": "근무 20일+결근 5일=고용 25일. gold 20은 근무일만 센 오독"
+ },
+ "train-004704": {
+  "verdict": "BROKEN",
+  "gold": 3,
+  "ours": 6,
+  "truth": null,
+  "note": "분모 2->1 변형으로 검산 불일치. gold 3은 원본 답"
+ },
+ "train-007935": {
+  "verdict": "GOLD_RIGHT",
+  "gold": -20,
+  "ours": 60,
+  "truth": -20,
+  "note": "n=2m-100"
+ },
+ "train-012152": {
+  "verdict": "BOTH_WRONG",
+  "gold": 17,
+  "ours": 1288,
+  "truth": 143,
+  "note": "C(27,3)C(11,3)/225^3=143/3375 -> m=143. gold 17, 우리 1288"
+ },
+ "train-012963": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 3,
+  "ours": 0,
+  "truth": 3,
+  "note": "P가 꼭짓점 위: 수직접선1 + 점근선평행2 = 3"
+ },
+ "train-010457": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 979,
+  "ours": 10,
+  "truth": 979,
+  "note": ""
+ },
+ "train-001060": {
+  "verdict": "MODEL_RIGHT",
+  "gold": -4,
+  "ours": -3,
+  "truth": -3,
+  "note": "b=-1,f(1)=3,f(-1)=-3. 모델 32/32"
+ },
+ "train-007324": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 4562,
+  "ours": 1,
+  "truth": 4562,
+  "note": ""
+ },
+ "train-000449": {
+  "verdict": "BROKEN",
+  "gold": 10,
+  "ours": 12,
+  "truth": null,
+  "note": "3.5b=43 정수해 없음 — 숫자 변형 붕괴 (gold 10도 검산 불일치)"
+ },
+ "train-015621": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 18215,
+  "ours": 10000,
+  "truth": 18215,
+  "note": ""
+ },
+ "train-003983": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 5,
+  "ours": 6,
+  "truth": 5,
+  "note": ""
+ },
+ "train-006857": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 12,
+  "ours": 0,
+  "truth": 12,
+  "note": ""
+ },
+ "train-002203": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 137,
+  "ours": 0,
+  "truth": 137,
+  "note": ""
+ },
+ "train-016032": {
+  "verdict": "BOTH_WRONG",
+  "gold": 10,
+  "ours": 30,
+  "truth": 0,
+  "note": "M∩B=70을 Bee(90)로 전부 덮기 가능 -> 최소 0. gold 10, 우리 30"
+ },
+ "train-003928": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 5,
+  "ours": 2,
+  "truth": 5,
+  "note": "OM중간선->PF1⊥PF2, 4k/3k/2a=k -> e=5"
+ },
+ "train-003890": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 17,
+  "ours": 20,
+  "truth": 17,
+  "note": ""
+ },
+ "train-004263": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 2,
+  "ours": 12,
+  "truth": 2,
+  "note": ""
+ },
+ "train-010744": {
+  "verdict": "BROKEN",
+  "gold": 16320,
+  "ours": 15000,
+  "truth": null,
+  "note": "2% undecided 추가가 비정합, gold=16000x1.02 기계적 적용"
+ },
+ "train-001488": {
+  "verdict": "AMBIG",
+  "gold": 3,
+  "ours": 25,
+  "truth": null,
+  "note": "다부/절단"
+ },
+ "train-001595": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 10,
+  "ours": 12,
+  "truth": 12,
+  "note": "B=11인 진법은 12 필수. gold 10은 불가능. 모델 32/32"
+ },
+ "train-015466": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 5,
+  "ours": 2,
+  "truth": 5,
+  "note": ""
+ },
+ "train-013950": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 1116,
+  "ours": 95924,
+  "truth": 1116,
+  "note": "P=1-5/16=11/16 -> 1116"
+ },
+ "train-001006": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 52,
+  "ours": 38,
+  "truth": 52,
+  "note": ""
+ },
+ "train-005933": {
+  "verdict": "UNSURE",
+  "gold": 403,
+  "ours": 203,
+  "truth": 403,
+  "note": "질문 절단"
+ },
+ "train-006242": {
+  "verdict": "BOTH_WRONG",
+  "gold": 41,
+  "ours": 35,
+  "truth": 37,
+  "note": "제곱31+세제곱9-6제곱3=37 (4제곱은 제곱의 부분집합). gold 41, 우리 35"
+ },
+ "train-012736": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 40,
+  "ours": 50,
+  "truth": 40,
+  "note": ""
+ },
+ "train-016865": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 329,
+  "ours": 2520,
+  "truth": 329,
+  "note": ""
+ },
+ "train-002796": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 2873,
+  "ours": 2872,
+  "truth": 2872,
+  "note": "f(12)=2872 점화식 검산. gold 2873은 off-by-one"
+ },
+ "train-005480": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 0,
+  "ours": 1,
+  "truth": 1,
+  "note": "지수 mod5: 3·1+2(-1)=1. gold 0 오류"
+ },
+ "train-002092": {
+  "verdict": "AMBIG",
+  "gold": 11,
+  "ours": 32,
+  "truth": null,
+  "note": "절단·비정합 수정"
+ },
+ "train-010277": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 2,
+  "ours": 16,
+  "truth": 16,
+  "note": "z=2 -> z^4=16. gold 2는 원본(합=1)의 답"
+ },
+ "train-012360": {
+  "verdict": "UNSURE",
+  "gold": 30,
+  "ours": 40,
+  "truth": 30,
+  "note": "질문 절단"
+ },
+ "train-001652": {
+  "verdict": "UNSURE",
+  "gold": 10,
+  "ours": 8,
+  "truth": 10,
+  "note": "긴 열거 필요 — 미판정"
+ },
+ "train-008665": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 4,
+  "ours": 2,
+  "truth": 4,
+  "note": ""
+ },
+ "train-005383": {
+  "verdict": "AMBIG",
+  "gold": 70,
+  "ours": 120,
+  "truth": null,
+  "note": "30 more each month 중의성 70/120"
+ },
+ "train-004153": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 23,
+  "ours": 7,
+  "truth": 23,
+  "note": ""
+ },
+ "train-011053": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 19,
+  "ours": 100,
+  "truth": 19,
+  "note": "T=25,b=6,n=19 자기일관"
+ },
+ "train-012567": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 36,
+  "ours": 144,
+  "truth": 144,
+  "note": "C(18,2)-9=144. gold 36 오류"
+ },
+ "train-007810": {
+  "verdict": "BROKEN",
+  "gold": 72,
+  "ours": 212427,
+  "truth": null,
+  "note": "답이 패턴(목록)인 질문 — 정수 하나로 답할 수 없음"
+ },
+ "train-002544": {
+  "verdict": "UNSURE",
+  "gold": 318,
+  "ours": 6,
+  "truth": 318,
+  "note": "질문 절단"
+ },
+ "train-002930": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 3,
+  "ours": 100,
+  "truth": 3,
+  "note": ""
+ },
+ "train-000798": {
+  "verdict": "AMBIG",
+  "gold": 54,
+  "ours": 46,
+  "truth": null,
+  "note": "질문 절단 — 묻는 대상 불명"
+ },
+ "train-003479": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 91,
+  "ours": 143,
+  "truth": 91,
+  "note": "1001=7·11·13, d≤100 최대 91"
+ },
+ "train-006439": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 414720,
+  "ours": 829440,
+  "truth": 829440,
+  "note": "4!·4!·3!·5!·2!=829440. gold은 토끼 2! 누락"
+ },
+ "train-002755": {
+  "verdict": "AMBIG",
+  "gold": 18,
+  "ours": 4,
+  "truth": null,
+  "note": "증명 문제를 상수로 평탄화, R 미지정 (gold=18R^4의 R=1 가정)"
+ },
+ "train-008551": {
+  "verdict": "BOTH_WRONG",
+  "gold": 340,
+  "ours": 11,
+  "truth": 78,
+  "note": "최소합: L+4(L-10)=350 -> L=78. gold 340, 우리 11"
+ },
+ "train-015798": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 2018,
+  "ours": 2019,
+  "truth": 2018,
+  "note": "요일 이동 +1/+2 계산"
+ },
+ "train-004040": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 384,
+  "ours": 96,
+  "truth": 96,
+  "note": "마름모 대각선 8,24 -> 96. gold 384 오류"
+ },
+ "train-007464": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 52,
+  "ours": 99,
+  "truth": 52,
+  "note": ""
+ },
+ "train-006645": {
+  "verdict": "BROKEN",
+  "gold": 203,
+  "ours": 451,
+  "truth": null,
+  "note": "EF=AB/2 변형이 uv=0 퇴화 강제 — 해 없음 (원본 AIME 900/400)"
+ },
+ "train-009060": {
+  "verdict": "BROKEN",
+  "gold": 407,
+  "ours": 901,
+  "truth": null,
+  "note": "판별식 (4√3-9)/3<0 — 실해 없음"
+ },
+ "train-009188": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 40,
+  "ours": 30,
+  "truth": 30,
+  "note": "속도 3/4 -> 시간 4/3: t+4t/3=70 -> 30. gold 40은 GSM8K 원본의 물리 오류"
+ },
+ "train-014993": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 948,
+  "ours": 1,
+  "truth": 948,
+  "note": ""
+ },
+ "train-001734": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 144,
+  "ours": 153,
+  "truth": 144,
+  "note": ""
+ },
+ "train-016962": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 89,
+  "ours": 74,
+  "truth": 74,
+  "note": "125-45-6=74. 모델 32/32. gold 89 오류"
+ },
+ "train-011506": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 126,
+  "ours": 252,
+  "truth": 126,
+  "note": ""
+ },
+ "train-012621": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 300,
+  "ours": 200,
+  "truth": 300,
+  "note": ""
+ },
+ "train-004688": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 561,
+  "ours": 2004,
+  "truth": 561,
+  "note": ""
+ },
+ "train-008421": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 1510,
+  "ours": 1006,
+  "truth": 1510,
+  "note": ""
+ },
+ "train-006932": {
+  "verdict": "UNSURE",
+  "gold": 89760,
+  "ours": 8,
+  "truth": 89760,
+  "note": "번역 모호 — 미판정"
+ },
+ "train-015233": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 8634,
+  "ours": 334,
+  "truth": 8634,
+  "note": ""
+ },
+ "train-003778": {
+  "verdict": "MODEL_RIGHT",
+  "gold": 18,
+  "ours": 6,
+  "truth": 6,
+  "note": "17x≡18 mod28, 역원5 -> x=6 검산 285≡5 ✓. gold 18 오류"
+ },
+ "train-004364": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 132,
+  "ours": 12,
+  "truth": 132,
+  "note": "a>0: Σ⌈d(m)/2⌉=108 + a=0 선형 24 = 132"
+ },
+ "train-012673": {
+  "verdict": "BROKEN",
+  "gold": 4,
+  "ours": 1,
+  "truth": null,
+  "note": "릴레이 입력 a 부재 (I4.2)"
+ },
+ "train-005508": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 103,
+  "ours": 102,
+  "truth": 103,
+  "note": ""
+ },
+ "train-013974": {
+  "verdict": "AMBIG",
+  "gold": -220,
+  "ours": -221,
+  "truth": null,
+  "note": "경계 -221(모델) vs 정수최소 -220(gold) — 열린구간이라 실수 최솟값 없음"
+ },
+ "train-013782": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 17,
+  "ours": 1003,
+  "truth": 17,
+  "note": ""
+ },
+ "train-007939": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 44,
+  "ours": 132,
+  "truth": 44,
+  "note": "|B-C|/2=6,|A-C|/2=18 -> C=44"
+ },
+ "train-016194": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 1,
+  "ours": 13,
+  "truth": 1,
+  "note": ""
+ },
+ "train-008220": {
+  "verdict": "AMBIG",
+  "gold": 1,
+  "ours": 3,
+  "truth": null,
+  "note": "다부/절단"
+ },
+ "train-012468": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 6455,
+  "ours": 2011,
+  "truth": 6455,
+  "note": "자릿수 증가 구간 누적 555 -> 5000+1455"
+ },
+ "train-015082": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 11,
+  "ours": 10,
+  "truth": 11,
+  "note": "|x|=1 또는 a, 사다리꼴 a^2-1=120"
+ },
+ "train-016056": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 135,
+  "ours": 96,
+  "truth": 135,
+  "note": ""
+ },
+ "train-011158": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 1520,
+  "ours": 480,
+  "truth": 1520,
+  "note": ""
+ },
+ "train-006381": {
+  "verdict": "BROKEN",
+  "gold": 29,
+  "ours": 47,
+  "truth": null,
+  "note": "x≡5(6)->x≡2(3) vs x≡7(9)->x≡1(3) 모순 — 합동식 비정합"
+ },
+ "train-009539": {
+  "verdict": "BROKEN",
+  "gold": 13,
+  "ours": 9,
+  "truth": null,
+  "note": "17Δ=77 비정수 — 변형이 정수해 파괴"
+ },
+ "train-003713": {
+  "verdict": "BOTH_WRONG",
+  "gold": 16200,
+  "ours": 9000,
+  "truth": null,
+  "note": "4자리 수는 총 9000개인데 gold 16200 — 정의상 불가능. 우리 9000(전부)도 오답"
+ },
+ "train-014564": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 2133,
+  "ours": 2008,
+  "truth": 2133,
+  "note": "1004(2a+2007)=제곱 -> k=3, a=126"
+ },
+ "train-008621": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 24,
+  "ours": 700,
+  "truth": 24,
+  "note": ""
+ },
+ "train-014159": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 720,
+  "ours": 30,
+  "truth": 720,
+  "note": "인접쌍 고정=회전군 소멸 -> 6!"
+ },
+ "train-002178": {
+  "verdict": "GOLD_RIGHT",
+  "gold": 2660,
+  "ours": 473,
+  "truth": 2660,
+  "note": "(729-64)x4"
+ }
+}

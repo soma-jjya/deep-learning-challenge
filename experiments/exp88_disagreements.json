@@ -1,0 +1,1055 @@
+[
+ {
+  "id": "train-000854",
+  "gold": 3680,
+  "ours": 3600,
+  "votes": "3600×4 3680×3 4820×2 3427×1",
+  "gold_votes": 3,
+  "top1_n": 4,
+  "q": "On a blackboard a stranger writes the values of $s_{7}(n)^{2}$ for $n=0,1, \\ldots, 7^{20}-1$, where $s_{7}(n)$ denotes the sum of digits of $n$ in base 7 . Compute the average value of all the numbers on the board."
+ },
+ {
+  "id": "train-009014",
+  "gold": 12,
+  "ours": 13,
+  "votes": "13×21 9×3 15×2 16×2",
+  "gold_votes": 1,
+  "top1_n": 21,
+  "q": "Consider a $5 \\times 5$ grid of squares. Vladimir colors some of these squares red, such that the centers of any four red squares do not form an axis-parallel rectangle (i.e. a rectangle whose sides are parallel to those of the squares). What is the maximum number of squares he could have colored red?"
+ },
+ {
+  "id": "train-014422",
+  "gold": 28800,
+  "ours": 30000,
+  "votes": "30000×19 27550×7 600×2 2500×1",
+  "gold_votes": 0,
+  "top1_n": 19,
+  "q": "In the \"Joy Tonight\" program, a TV station took out two mailboxes, which contained letters from audiences who performed well in two consecutive quizzes. There are 30 letters in mailbox A and 20 letters in mailbox B. Now, the host draws lots to determine the lucky audience. If one lucky star is determined first, and then one lucky partner is determined from each mailbox, how many different outcomes are there?"
+ },
+ {
+  "id": "train-014215",
+  "gold": 21586,
+  "ours": 24209,
+  "votes": "24209×2 28586×1 24046×1 8086×1",
+  "gold_votes": 0,
+  "top1_n": 2,
+  "q": "Three of the below entries, with labels $a$, $b$, $c$, are blatantly incorrect (in the United States).  What is $a^2+b^2+c^2$?  041. The Gentleman's Alliance Cross 042. Glutamine (an amino acid) 051. Grant Nelson and Norris Windross 052. A compact region at the center of a galaxy 061. The value of \\verb+'wat'-1+. (See \\url{https://www.destroyallsoftware.com/talks/wat}.) 062. Threonine (an amino acid) 071. Nintendo Gamecube 072. Methane and other gases are compressed 081. A prank or trick 082. Three carbons 091. Australia's second largest local government area 092. Angoon Seaplane Base 101. A compressed archive file format 102. Momordica cochinchinensis 111. Gentaro Takahashi 112. Nat Geo 121. Ante Christum Natum 122. The supreme Siberian god of death 131. Gnu C Compiler 132. My TeX Shortcut for $\\angle$."
+ },
+ {
+  "id": "train-009924",
+  "gold": 4,
+  "ours": 2,
+  "votes": "2×20 1×6 4×5 3×1",
+  "gold_votes": 5,
+  "top1_n": 20,
+  "q": "Suppose $f$ and $g$ are polynomials, and that $h(x)=f(g(x)) - g(x)$. Find the degree of $g(x)$ given that the degree of $h(x)$ is $4$ and the degree of $f(x)$ is $3$."
+ },
+ {
+  "id": "train-014105",
+  "gold": 4,
+  "ours": 2,
+  "votes": "8×9 2×9 4×9 24×1",
+  "gold_votes": 9,
+  "top1_n": 9,
+  "q": "Find the positive integer $n$ such that \\[\\cos \\left( \\frac{\\pi}{2n} \\right) - \\sin \\left (\\frac{\\pi}{2n} \\right) = \\frac{\\sqrt{n}}{2}.\\]"
+ },
+ {
+  "id": "train-007093",
+  "gold": 33,
+  "ours": 11,
+  "votes": "11×12 0×2 30×2 45×1",
+  "gold_votes": 1,
+  "top1_n": 12,
+  "q": "Let $b_n$ be the number obtained by writing the squares of integers from 1 to $n$ consecutively. For example, $b_3 = 149$ (since $1^2 = 1$, $2^2 = 4$, $3^2 = 9$). For $1 \\le k \\le 100$, how many $b_k$ are divisible by 9?"
+ },
+ {
+  "id": "train-013513",
+  "gold": 321,
+  "ours": 1,
+  "votes": "1×6 5×4 276×4 11×2",
+  "gold_votes": 0,
+  "top1_n": 6,
+  "q": "Define a function $f(x),$ for positive integer values of $x,$ by \\[f(x) = \\left\\{\\begin{aligned} \\log_3 x & \\quad \\text{ if } \\log_3 x \\text{ is an integer} \\\\ 1 + f(x + 2) & \\quad \\text{ otherwise}. \\end{aligned} \\right.\\] Compute $f(100).$"
+ },
+ {
+  "id": "train-000390",
+  "gold": 49,
+  "ours": 52,
+  "votes": "52×15 40×8 41×3 51×2",
+  "gold_votes": 0,
+  "top1_n": 15,
+  "q": "In $\\triangle ABC, D$ and $E$ are the midpoints of $BC$ and $CA$, respectively. $AD$ and $BE$ intersect at $G$. Given that $GEC$D is cyclic, $AB=41$, and $AC=31$, compute $BC$."
+ },
+ {
+  "id": "train-013511",
+  "gold": 4,
+  "ours": 3,
+  "votes": "3×19 0×6 4×4 1×3",
+  "gold_votes": 4,
+  "top1_n": 19,
+  "q": "Let $t$ be TNYWR.  The lines with equations $y=13$ and $y=3 x+t$ intersect at the point $(a, b)$. What is the value of $a$ ?"
+ },
+ {
+  "id": "train-010825",
+  "gold": 409,
+  "ours": 435,
+  "votes": "435×19 29×2 409×2 870×2",
+  "gold_votes": 2,
+  "top1_n": 19,
+  "q": "Thirty teams play a tournament in which every team plays every other team exactly once. No ties occur, and each team has a 50% chance of winning any game it plays. The probability that no two teams win the same number of games is $\\frac{m}{n}$, where $m$ and $n$ are relatively prime positive integers. Find $\\log_2 n$."
+ },
+ {
+  "id": "train-009215",
+  "gold": 3,
+  "ours": 4,
+  "votes": "4×12 5×3 10×2 3×1",
+  "gold_votes": 1,
+  "top1_n": 12,
+  "q": "\\section*{Problem 4 - 041024}  The path from place A to place B is 11.5 km long and first goes uphill, then runs at the same level, and finally goes downhill. A pedestrian who walked from A to B covered this distance in 2 hours 54 minutes.  For the return trip on the same route, he needed \\(3 \\mathrm{~h} 6 \\mathrm{~min}\\). He walked uphill at a speed of \\(3 \\frac{\\mathrm{km}}{\\mathrm{h}}\\), on the middle section at a speed of \\(4 \\frac{\\mathrm{km}}{\\mathrm{h}}\\), and downhill at \\(5 \\frac{\\mathrm{km}}{\\mathrm{h}}\\).  How long are the individual sections, assuming that on each section the respective speed was constant?"
+ },
+ {
+  "id": "train-013382",
+  "gold": 18,
+  "ours": 16,
+  "votes": "16×10 2×7 9×3 1×2",
+  "gold_votes": 0,
+  "top1_n": 10,
+  "q": "Compute the sum of all positive integers $n$ for which $9 \\sqrt{n}+4 \\sqrt{n+2}-3 \\sqrt{n+16}$ is an integer."
+ },
+ {
+  "id": "train-002670",
+  "gold": 20503,
+  "ours": 203,
+  "votes": "203×16 1×10 202×2 200×1",
+  "gold_votes": 0,
+  "top1_n": 16,
+  "q": "Compute the number of sequences of integers $(a_{1}, \\ldots, a_{200})$ such that the following conditions hold. - $0 \\leq a_{1}<a_{2}<\\cdots<a_{200} \\leq 202$. - There exists a positive integer $N$ with the following property: for every index $i \\in\\{1, \\ldots, 200\\}$ there exists an index $j \\in\\{1, \\ldots, 200\\}$ such that $a_{i}+a_{j}-N$ is divisible by 203."
+ },
+ {
+  "id": "train-005631",
+  "gold": 76,
+  "ours": 196,
+  "votes": "196×24 200×7 236×1",
+  "gold_votes": 0,
+  "top1_n": 24,
+  "q": "The circle $x^2 = -y^2 + 10x - 6y + 15$ is inscribed inside a square which has a pair of sides parallel to the y-axis. What is the area of the square?"
+ },
+ {
+  "id": "train-010673",
+  "gold": 6,
+  "ours": 3,
+  "votes": "3×10 6×7 4×3 1×2",
+  "gold_votes": 7,
+  "top1_n": 10,
+  "q": "Consider the ellipse $E: \\frac{x^2}{a^2} + \\frac{y^2}{b^2} = 1 (a > b > 0)$ with left and right foci $F_1, F_2$, an eccentricity of $\\frac{1}{2}$, and $P$ as its upper vertex. The area of the incircle of $\\triangle F_1PF_2$ is $\\frac{\\pi}{3}$.  (1) Find the equation of $E$;  (2) Lines $l_1$ and $l_2$ pass through $F_1$ and $F_2$, respectively, intersecting $E$ at points $A, C$ and $B, D$, respectively, with $l_1 \\perp l_2$. Find the range of possible values for the area of quadrilateral $ABCD$."
+ },
+ {
+  "id": "train-003733",
+  "gold": 77500,
+  "ours": 171,
+  "votes": "171×7 189×4 153×3 2730×1",
+  "gold_votes": 0,
+  "top1_n": 7,
+  "q": "The function $f: \\mathbb{Z}^{2} \\rightarrow \\mathbb{Z}$ satisfies - $f(x, 0)=f(0, y)=0$, and - $f(x, y)=f(x-1, y)+f(x, y-1)+x+y$ for all nonnegative integers $x$ and $y$. Find $f(6,12)$."
+ },
+ {
+  "id": "train-001588",
+  "gold": 9,
+  "ours": 6,
+  "votes": "6×11 9×8 13×5 5×2",
+  "gold_votes": 8,
+  "top1_n": 11,
+  "q": "How many positive integers \\( n \\) between 10 and 1000 have the property that the sum of the digits of \\( n \\) is 3?"
+ },
+ {
+  "id": "train-004424",
+  "gold": 2210,
+  "ours": 2125,
+  "votes": "2125×28 2210×4",
+  "gold_votes": 4,
+  "top1_n": 28,
+  "q": "Riku has 25 times more stickers than Kristoff. If Kristoff has 85 stickers, how many stickers does Riku have?"
+ },
+ {
+  "id": "train-013850",
+  "gold": 10,
+  "ours": 8,
+  "votes": "8×7 7×5 11×5 10×3",
+  "gold_votes": 3,
+  "top1_n": 7,
+  "q": "3. (1991 Japan Mathematical Olympiad) $n$ is a non-negative integer, determined by $f(0)=0, f(1)=1, f(n)=$ $f\\left(\\left[\\frac{n}{2}\\right]\\right)+n-2\\left[\\frac{n}{2}\\right]$. Find the maximum value of $f(n)$ when $0 \\leqslant n \\leqslant 1991$. (Here $[x]$ denotes the greatest integer not exceeding $x$)"
+ },
+ {
+  "id": "train-008250",
+  "gold": 14,
+  "ours": 15,
+  "votes": "15×8 9×5 14×5 12×3",
+  "gold_votes": 5,
+  "top1_n": 8,
+  "q": "Let $T=2018$, and append the digits of $T$ to $\\underline{A} \\underline{A} \\underline{B}$ (for example, if $T=17$, then the result would be $\\underline{1} \\underline{\\underline{A}} \\underline{A} \\underline{B}$ ). If the resulting number is divisible by 11 , compute the largest possible value of $A+B$."
+ },
+ {
+  "id": "train-012248",
+  "gold": 43,
+  "ours": 49,
+  "votes": "49×8 14×6 13×4 42×3",
+  "gold_votes": 1,
+  "top1_n": 8,
+  "q": "A lame king is a chess piece that can move from a cell to any cell that shares at least one vertex with it, except for the cells in the same column as the current cell. A lame king is placed in the top-left cell of a $7 \\times 7$ grid. Compute the maximum number of cells it can visit without visiting the same cell twice (including its starting cell)."
+ },
+ {
+  "id": "train-000738",
+  "gold": 512,
+  "ours": 1,
+  "votes": "1×19 92378×7 3628800×2 10×2",
+  "gold_votes": 0,
+  "top1_n": 19,
+  "q": "Let $x_1, x_2, \\ldots, x_{10}$ be a permutation of $1, 2, \\ldots, 10$. Find the number of different permutations such that for any positive integers $m, n$ with $1 \\leq m < n \\leq 10$, the inequality $x_m + m \\leq x_n + n$ holds."
+ },
+ {
+  "id": "train-012548",
+  "gold": 24,
+  "ours": 72,
+  "votes": "72×7 24×6 -6×2 42×2",
+  "gold_votes": 6,
+  "top1_n": 7,
+  "q": "Prudence was starting a cupcake business.  She figured that each cupcake cost $0.75 to make.  The first 2 dozen that she made burnt and she had to throw them out.  The next 2 came out perfectly and she ended up eating 5 cupcakes right away.  Later that day she made 2 more dozen cupcakes and decided to eat 4 more. If she sells the remaining cupcakes at $2.00 each, how much is her net profit?"
+ },
+ {
+  "id": "train-016375",
+  "gold": 16,
+  "ours": 21,
+  "votes": "21×10 63×7 16×3 1×3",
+  "gold_votes": 3,
+  "top1_n": 10,
+  "q": "In triangle $DEF$, the side lengths are $DE = 15$, $EF = 20$, and $FD = 25$. A rectangle $WXYZ$ has vertex $W$ on $\\overline{DE}$, vertex $X$ on $\\overline{DF}$, and vertices $Y$ and $Z$ on $\\overline{EF}$. Letting $WX = \\lambda$, the area of $WXYZ$ can be expressed as the quadratic polynomial \\[Area(WXYZ) = \\gamma \\lambda - \\delta \\lambda^2.\\] Then the coefficient $\\gamma = \\frac{p}{q}$, where $p$ and $q$ are relatively prime positive integers. Find $p+q$."
+ },
+ {
+  "id": "train-001333",
+  "gold": 148,
+  "ours": 151,
+  "votes": "151×6 144×3 163×2 159×2",
+  "gold_votes": 1,
+  "top1_n": 6,
+  "q": "Evaluate $$\\lceil\\sqrt{5}\\rceil + \\lceil\\sqrt{6}\\rceil + \\lceil\\sqrt{7}\\rceil + \\cdots + \\lceil\\sqrt{35}\\rceil$$Note: For a real number $x,$ $\\lceil x \\rceil$ denotes the smallest integer that is greater than or equal to $x.$"
+ },
+ {
+  "id": "train-009443",
+  "gold": 6,
+  "ours": 4,
+  "votes": "4×8 2×6 8×3 16×3",
+  "gold_votes": 1,
+  "top1_n": 8,
+  "q": "Let \\(ABCDEF\\) be a regular hexagon and let point \\(O\\) be the center of the hexagon. How many ways can you color these seven points either red or blue such that there doesn't exist any equilateral triangle with vertices of all the same color?"
+ },
+ {
+  "id": "train-003272",
+  "gold": 20,
+  "ours": 15,
+  "votes": "15×6 14×4 24×4 23×4",
+  "gold_votes": 0,
+  "top1_n": 6,
+  "q": "The integers $1,2,4,5,6,9,10,11,13$ are to be placed in the circles and squares below with one number in each shape. Each integer must be used exactly once and the integer in each circle must be equal to the sum of the integers in the two neighbouring squares. If the integer $x$ is placed in the leftmost square and the integer $y$ is placed in the rightmost square, what is the largest possible value of $x+y$?"
+ },
+ {
+  "id": "train-003801",
+  "gold": 49,
+  "ours": 16,
+  "votes": "16×23 4×4 64×3 28×1",
+  "gold_votes": 0,
+  "top1_n": 23,
+  "q": "In a $16 \\times 16$ table of integers, each row and column contains at most 4 distinct integers. What is the maximum number of distinct integers that there can be in the whole table?"
+ },
+ {
+  "id": "train-004616",
+  "gold": 30000,
+  "ours": 25000,
+  "votes": "25000×23 15000×3 30000×2 45000×1",
+  "gold_votes": 2,
+  "top1_n": 23,
+  "q": "If Jim purchases a wedding ring for $10,000 and buys a ring for his wife that is twice the value of the first ring, and then sells the first ring for half its original value, what is the total amount of money he spent?"
+ },
+ {
+  "id": "train-010120",
+  "gold": 3,
+  "ours": 2,
+  "votes": "2×29 -7×1 -4×1 -3×1",
+  "gold_votes": 0,
+  "top1_n": 29,
+  "q": "Given the matrix $M= \\begin{bmatrix} 1 & a \\\\ -1 & b\\end{bmatrix}$, the point $(1, -1)$ is transformed to the point $(-1, 5)$ under the transformation corresponding to $M$. Find the eigenvalues of the matrix $M$."
+ },
+ {
+  "id": "train-015063",
+  "gold": 59,
+  "ours": 5,
+  "votes": "5×10 59×3 6×3 30×2",
+  "gold_votes": 3,
+  "top1_n": 10,
+  "q": "3. Let's say you have two bank cards for making purchases: a debit card and a credit card. Today, at the beginning of the month, you decided to buy airline tickets for 12,000 rubles. If you pay for the purchase with a credit card (the credit limit allows it), you will have to return the money to the bank in $\\mathrm{N}$ days to avoid going beyond the grace period, during which you can repay the credit for free. In this case, the bank will pay a cashback of $1 \\%$ of the purchase amount after 1 month. If you pay for the purchase with a debit card (there is more than enough money on the card), you will receive a cashback of $2 \\%$ of the purchase amount after 1 month. It is known that the annual interest rate on the average monthly balance of funds on the debit card is $6 \\%$ per year (for simplicity, assume that each month has 30 days, interest on the card is paid at the end of each month, and interest earned on the balance is not capitalized). Determine the maximum number of days $\\mathrm{N}$, under equal conditions, for which it is more profitable to pay for this purchase of airline tickets with a debit card. (15 points)"
+ },
+ {
+  "id": "train-010238",
+  "gold": 48,
+  "ours": 1,
+  "votes": "1×10 52×4 50×3 2×3",
+  "gold_votes": 0,
+  "top1_n": 10,
+  "q": "Consider a $25 \\times 25$ grid of unit squares. Draw with a red pen contours of squares of any size on the grid. What is the minimal number of squares we must draw in order to colour all the lines of the grid?"
+ },
+ {
+  "id": "train-008514",
+  "gold": 66,
+  "ours": 64,
+  "votes": "64×21 68×4 48×3 52×1",
+  "gold_votes": 0,
+  "top1_n": 21,
+  "q": "Students at Highridge High earn 2 points for each correct answer during a quiz bowl If a student correctly answers all the questions in a round, the student is awarded an additional 4 point bonus. They played a total of five rounds each consisting of five questions. If James only missed one question, how many points did he get?"
+ },
+ {
+  "id": "train-012495",
+  "gold": 76,
+  "ours": 148,
+  "votes": "148×8 151×7 150×6 152×4",
+  "gold_votes": 0,
+  "top1_n": 8,
+  "q": "Let $a,$ $b,$ and $c$ be constants, and suppose that the inequality \\[\\frac{(x-a)(x-b)}{x-c} \\le 0\\] is true if and only if either $x < -6$ or $|x-31| \\le 1.$ Given that $a < b,$ find the value of $a + 2b + 3c.$"
+ },
+ {
+  "id": "train-016981",
+  "gold": 126,
+  "ours": 252,
+  "votes": "252×16 462×8 126×4 42×2",
+  "gold_votes": 4,
+  "top1_n": 16,
+  "q": "Matt wants to arrange five identical, dotless dominoes on a 6 by 5 grid in such a way that a path forms from the upper left-hand corner \\( A \\) to the lower right-hand corner \\( B \\). Each domino covers two adjacent horizontal or vertical cells. The path must consist of movements to the right or downward, and consecutive dominoes must touch at their sides. No domino can be placed diagonally. How many distinct domino arrangements, including disjoint and overlapping paths, are possible?"
+ },
+ {
+  "id": "train-007963",
+  "gold": 20,
+  "ours": 25,
+  "votes": "25×25 20×7",
+  "gold_votes": 7,
+  "top1_n": 25,
+  "q": "A labourer was engaged for some days on the condition that for every day he works, he will be paid Rs. 2 and for every day he is absent, he will be fined 50 p. He received only Rs. 37.50 and was absent for 5 days. How many days was he engaged for?"
+ },
+ {
+  "id": "train-004704",
+  "gold": 3,
+  "ours": 6,
+  "votes": "6×13 2×6 9×4 4×4",
+  "gold_votes": 3,
+  "top1_n": 13,
+  "q": "The quadratic $2x^2 + 6x + c$ has roots in the form of $x = \\frac{-3 \\pm \\sqrt{c}}{1}$. What is the value of $c$?"
+ },
+ {
+  "id": "train-007935",
+  "gold": -20,
+  "ours": 60,
+  "votes": "60×15 20×11 40×6",
+  "gold_votes": 0,
+  "top1_n": 15,
+  "q": "Kovaldzhi A.k.  A hundred people answered the question: \"Will the new president be better than the previous one?\" Of them, $a$ people think it will be better, $b$ - that it will be the same, and $c$ - that it will be worse. Sociologists constructed two \"optimism\" indicators of the respondents: $m=a+b / 2$ and $n=a-c$. It turned out that $m=40$. Find $n$."
+ },
+ {
+  "id": "train-012152",
+  "gold": 17,
+  "ours": 1288,
+  "votes": "1288×5 161×4 1×4 143×2",
+  "gold_votes": 1,
+  "top1_n": 5,
+  "q": "Let \\( S \\) be the set of positive integer divisors of \\( 24^8 \\). Three numbers are chosen independently and at random with replacement from the set \\( S \\) and labeled \\( a_1, a_2, \\) and \\( a_3 \\) in the order they are chosen. The probability that both \\( a_1 \\) divides \\( a_2 \\) and \\( a_2 \\) divides \\( a_3 \\) is \\( \\frac{m}{n} \\), where \\( m \\) and \\( n \\) are relatively prime positive integers. Find \\( m \\)."
+ },
+ {
+  "id": "train-012963",
+  "gold": 3,
+  "ours": 0,
+  "votes": "0×11 1×11 2×8 4×1",
+  "gold_votes": 1,
+  "top1_n": 11,
+  "q": "Given a point $P(\\frac{1}{2},0)$, determine the number of lines passing through point $P$ that intersect the hyperbola $4x^{2}-y^{2}=1$ at only one point."
+ },
+ {
+  "id": "train-010457",
+  "gold": 979,
+  "ours": 10,
+  "votes": "202×2 121×2 323×2 10×2",
+  "gold_votes": 2,
+  "top1_n": 2,
+  "q": "1. A palindrome is a number that reads the same from left to right and from right to left. For example, the numbers 333 and $4884-$ are palindromes. It is known that a three-digit number $x$ is a palindrome. To it, 22 was added and a four-digit number was obtained, which is also a palindrome. Find $x$."
+ },
+ {
+  "id": "train-001060",
+  "gold": -4,
+  "ours": -3,
+  "votes": "-3×32",
+  "gold_votes": 0,
+  "top1_n": 32,
+  "q": "Let $f(x)$ be an odd function defined on $\\mathbb{R}$ such that for $x \\geq 0$, $f(x) = 2^x + 2x + b$ where $b$ is a constant. Find the value of $f(-1)$."
+ },
+ {
+  "id": "train-007324",
+  "gold": 4562,
+  "ours": 1,
+  "votes": "2×2 1×2 670×2 31×2",
+  "gold_votes": 0,
+  "top1_n": 2,
+  "q": "22**. In how many ways can you make up a ruble using coins of 1, 2, 5, 10, 20, and 50 kopecks?"
+ },
+ {
+  "id": "train-000449",
+  "gold": 10,
+  "ours": 12,
+  "votes": "12×29 13×3",
+  "gold_votes": 0,
+  "top1_n": 29,
+  "q": "Mrs. Taylor's kindergarten class has 40 students. The number of students with blond hair is 2.5 times the number of students with blue eyes. There are 8 students with both blond hair and blue eyes, and 5 students with neither blond hair nor blue eyes. How many students have blue eyes?"
+ },
+ {
+  "id": "train-015621",
+  "gold": 18215,
+  "ours": 10000,
+  "votes": "10000×12 20×7 20000×2 14×1",
+  "gold_votes": 0,
+  "top1_n": 12,
+  "q": "Let $f(n)$ be the largest prime factor of $n$. Estimate $$N=\\left\\lfloor 10^{4} \\cdot \\frac{\\sum_{n=2}^{10^{6}} f\\left(n^{2}-1\\right)}{\\sum_{n=2}^{10^{6}} f(n)}\\right\\rfloor$$ An estimate of $E$ will receive $\\max \\left(0,\\left\\lfloor 20-20\\left(\\frac{|E-N|}{10^{3}}\\right)^{1 / 3}\\right\\rfloor\\right)$ points."
+ },
+ {
+  "id": "train-003983",
+  "gold": 5,
+  "ours": 6,
+  "votes": "6×11 4×9 5×2 -2×1",
+  "gold_votes": 2,
+  "top1_n": 11,
+  "q": "On rainy mornings, Mo drinks exactly n cups of hot chocolate (assume that n is an integer). On mornings that are not rainy, Mo drinks some cups of tea. Last week Mo drank a total of 22 cups of tea and hot chocolate together. During that week, Mo drank 8 more tea cups than hot chocolate cups. There were 4 rainy days last week. How many cups of tea does Mo drink on mornings that are not rainy?"
+ },
+ {
+  "id": "train-006857",
+  "gold": 12,
+  "ours": 0,
+  "votes": "0×12 24×4 12×2 18×2",
+  "gold_votes": 2,
+  "top1_n": 12,
+  "q": "Amy baked 4 dozen cookies. Of these: - Half of them contain chocolate chips. - Three-fourths contain peanut butter. - One-third contain white chocolate. - One-eighth contain coconut flakes. What is the largest possible number of cookies that had none of these ingredients?"
+ },
+ {
+  "id": "train-002203",
+  "gold": 137,
+  "ours": 0,
+  "votes": "0×7 5242×4 2621×4 9×2",
+  "gold_votes": 0,
+  "top1_n": 7,
+  "q": "Given that \\[ \\frac 1{2!17!}+\\frac 1{3!16!}+\\frac 1{4!15!}+\\frac 1{5!14!}+\\frac 1{6!13!}+\\frac 1{7!12!}+\\frac 1{8!11!}+\\frac 1{9!10!}=\\frac N{1!18!} \\] find the greatest integer that is less than $\\frac N{100}.$"
+ },
+ {
+  "id": "train-016032",
+  "gold": 10,
+  "ours": 30,
+  "votes": "30×8 10×5 0×4 70×3",
+  "gold_votes": 5,
+  "top1_n": 8,
+  "q": "Two hundred people were surveyed. Of these, $150$ indicated they liked Mozart, $120$ indicated they liked Bach, and $90$ indicated they liked Beethoven. What is the minimum number of people surveyed who could have said they liked both Mozart and Bach but not Beethoven?"
+ },
+ {
+  "id": "train-003928",
+  "gold": 5,
+  "ours": 2,
+  "votes": "2×18 3×5 5×3 7×2",
+  "gold_votes": 3,
+  "top1_n": 18,
+  "q": "4. In the Cartesian coordinate system $x O y$, let $F_{1}, F_{2}$ be the left and right foci of the hyperbola $\\frac{x^{2}}{a^{2}}-\\frac{y^{2}}{b^{2}}=1(a>0, b>0)$, respectively. $P$ is a point on the right branch of the hyperbola, $M$ is the midpoint of $P F_{2}$, and $O M \\perp P F_{2}, 3 P F_{1}=4 P F_{2}$. Then the eccentricity of the hyperbola is $\\qquad$."
+ },
+ {
+  "id": "train-003890",
+  "gold": 17,
+  "ours": 20,
+  "votes": "20×8 18×3 4×3 7×3",
+  "gold_votes": 1,
+  "top1_n": 8,
+  "q": "Let $A B C$ be a triangle and $D, E$, and $F$ be the midpoints of sides $B C, C A$, and $A B$ respectively. What is the maximum number of circles which pass through at least 3 of these 6 points?"
+ },
+ {
+  "id": "train-004263",
+  "gold": 2,
+  "ours": 12,
+  "votes": "12×9 2×9 13×5 3×4",
+  "gold_votes": 9,
+  "top1_n": 9,
+  "q": "Morgan's dad said that she had $90 budgeted for her birthday party. She wants to make sure she and her friends all get to play one round of mini-golf, have $5 in arcade tokens, and get to ride the go-karts twice. A round of mini-golf is $5. The Go-karts cost $10 a ride. How many friends can she invite?"
+ },
+ {
+  "id": "train-010744",
+  "gold": 16320,
+  "ours": 15000,
+  "votes": "15000×17 50000×4 13700×3 15306×2",
+  "gold_votes": 0,
+  "top1_n": 17,
+  "q": "In an election, candidate X obtained 40% of the total votes. However, he lost to his rival, candidate Y, by 3000 votes. In addition, there were 1000 invalid votes casted that were not counted towards the total. Moreover, it was later found out that 2% of the votes were undecided. How many votes were cast in total factoring in all these variables?"
+ },
+ {
+  "id": "train-001488",
+  "gold": 3,
+  "ours": 25,
+  "votes": "25×9 8×7 3×6 5×3",
+  "gold_votes": 6,
+  "top1_n": 9,
+  "q": "In extracurricular sports activities, two students, A and B, play a shooting game. Each person shoots $3$ times. If they make a shot, they get $2$ points; otherwise, they get $0$ points. It is known that the probability of A making a shot each time is $\\frac{1}{2}$, and the shots are independent of each other. B has a probability of $\\frac{1}{2}$ of making the first shot. Starting from the second shot, if the previous shot was made, the probability of making the next shot is $\\frac{3}{5}$; if the previous shot was missed, the probability of making the next shot is $\\frac{2}{5}$.  $(1)$ Find the probability that A scores more than $3$ points in $3$ shots.  $(2)$ Let $X$ be the score of B in $3$ shots. Find the probability distribution and expectation of $X$."
+ },
+ {
+  "id": "train-001595",
+  "gold": 10,
+  "ours": 12,
+  "votes": "12×32",
+  "gold_votes": 0,
+  "top1_n": 32,
+  "q": "Express $249_{11}+3AB_{12}$ as a base 10 integer. Here $A$ and $B$ denote the digits whose values are 10 and 11, respectively, in base X. If we know the answer to the above question is 858, what is the value of unknown variable X?"
+ },
+ {
+  "id": "train-015466",
+  "gold": 5,
+  "ours": 2,
+  "votes": "2×22 1×7 3×2 6×1",
+  "gold_votes": 0,
+  "top1_n": 22,
+  "q": "Compute the number of real solutions $(x, y, z, w)$ to the system of equations: $$\\begin{array}{rlrl} x & =z+w+z w x & z & =x+y+x y z \\\\ y & =w+x+w x y & w & =y+z+y z w \\end{array}$$"
+ },
+ {
+  "id": "train-013950",
+  "gold": 1116,
+  "ours": 95924,
+  "votes": "95924×4 103324×3 100324×2 101924×1",
+  "gold_votes": 1,
+  "top1_n": 4,
+  "q": "Michael, David, Evan, Isabella, and Justin compete in the NIMO Super Bowl, a round-robin cereal-eating tournament. Each pair of competitors plays exactly one game, in which each competitor has an equal chance of winning (and there are no ties). The probability that none of the five players wins all of his/her games is $\\tfrac{m}{n}$ for relatively prime positive integers $m$, $n$. Compute $100m + n$.  [i]Proposed by Evan Chen[/i]"
+ },
+ {
+  "id": "train-001006",
+  "gold": 52,
+  "ours": 38,
+  "votes": "38×10 49×4 13×3 144×2",
+  "gold_votes": 0,
+  "top1_n": 10,
+  "q": "Let $a, b$ and $c$ be positive real numbers such that $$\\begin{aligned} a^{2}+a b+b^{2} & =9 \\\\ b^{2}+b c+c^{2} & =52 \\\\ c^{2}+c a+a^{2} & =49 \\end{aligned}$$ Compute the value of $\\frac{49 b^{2}-33 b c+9 c^{2}}{a^{2}}$."
+ },
+ {
+  "id": "train-005933",
+  "gold": 403,
+  "ours": 203,
+  "votes": "203×9 305×4 302×2 102×2",
+  "gold_votes": 0,
+  "top1_n": 9,
+  "q": "Two circles $\\Gamma_{1}$ and $\\Gamma_{2}$ of radius 1 and 2, respectively, are centered at the origin. A particle is placed at $(2,0)$ and is shot towards $\\Gamma_{1}$. When it reaches $\\Gamma_{1}$, it bounces off the circumference and heads back towards $\\Gamma_{2}$. The particle continues bouncing off the two circles in this fashion. If the particle is shot at an acute angle $\\theta$ above the $x$-axis, it will bounce 11 times before returning to $(2,0)$ for the first time. If $\\cot \\theta=a-\\sqrt{b}$ for positive integers $a$ and $b$, compute $100 a+b$."
+ },
+ {
+  "id": "train-006242",
+  "gold": 41,
+  "ours": 35,
+  "votes": "35×5 39×5 40×5 43×4",
+  "gold_votes": 2,
+  "top1_n": 5,
+  "q": "How many positive integers less than $1000$ are either a perfect cube or a perfect square or a perfect fourth power?"
+ },
+ {
+  "id": "train-012736",
+  "gold": 40,
+  "ours": 50,
+  "votes": "50×21 100×4 10×3 25×2",
+  "gold_votes": 0,
+  "top1_n": 21,
+  "q": "Several  fleas sit on the squares of a $10\\times 10$ chessboard (at most one  fea per square). Every minute, all  fleas simultaneously jump to adjacent squares. Each  fea begins jumping in one of four directions (up, down, left, right), and keeps jumping in this direction while it is possible; otherwise, it reverses direction on the opposite. It happened that during one hour, no two  fleas ever occupied the same square. Find the maximal possible number of  fleas on the board."
+ },
+ {
+  "id": "train-016865",
+  "gold": 329,
+  "ours": 2520,
+  "votes": "2520×4 210×4 1260×3 576×2",
+  "gold_votes": 0,
+  "top1_n": 4,
+  "q": "For positive integers $n$, let $c_{n}$ be the smallest positive integer for which $n^{c_{n}}-1$ is divisible by 210, if such a positive integer exists, and $c_{n}=0$ otherwise. What is $c_{1}+c_{2}+\\cdots+c_{210}$?"
+ },
+ {
+  "id": "train-002796",
+  "gold": 2873,
+  "ours": 2872,
+  "votes": "2872×22 1705×1 59×1 1731×1",
+  "gold_votes": 0,
+  "top1_n": 22,
+  "q": "A paperboy now delivers newspapers to 12 houses along Main Street. To accomplish his task effectively while also conserving energy, he makes sure never to miss four consecutive houses. Calculate how many different ways he can deliver the newspapers considering these conditions."
+ },
+ {
+  "id": "train-005480",
+  "gold": 0,
+  "ours": 1,
+  "votes": "1×21 3×5 0×5 11×1",
+  "gold_votes": 5,
+  "top1_n": 21,
+  "q": "Let $\\omega$ be a complex number such that $\\omega^5 = 1$ and $\\omega \\ne 1.$ Compute \\[ \\omega^{15} + \\omega^{18} + \\omega^{21} + \\dots + \\omega^{45}. \\]"
+ },
+ {
+  "id": "train-002092",
+  "gold": 11,
+  "ours": 32,
+  "votes": "32×8 43×7 54×4 11×3",
+  "gold_votes": 3,
+  "top1_n": 8,
+  "q": "A hot air balloon with 200 balloons is blowing up. After about half an hour, 1/5 of the total number of balloons in the hot air balloon have blown up. The wind speed then increases, creating a variation in the rate at which balloons blow up. In the next hour, 30% of the remaining balloons blow up. Due to different manufacturing quality, 10% of the balloons still intact have double durability and are less likely to blow up in the same conditions. At the end of the second hour, twice the number of balloons that had already blown up, excluding the more durable ones, also blow up. How many balloons in the hot air balloon remain intact?"
+ },
+ {
+  "id": "train-010277",
+  "gold": 2,
+  "ours": 16,
+  "votes": "16×21 2×5 8×5 3×1",
+  "gold_votes": 5,
+  "top1_n": 21,
+  "q": "Let \\(x,\\) \\(y,\\) and \\(z\\) be nonnegative real numbers such that \\(x + y + z = 2.\\) Find the maximum value of \\(x + y^3 + z^4.\\)"
+ },
+ {
+  "id": "train-012360",
+  "gold": 30,
+  "ours": 40,
+  "votes": "40×19 60×3 100×2 80×2",
+  "gold_votes": 0,
+  "top1_n": 19,
+  "q": "3. In a certain state, only liars and economists live (liars always lie, while economists tell the truth). At a certain moment, the state decided to carry out monetary and credit, as well as budgetary and tax reforms. Since it was unknown what the residents expected, everyone was asked several questions (with only \"yes\" and \"no\" answers). The questions were answered affirmatively as follows:  \"Will taxes be raised?\" $40 \\%$,  \"Will there be an increase in the money supply?\" $30 \\%$,  \"Will bonds be issued?\" $50 \\%$,  \"Will the gold and foreign exchange reserves be squandered?\" $\\mathbf{0} \\%$.  What percentage of the population actually expects taxes to be raised, if each of them realistically expects only one measure? (14 points)."
+ },
+ {
+  "id": "train-001652",
+  "gold": 10,
+  "ours": 8,
+  "votes": "8×8 7×6 1×3 2×2",
+  "gold_votes": 0,
+  "top1_n": 8,
+  "q": "How many integers $M$ less than $500$ can be written as the sum of $k$ consecutive positive even integers from exactly 3 values of $k \\geq 1$?"
+ },
+ {
+  "id": "train-008665",
+  "gold": 4,
+  "ours": 2,
+  "votes": "2×30 4×2",
+  "gold_votes": 2,
+  "top1_n": 30,
+  "q": "Maddy was given 40 chocolate eggs for Easter. She likes to eat two each day after school. If Maddy has two chocolate eggs after school each day, how many weeks will they last?"
+ },
+ {
+  "id": "train-005383",
+  "gold": 70,
+  "ours": 120,
+  "votes": "120×31 70×1",
+  "gold_votes": 1,
+  "top1_n": 31,
+  "q": "It took Alice three months to save up to buy new shoes. If she saved 10 dollars the first month and 30 more each month, how much did she have saved by the end of the third month?"
+ },
+ {
+  "id": "train-004153",
+  "gold": 23,
+  "ours": 7,
+  "votes": "7×18 6×8 166320×1 1×1",
+  "gold_votes": 0,
+  "top1_n": 18,
+  "q": "Someone observed that $6! = 8 \\cdot 9 \\cdot 10$.  Find the largest positive integer $n$ for which $n!$ can be expressed as the product of $n - 3$ consecutive positive integers."
+ },
+ {
+  "id": "train-011053",
+  "gold": 19,
+  "ours": 100,
+  "votes": "100×10 1×5 50×4 33×4",
+  "gold_votes": 0,
+  "top1_n": 10,
+  "q": "Let $n$ be the answer to this problem. An urn contains white and black balls. There are $n$ white balls and at least two balls of each color in the urn. Two balls are randomly drawn from the urn without replacement. Find the probability, in percent, that the first ball drawn is white and the second is black."
+ },
+ {
+  "id": "train-012567",
+  "gold": 36,
+  "ours": 144,
+  "votes": "144×19 72×5 9×2 10392×1",
+  "gold_votes": 1,
+  "top1_n": 19,
+  "q": "There are 9 pairs of socks and 2 socks are worn from that such that the pair of socks worn are not of the same pair. What is the number of pairs that can be formed?"
+ },
+ {
+  "id": "train-007810",
+  "gold": 72,
+  "ours": 212427,
+  "votes": "212427×5 272421×4 369121518212427×4 272421181512963×3",
+  "gold_votes": 0,
+  "top1_n": 5,
+  "q": "The sum of a certain pattern of multiples of 3 is 72. The largest number in the sequence is 27. What is the pattern of the multiples?"
+ },
+ {
+  "id": "train-002544",
+  "gold": 318,
+  "ours": 6,
+  "votes": "6×9 318×3 4×3 1×3",
+  "gold_votes": 3,
+  "top1_n": 9,
+  "q": "6. It is known that the selling price of a certain model of car is 230,000 yuan per unit. A factory's total cost for producing this model of car in a year consists of fixed costs and production costs. The fixed cost for one year is 70,000,000 yuan. When producing $x$ units of this car in a year, the production cost for each car is $\\frac{70-\\sqrt{x}}{3 \\sqrt{x}}$ ten thousand yuan $(0<x<1000)$. To ensure that the factory's sales revenue from producing this model of car in a year is no less than the total cost, the factory needs to produce at least $\\qquad$ units of this car."
+ },
+ {
+  "id": "train-002930",
+  "gold": 3,
+  "ours": 100,
+  "votes": "100×14 49×2 35×2 75×1",
+  "gold_votes": 1,
+  "top1_n": 14,
+  "q": "An infinite sequence of real numbers $a_{1}, a_{2}, \\ldots$ satisfies the recurrence $$a_{n+3}=a_{n+2}-2 a_{n+1}+a_{n}$$ for every positive integer $n$. Given that $a_{1}=a_{3}=1$ and $a_{98}=a_{99}$, compute $a_{1}+a_{2}+\\cdots+a_{100}$."
+ },
+ {
+  "id": "train-000798",
+  "gold": 54,
+  "ours": 46,
+  "votes": "46×12 56×11 108×1 122×1",
+  "gold_votes": 0,
+  "top1_n": 12,
+  "q": "A survey was taken among 500 brainiacs. Of those surveyed, twice as many brainiacs like rebus teasers as math teasers. Additionally, an equal number of brainiacs like a third type of teaser called logic teasers as math teasers. If 72 brainiacs like both rebus teasers and math teasers, 40 brainiacs like both rebus teasers and logic teasers, 36 brainiacs like both math teasers and logic teasers, and 10 brainiacs like all three types of teasers, while 20 like neither kind of teaser, how many brainiacs like math teasers but not rebus teasers or logic teasers?"
+ },
+ {
+  "id": "train-003479",
+  "gold": 91,
+  "ours": 143,
+  "votes": "143×8 91×7 13×6 7×3",
+  "gold_votes": 7,
+  "top1_n": 8,
+  "q": "9.4. The sum of ten natural numbers is 1001. What is the greatest value that the GCD (greatest common divisor) of these numbers can take?"
+ },
+ {
+  "id": "train-006439",
+  "gold": 414720,
+  "ours": 829440,
+  "votes": "829440×30 34694160×1 34560×1",
+  "gold_votes": 0,
+  "top1_n": 30,
+  "q": "The Happy Valley Kennel has now 4 chickens, 3 dogs, 5 cats, and 2 rabbits. In how many ways can these 14 animals be placed in a row of 14 cages, such that all animals of each type are in adjacent cages?"
+ },
+ {
+  "id": "train-002755",
+  "gold": 18,
+  "ours": 4,
+  "votes": "4×13 3×10 2×2 27×2",
+  "gold_votes": 0,
+  "top1_n": 13,
+  "q": "Example 17 Let point $M$ be on the circumcircle of a given equilateral $\\triangle A B C$. Prove: $M A^{4}+M B^{4}+M C^{4}$ is independent of the choice of point $M$.  ---  The translation maintains the original text's formatting and line breaks as requested."
+ },
+ {
+  "id": "train-008551",
+  "gold": 340,
+  "ours": 11,
+  "votes": "11×5 178×3 332×2 2×2",
+  "gold_votes": 0,
+  "top1_n": 5,
+  "q": "If the average of 5 positive integers is 70 and the difference between the largest and the smallest of these 5 numbers is 10, what is the maximum value possible for the largest of these 5 integers?"
+ },
+ {
+  "id": "train-015798",
+  "gold": 2018,
+  "ours": 2019,
+  "votes": "2019×9 2017×5 2016×2 2020×2",
+  "gold_votes": 2,
+  "top1_n": 9,
+  "q": "Given that April $1^{\\text {st }}, 2012$ fell on a Sunday, what is the next year in which April $1^{\\text {st }}$ will fall on a Sunday?"
+ },
+ {
+  "id": "train-004040",
+  "gold": 384,
+  "ours": 96,
+  "votes": "96×19 64×3 48×3 192×2",
+  "gold_votes": 0,
+  "top1_n": 19,
+  "q": "What is the area enclosed by the graph of $|3x| + |y| = 12$?"
+ },
+ {
+  "id": "train-007464",
+  "gold": 52,
+  "ours": 99,
+  "votes": "99×15 50×4 51×2 47×2",
+  "gold_votes": 0,
+  "top1_n": 15,
+  "q": "Let $N$ denote the number of subsets of $\\{1,2,3, \\ldots, 100\\}$ that contain more prime numbers than multiples of 4. Compute the largest integer $k$ such that $2^{k}$ divides $N$."
+ },
+ {
+  "id": "train-006645",
+  "gold": 203,
+  "ours": 451,
+  "votes": "451×11 151×6 152×2 602×1",
+  "gold_votes": 0,
+  "top1_n": 11,
+  "q": "Square $ABCD$ has center $O,\\ AB=600,\\ E$ and $F$ are on $AB$ with $AE<BF$ and $E$ between $A$ and $F, m\\angle EOF =45^\\circ,$ and $EF=300.$ Given that $BF=p+q\\sqrt{r},$ where $p,q,$ and $r$ are positive integers and $r$ is not divisible by the square of any prime, find $p+q+r.$"
+ },
+ {
+  "id": "train-009060",
+  "gold": 407,
+  "ours": 901,
+  "votes": "901×6 301×4 603×4 601×2",
+  "gold_votes": 0,
+  "top1_n": 6,
+  "q": "Square $ABCD$ has center $O$, and side length $AB=1200$. Points $G$ and $H$ are on side $AB$, with $AG < BH$ and $G$ between $A$ and $H$. If $\\angle GOH = 60^\\circ$ and $GH = 600$, find the length of $BH$ expressed in the form $p + q\\sqrt{r}$, where $p, q,$ and $r$ are integers, and $r$ is not divisible by the square of any prime. Calculate $p+q+r$."
+ },
+ {
+  "id": "train-009188",
+  "gold": 40,
+  "ours": 30,
+  "votes": "30×25 40×7",
+  "gold_votes": 7,
+  "top1_n": 25,
+  "q": "Prejean's speed in a race was three-quarters that of Rickey. If they both took a total of 70 minutes to run the race, calculate the total number of minutes that Rickey took to finish the race."
+ },
+ {
+  "id": "train-014993",
+  "gold": 948,
+  "ours": 1,
+  "votes": "1×7 45×4 2016×3 148995×1",
+  "gold_votes": 0,
+  "top1_n": 7,
+  "q": "8. Given a sequence of non-negative integers $\\left\\{a_{n}\\right\\}$ satisfying $$ a_{1}=2016, a_{n+1} \\leqslant \\sqrt{a_{n}}, $$  and if the number of terms is no less than 2, then any two terms are distinct. Then, the number of such sequences $\\left\\{a_{n}\\right\\}$ is $\\qquad$"
+ },
+ {
+  "id": "train-001734",
+  "gold": 144,
+  "ours": 153,
+  "votes": "153×9 145×4 81×3 157×1",
+  "gold_votes": 0,
+  "top1_n": 9,
+  "q": "3. (35 points) Journalists have found out that  a) in the lineage of Tsar Pafnuty, all descendants are male: the tsar himself had 2 sons, 60 of his descendants also had 2 sons each, and 20 had 1 son each;  b) in the lineage of Tsar Zinovy, all descendants are female: the tsar himself had 4 daughters, 35 of his descendants had 3 daughters each, and another 35 had 1 daughter each.  The rest of the descendants of both tsars had no children. Who had more descendants?"
+ },
+ {
+  "id": "train-016962",
+  "gold": 89,
+  "ours": 74,
+  "votes": "74×32",
+  "gold_votes": 0,
+  "top1_n": 32,
+  "q": "Suppose for some $p, q, r$ we have $p+q+r = 5$, $pq+pr+qr = 3$, and $pqr = -2$. What is $p^3+q^3+r^3$?"
+ },
+ {
+  "id": "train-011506",
+  "gold": 126,
+  "ours": 252,
+  "votes": "252×12 126×5 1×4 120×3",
+  "gold_votes": 5,
+  "top1_n": 12,
+  "q": "Matt will arrange five identical, dotless dominoes (shaded 1 by 2 rectangles) on a 6 by 5 grid so that a path is formed from the upper left-hand corner $A$ to the lower right-hand corner $B$. In the path, consecutive dominoes must touch at their sides, not just corners. No domino can be placed diagonally; each domino must cover exactly two of the unit squares shown in the grid. How many distinct arrangements are possible, ensuring all dominoes are used in the path?"
+ },
+ {
+  "id": "train-012621",
+  "gold": 300,
+  "ours": 200,
+  "votes": "200×5 202×3 201×3 401×3",
+  "gold_votes": 0,
+  "top1_n": 5,
+  "q": "Anna writes a sequence of 0s and 1s on the board. Anna notices that in every sequence of 200 consecutive digits written on the board, there are as many 0s as there are 1s. She also notices that in every sequence of 202 consecutive digits written on the board, the number of 0s and 1s is not equal. What is the maximum number of digits that Anna could have written on the board?"
+ },
+ {
+  "id": "train-004688",
+  "gold": 561,
+  "ours": 2004,
+  "votes": "2004×5 2005×4 4016014×3 4×2",
+  "gold_votes": 0,
+  "top1_n": 5,
+  "q": "24. 3. 15 On a plane, there are $2004 \\times 2004$ points arranged in a square array. Find the largest $n$ such that a convex $n$-gon can be drawn, with all its vertices being points from the array."
+ },
+ {
+  "id": "train-008421",
+  "gold": 1510,
+  "ours": 1006,
+  "votes": "1006×5 2012×4 1×4 503×2",
+  "gold_votes": 2,
+  "top1_n": 5,
+  "q": "If $n$ is a positive integer, then $n$ !! is defined to be $n(n-2)(n-4) \\cdots 2$ if $n$ is even and $n(n-2)(n-4) \\cdots 1$ if $n$ is odd. For example, $8 ! !=8 \\cdot 6 \\cdot 4 \\cdot 2=384$ and $9 ! !=9 \\cdot 7 \\cdot 5 \\cdot 3 \\cdot 1=945$. Compute the number of positive integers $n$ such that $n !$ ! divides 2012!!."
+ },
+ {
+  "id": "train-006932",
+  "gold": 89760,
+  "ours": 8,
+  "votes": "180×2 8×2 629847×1 43200×1",
+  "gold_votes": 0,
+  "top1_n": 2,
+  "q": "11.2. Find the number of five-digit numbers containing two digits, one of which is divisible by the other."
+ },
+ {
+  "id": "train-015233",
+  "gold": 8634,
+  "ours": 334,
+  "votes": "3014×4 334×4 1012×3 2013×2",
+  "gold_votes": 0,
+  "top1_n": 4,
+  "q": "$O$ is the center of square $A B C D$, and $M$ and $N$ are the midpoints of $\\overline{B C}$ and $\\overline{A D}$, respectively. Points $A^{\\prime}, B^{\\prime}, C^{\\prime}, D^{\\prime}$ are chosen on $\\overline{A O}, \\overline{B O}, \\overline{C O}, \\overline{D O}$, respectively, so that $A^{\\prime} B^{\\prime} M C^{\\prime} D^{\\prime} N$ is an equiangular hexagon. The ratio $\\frac{\\left[A^{\\prime} B^{\\prime} M C^{\\prime} D^{\\prime} N\\right]}{[A B C D]}$ can be written as $\\frac{a+b \\sqrt{c}}{d}$, where $a, b, c, d$ are integers, $d$ is positive, $c$ is square-free, and $\\operatorname{gcd}(a, b, d)=1$. Find $1000 a+100 b+10 c+d$."
+ },
+ {
+  "id": "train-003778",
+  "gold": 18,
+  "ours": 6,
+  "votes": "6×23 22×5 18×4",
+  "gold_votes": 4,
+  "top1_n": 23,
+  "q": "Find the smallest positive integer $x$ which satisfies the congruence $45x + 15 \\equiv 5 \\pmod{28}$."
+ },
+ {
+  "id": "train-004364",
+  "gold": 132,
+  "ours": 12,
+  "votes": "12×7 24×3 36×2 1×1",
+  "gold_votes": 0,
+  "top1_n": 7,
+  "q": "5. How many different pairs of integers $a$ and $b$ exist such that the equation $a x^{2}+b x+1944=0$ has positive integer roots?"
+ },
+ {
+  "id": "train-012673",
+  "gold": 4,
+  "ours": 1,
+  "votes": "1×7 4×6 0×3 3×2",
+  "gold_votes": 6,
+  "top1_n": 7,
+  "q": "I4.2 When the integers $1108+a$, $1453$, $1844+2a$ and 2281 are divided by some positive integer $n(>1)$, they all get the same remainder $b$. Determine the value of $b$."
+ },
+ {
+  "id": "train-005508",
+  "gold": 103,
+  "ours": 102,
+  "votes": "102×6 105×6 104×3 144×2",
+  "gold_votes": 0,
+  "top1_n": 6,
+  "q": "The rightmost nonzero digit in the decimal expansion of 101 ! is the same as the rightmost nonzero digit of $n$ !, where $n$ is an integer greater than 101. Find the smallest possible value of $n$."
+ },
+ {
+  "id": "train-013974",
+  "gold": -220,
+  "ours": -221,
+  "votes": "-221×19 -220×11 0×1 221×1",
+  "gold_votes": 11,
+  "top1_n": 19,
+  "q": "If the graph of the equation $x^2 + 4y^2 - 10x + 56y = k$ is a non-degenerate ellipse, what is the minimum value of $k$ that guarantees this condition?"
+ },
+ {
+  "id": "train-013782",
+  "gold": 17,
+  "ours": 1003,
+  "votes": "1003×10 669×6 12×3 2003×2",
+  "gold_votes": 0,
+  "top1_n": 10,
+  "q": "From the numbers 1, 2, 3, 4, ..., 2004, select $k$ numbers such that among the selected $k$ numbers, there are always three numbers that can form the sides of a triangle (the lengths of the three sides must be different). What is the minimum value of $k$?"
+ },
+ {
+  "id": "train-007939",
+  "gold": 44,
+  "ours": 132,
+  "votes": "132×7 6×3 12×3 84×2",
+  "gold_votes": 2,
+  "top1_n": 7,
+  "q": "Triangle $A B C$ has $\\mathrm{m} \\angle A>\\mathrm{m} \\angle B>\\mathrm{m} \\angle C$. The angle between the altitude and the angle bisector at vertex $A$ is $6^{\\circ}$. The angle between the altitude and the angle bisector at vertex $B$ is $18^{\\circ}$. Compute the degree measure of angle $C$."
+ },
+ {
+  "id": "train-016194",
+  "gold": 1,
+  "ours": 13,
+  "votes": "13×6 1×5 2×4 10×3",
+  "gold_votes": 5,
+  "top1_n": 6,
+  "q": "Find the smallest positive number $\\lambda $ , such that for any complex numbers ${z_1},{z_2},{z_3}\\in\\{z\\in C\\big| |z|<1\\}$ ,if  $z_1+z_2+z_3=0$, then $$\\left|z_1z_2 +z_2z_3+z_3z_1\\right|^2+\\left|z_1z_2z_3\\right|^2 <\\lambda .$$"
+ },
+ {
+  "id": "train-008220",
+  "gold": 1,
+  "ours": 3,
+  "votes": "3×16 1×8 2×7 5×1",
+  "gold_votes": 8,
+  "top1_n": 16,
+  "q": "In the rectangular coordinate system xOy, the parametric equation of the curve C₁ is $$\\begin{cases} \\overset{x=cos\\alpha }{y=1+sin\\alpha }\\end{cases}$$ (where α is the parameter). Establish a polar coordinate system with the coordinate origin as the pole and the positive semi-axis of the x-axis as the polar axis (ρ＞0, 0≤θ≤2π). Point A is a moving point on the curve C₁, and point B is on the extension line of segment OA, satisfying |OA|•|OB|=6. The trajectory of point B is C₂.  1. Find the polar coordinate equations of C₁ and C₂. 2. If point C has polar coordinates (2, 0), find the minimum value of the area of △ABC."
+ },
+ {
+  "id": "train-012468",
+  "gold": 6455,
+  "ours": 2011,
+  "votes": "2011×2 12010×2 3010×1 2411×1",
+  "gold_votes": 0,
+  "top1_n": 2,
+  "q": "Compute the $2011^{\\text {th }}$ smallest positive integer $N$ that gains an extra digit when doubled."
+ },
+ {
+  "id": "train-015082",
+  "gold": 11,
+  "ours": 10,
+  "votes": "8×6 16×6 10×6 15×4",
+  "gold_votes": 2,
+  "top1_n": 6,
+  "q": "## Task B-1.1.  Let $a>1$. The points $(x, y)$ for which the coordinates satisfy $|x|+y=a, x^{2}+y=a|x|$ determine a figure in the coordinate plane with an area of 120 square units. Calculate the real number $a$."
+ },
+ {
+  "id": "train-016056",
+  "gold": 135,
+  "ours": 96,
+  "votes": "96×2 279×2 388×1 1×1",
+  "gold_votes": 0,
+  "top1_n": 2,
+  "q": "Reading from left to right, a sequence consists of 6 X's, followed by 24 Y's, followed by 96 X's. After the first \\(n\\) letters, reading from left to right, one letter has occurred twice as many times as the other letter. What is the sum of the four possible values of \\(n\\)?"
+ },
+ {
+  "id": "train-011158",
+  "gold": 1520,
+  "ours": 480,
+  "votes": "480×4 240×3 12000×2 800×2",
+  "gold_votes": 0,
+  "top1_n": 4,
+  "q": "Runner $\\underline{\\text { A.V. }}$.  Find the smallest natural number divisible by 80, in which two of its different digits can be swapped so that the resulting number is also divisible by 80.  #"
+ },
+ {
+  "id": "train-006381",
+  "gold": 29,
+  "ours": 47,
+  "votes": "47×8 9×7 35×3 3×2",
+  "gold_votes": 0,
+  "top1_n": 8,
+  "q": "Anne has prepared a number of cookies. When she groups them into sets of 6, there are 5 cookies left over. When she places the cookies into groups of 9, there are 7 left over. If Anne has fewer than 80 cookies, what is the sum of all possible quantities of cookies that she could have?"
+ },
+ {
+  "id": "train-009539",
+  "gold": 13,
+  "ours": 9,
+  "votes": "9×7 3×4 18×3 4×3",
+  "gold_votes": 1,
+  "top1_n": 7,
+  "q": "Given all triangles have the same value, and all circles have the same value, find the sum of three circles: \\begin{align*} \\Delta + \\bigcirc + \\Delta + \\bigcirc + 3\\Delta &= 27\\\\ 3\\bigcirc + 2\\Delta + \\bigcirc + 2\\Delta + \\bigcirc &= 29\\\\ 3\\bigcirc &= \\ ? \\end{align*}"
+ },
+ {
+  "id": "train-003713",
+  "gold": 16200,
+  "ours": 9000,
+  "votes": "9000×9 818×2 4500×2 5726×1",
+  "gold_votes": 0,
+  "top1_n": 9,
+  "q": "How many integers between $1000$ and $9999$, inclusive, have the property that some permutation of its digits is a multiple of $11$?"
+ },
+ {
+  "id": "train-014564",
+  "gold": 2133,
+  "ours": 2008,
+  "votes": "2008×21 2015×4 2014×3 2017×2",
+  "gold_votes": 0,
+  "top1_n": 21,
+  "q": "5. Given that the sum of 2008 consecutive positive integers is a perfect square. Then the minimum value of the largest number is $\\qquad$  Translate the above text into English, please retain the original text's line breaks and format, and output the translation result directly."
+ },
+ {
+  "id": "train-008621",
+  "gold": 24,
+  "ours": 700,
+  "votes": "700×17 706×4 70×3 32×2",
+  "gold_votes": 1,
+  "top1_n": 17,
+  "q": "The capacity of a tank is 32 gallons. If a company bought 728 gallons of oil, how much oil is in the tank that is not full?"
+ },
+ {
+  "id": "train-014159",
+  "gold": 720,
+  "ours": 30,
+  "votes": "30×7 1680×4 75×2 60×2",
+  "gold_votes": 0,
+  "top1_n": 7,
+  "q": "Eight congruent equilateral triangles, each of a different color, are used to construct a regular octahedron. Two triangles that share an edge are fixed as red and blue, respectively. How many distinguishable ways are there to arrange the colors of the other six triangles, ensuring that the octahedron remains distinguishable under rotation? (Two colored octahedrons are distinguishable if neither can be rotated to look just like the other.)"
+ },
+ {
+  "id": "train-002178",
+  "gold": 2660,
+  "ours": 473,
+  "votes": "473×13 1892×11 2660×8",
+  "gold_votes": 8,
+  "top1_n": 13,
+  "q": "Evaluate the expression $(a^b)^a - (b^a)^b$ multiplied by $c$ for $a = 3$, $b = 2$, and $c = 4$."
+ }
+]
