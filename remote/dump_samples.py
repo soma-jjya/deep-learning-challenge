@@ -32,6 +32,8 @@ def main():
     ap.add_argument('--adapter', default=None,
                     help='LoRA 어댑터 경로 (없으면 베이스). 학습이 표본 다양성에 준 영향을 '
                          '베이스 덤프와 직접 비교하기 위한 인자')
+    ap.add_argument('--model', default='Qwen/Qwen2.5-3B-Instruct',
+                    help='full FT 체크포인트 경로 (exp93). 어댑터와 동시 지정 금지')
     ap.add_argument('--seed', type=int, default=42)
     # H1(1024→2048) 이후 재검토한 적 없는 축. 잘림은 전체 표의 1.7%뿐이지만 **오답 문항에
     # 12배 몰려 있고**(정답 문항 0.15표 vs 오답 문항 1.80표), "틀렸고·잘림 있고·안 잘린
@@ -61,7 +63,9 @@ def main():
             val = val[~val['id'].isin(bad_ids)].reset_index(drop=True)
     print(f'검증 {len(val)}문항 × {args.n}샘플 덤프')
 
-    llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
+    assert not (args.adapter and args.model != 'Qwen/Qwen2.5-3B-Instruct'), \
+        '--model과 --adapter 동시 지정 금지'
+    llm = LLM(model=args.model, dtype='bfloat16',
               gpu_memory_utilization=0.85, max_model_len=4096,
               enable_lora=args.adapter is not None, max_lora_rank=64)
     lora = LoRARequest('adapter', 1, args.adapter) if args.adapter else None
