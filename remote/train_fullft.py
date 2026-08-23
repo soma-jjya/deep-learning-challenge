@@ -84,6 +84,7 @@ def main():
     save_steps = max(1, steps_per_epoch // CONFIG['num_checkpoints'])
     print(f'총 스텝 ~{steps_per_epoch}, 체크포인트 간격 {save_steps}', flush=True)
 
+    # transformers v5: group_by_length 제거됨, warmup_ratio는 5.2에서 제거 예정
     args = TrainingArguments(
         output_dir=CONFIG['output_dir'],
         per_device_train_batch_size=CONFIG['per_device_batch'],
@@ -91,14 +92,12 @@ def main():
         num_train_epochs=CONFIG['epochs'],
         learning_rate=CONFIG['learning_rate'],
         lr_scheduler_type='cosine',
-        warmup_ratio=CONFIG['warmup_ratio'],
+        warmup_steps=max(10, int(CONFIG['warmup_ratio'] * steps_per_epoch)),
         bf16=True,
         optim='adamw_bnb_8bit',
         logging_steps=10,
         save_steps=save_steps,
         save_only_model=True,
-        group_by_length=True,
-        length_column_name='length',
         seed=CONFIG['seed'],
         report_to=[],
         dataloader_num_workers=2,
