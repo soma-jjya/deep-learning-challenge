@@ -27,6 +27,43 @@ MIN_SOLUTION_CHARS = 50
 MAX_PROBLEM_CHARS = 1500
 INT64_MIN, INT64_MAX = -(2**63), 2**63 - 1
 
+import re
+
+_INT_RE = re.compile(r'^-?\d+$')
+
+
+def boxed_content(solution):
+    """마지막 boxed{...}의 중괄호 균형 내용을 돌려준다. 없으면 None."""
+    i = solution.rfind('boxed{')
+    if i < 0:
+        return None
+    j = i + len('boxed{')
+    depth = 1
+    out = []
+    while j < len(solution) and depth:
+        ch = solution[j]
+        if ch == '{':
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if not depth:
+                break
+        out.append(ch)
+        j += 1
+    return ''.join(out) if not depth else None
+
+
+def is_pure_integer_boxed(solution):
+    """boxed 내용이 순수 정수인지 — extract_answer는 비정수 답에서도 숫자를 건져
+    올리는 관대한 추출기라(1.92 yuan→192 등) 학습 필터로는 부적합했다 (8/23 발견).
+    천단위 콤마·LaTeX 공백 매크로만 허용하고 나머지는 전부 탈락시킨다."""
+    c = boxed_content(solution)
+    if c is None:
+        return False
+    c = c.replace('\\,', '').replace('\\!', '').replace('\\;', '').replace('~', '')
+    c = c.replace('{,}', '').replace(',', '').replace(' ', '').strip('$')
+    return bool(_INT_RE.match(c))
+
 
 def main():
     from datasets import load_dataset
@@ -57,6 +94,9 @@ def main():
                 continue
             if 'boxed' not in solution:
                 drop['no_boxed'] += 1
+                continue
+            if not is_pure_integer_boxed(solution):
+                drop['not_pure_int'] += 1
                 continue
             ans = extract_answer(solution)
             if ans is None or not (INT64_MIN <= ans <= INT64_MAX):
