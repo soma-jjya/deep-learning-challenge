@@ -1,0 +1,53 @@
+{
+ "results": {
+  "val_samples_e93_c529_s42.jsonl": {
+   "n": 483,
+   "dirty": 334,
+   "corr": 339,
+   "passn": 407,
+   "uniq": 6.39,
+   "trunc_pct": 1.53
+  },
+  "val_samples_e93_c1058_s42.jsonl": {
+   "n": 483,
+   "dirty": 334,
+   "corr": 338,
+   "passn": 405,
+   "uniq": 6.53,
+   "trunc_pct": 1.73
+  },
+  "val_samples_e93_c1587_s42.jsonl": {
+   "n": 483,
+   "dirty": 336,
+   "corr": 340,
+   "passn": 406,
+   "uniq": 6.61,
+   "trunc_pct": 1.66
+  },
+  "val_samples_e93_c2116_s42.jsonl": {
+   "n": 483,
+   "dirty": 334,
+   "corr": 338,
+   "passn": 408,
+   "uniq": 6.56,
+   "trunc_pct": 1.57
+  },
+  "val_samples_e93_c2117_s42.jsonl": {
+   "n": 483,
+   "dirty": 334,
+   "corr": 338,
+   "passn": 408,
+   "uniq": 6.56,
+   "trunc_pct": 1.57
+  }
+ },
+ "baseline": {
+  "dirty": 366,
+  "corr": 380
+ },
+ "best_s42": {
+  "file": "val_samples_e93_c1587_s42.jsonl",
+  "corr": 340
+ },
+ "verdict": "G1 기각 (<383) → 실험 종료, 동결 유지"
+}
