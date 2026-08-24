@@ -42,6 +42,8 @@ def main():
     # "로컬은 오답의 23%가 라벨 의심인 흐린 자, 리더보드는 운영진 검수를 거친 깨끗한 자"
     # 이므로 더 좋은 측정기를 아낄 이유가 없다(exp41은 로컬과 LB가 정반대였다).
     ap.add_argument('--adapter', default=None, help='LoRA 어댑터 경로 (없으면 베이스)')
+    ap.add_argument('--model', default='Qwen/Qwen2.5-3B-Instruct',
+                    help='full FT 체크포인트 경로 (exp93 계열). 어댑터와 동시 지정 금지')
     # ⚠️ 2026-08-19 추가 (8/31 신뢰성 감사). 아래 재개 로직은 done 목록만 보고 이어붙이므로,
     # 다른 --n/--seed/--temp/--top-p/--max-tokens/--adapter 로 재개해도 **경고 없이 섞인다.**
     # 당일 2시간 30분짜리 작업이 중단됐을 때 명령을 다시 타이핑하다 한 글자 틀리면
@@ -79,7 +81,9 @@ def main():
         print(f'⚠️ 스모크 테스트 모드 — 앞 {len(lb)}문항만 처리한다 (실전 제출용 아님)')
     print(f'리더보드 {len(lb)}문항 × {args.n}샘플 덤프 시작 (seed={args.seed})')
 
-    llm = LLM(model='Qwen/Qwen2.5-3B-Instruct', dtype='bfloat16',
+    assert not (args.adapter and args.model != 'Qwen/Qwen2.5-3B-Instruct'), \
+        '--model과 --adapter 동시 지정 금지'
+    llm = LLM(model=args.model, dtype='bfloat16',
               gpu_memory_utilization=0.85, max_model_len=4096,
               enable_lora=args.adapter is not None, max_lora_rank=64)
     lora = LoRARequest('adapter', 1, args.adapter) if args.adapter else None
@@ -95,7 +99,7 @@ def main():
     prog = args.out + '.progress'
     # 재개 시 파라미터가 같은지 대조하기 위한 지문 (--limit은 스모크용이라 제외하지 않는다)
     fp = {'n': args.n, 'seed': args.seed, 'temp': args.temp, 'top_p': args.top_p,
-          'max_tokens': args.max_tokens, 'adapter': args.adapter,
+          'max_tokens': args.max_tokens, 'adapter': args.adapter, 'model': args.model,
           'lb_csv': os.path.basename(args.lb_csv), 'limit': args.limit}
     done = set()
     if os.path.exists(prog) and os.path.exists(args.out):
