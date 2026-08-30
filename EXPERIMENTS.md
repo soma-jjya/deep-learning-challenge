@@ -2623,3 +2623,4 @@ MATH 성적이 혼합 증류 64.7 vs 순수 장CoT 증류 56.2인데, **무학�
 - **판정**: 완료. **최종 스택(무학습 베이스 + 가중 SC n=32) 변경 없음.** 오늘 제출 5건 중 exp93c(1) + 본 실험(2) = 3건 사용, 2건 남김 — 큐가 지정한 후보 3종을 전량 확인(1종 신규 제출, 2종 기제출 확인)했으므로 이월 항목 없음.
 - ntfy 전송 완료.
 - 산출: `results/submission_n8w.csv`, `results/submission_n16w.csv`(둘 다 커밋 대상)
+| final | 2026-08-31 | **최종 test 제출 실행 (docs/final-pipeline.md 준수)** — test 2,000문항, 확정 스택(베이스+가중 SC n=32, temp0.7/top_p0.8, seed42), dump 방식 00:20~02:52 완주(중단 0회), 검증기 EXIT=0 (행 2000/id 완전 일치/전부 정수/0답 29개 1.45%/추출 실패 0%/잘림 2.63%). 산출물: results/submission_final.csv(id,answer) + 폼 양식 test_submission_filled.csv(로컬). 구글 폼 제출은 사용자 수행 | - | (채점 대기) | remote/dump_lb_samples.py |
