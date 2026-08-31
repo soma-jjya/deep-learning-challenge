@@ -24,3 +24,5 @@ results/ppv_texts*.jsonl
 results/ppv_emb*.npz
 results/val_samples_ts_*.jsonl
 results/val_samples_e93_*.jsonl
+results/submission_final.csv
+deep-learning-challenge-2026/test_submission.csv
