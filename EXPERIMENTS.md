@@ -2624,3 +2624,4 @@ MATH 성적이 혼합 증류 64.7 vs 순수 장CoT 증류 56.2인데, **무학�
 - ntfy 전송 완료.
 - 산출: `results/submission_n8w.csv`, `results/submission_n16w.csv`(둘 다 커밋 대상)
 | final | 2026-08-31 | **최종 test 제출 실행 (docs/final-pipeline.md 준수)** — test 2,000문항, 확정 스택(베이스+가중 SC n=32, temp0.7/top_p0.8, seed42), dump 방식 00:20~02:52 완주(중단 0회), 검증기 EXIT=0 (행 2000/id 완전 일치/전부 정수/0답 29개 1.45%/추출 실패 0%/잘림 2.63%). 산출물: results/submission_final.csv(id,answer) + 폼 양식 test_submission_filled.csv(로컬). 구글 폼 제출은 사용자 수행 | - | (채점 대기) | remote/dump_lb_samples.py |
+| final-submit | 2026-08-31 | **구글 폼 1차 제출 완료 (오후)** — test_submission_filled.csv(검증기 통과본) + GitHub URL + 규정 준수 '예'. 재제출 가능. 잔여: ① 23시경 저장소 Public 전환(소유자 계정) 후 최종 확인 ② 깨진 문항 5건(test-0268/0754/0780/1350/1740) 제보는 사용자 판단 대기 | - | (채점 대기) | - |
